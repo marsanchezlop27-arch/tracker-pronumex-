@@ -35,6 +35,9 @@ window.FB = { auth: fbAuth, db: fbDb,
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
+.col-toggle{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:5px;cursor:pointer;padding:3px 8px;border-radius:5px;border:1px solid var(--border);background:var(--navy2)}
+.col-toggle input{accent-color:var(--cyan);width:13px;height:13px;cursor:pointer}
+.col-hidden{display:none!important}
 /* LOGIN MODAL */
 #loginModal{position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center}
 #loginModal.hidden{display:none!important}
@@ -304,6 +307,14 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
     Exportar CSV
   </button>
+  <button class="btn" id="btnDesdeGuardado" onclick="cargarDesdeGuardado()" style="border-color:var(--green);color:var(--green)">
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 019-9 9 9 0 016.38 2.62M21 12a9 9 0 01-9 9 9 9 0 01-6.38-2.62"/><polyline points="16 6 21 6 21 11"/><polyline points="8 18 3 18 3 13"/></svg>
+    Cargar guardado
+  </button>
+  <button class="btn hidden" id="btnRecalc" onclick="recalcular()" style="border-color:var(--cyan);color:var(--cyan)">
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
+    Actualizar vista
+  </button>
   <button class="btn hidden" id="btnReporte" onclick="generarReporte()" style="border-color:var(--purple);color:var(--purple)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
     Reporte de turno
@@ -322,6 +333,11 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
     Descargas
   </button>
+  <button class="vsw-btn" id="vsw-inc" onclick="switchView('inc')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    Incidencias <span id="incBdg" style="margin-left:2px"></span>
+  </button>
+
 </div>
 
 <!-- VISTA EMBARQUES -->
@@ -448,6 +464,10 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8l5 3-5 3V8z"/></svg>
       Control descargas
     </div>
+    <div class="tab" onclick="swTab(this,'cl')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      Clientes
+    </div>
 
   </div>
 
@@ -480,34 +500,33 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       </select>
     </div>
     <div class="tw"><div class="ts">
-      <table>
+      <table id="tk-table">
         <thead>
           <tr>
-            <th colspan="3" style="background:#0F2544;color:var(--text3);font-size:9px;letter-spacing:.1em;border-bottom:none;padding-bottom:3px">IDENTIFICACIÓN</th>
-            <th colspan="2" style="background:#0F2544;color:var(--text3);font-size:9px;letter-spacing:.1em;border-bottom:none;padding-bottom:3px">SEMÁFORO</th>
+            <th colspan="4" style="background:#0F2544;color:var(--text3);font-size:9px;letter-spacing:.1em;border-bottom:none;padding-bottom:3px">IDENTIFICACIÓN</th>
             <th colspan="5" style="background:#0F2544;color:var(--text3);font-size:9px;letter-spacing:.1em;border-bottom:none;padding-bottom:3px">CARGA</th>
-            <th colspan="1" style="background:#0F2544;color:var(--text3);font-size:9px;letter-spacing:.1em;border-bottom:none;padding-bottom:3px">TRANSPORTE</th>
-            <th colspan="4" style="background:#0F2544;font-size:9px;letter-spacing:.1em;border-bottom:none;padding-bottom:3px;color:var(--cyan)">OPERACIÓN</th>
-            <th style="background:#0F2544;border-bottom:none"></th>
+            <th colspan="4" style="background:#0F2544;color:var(--text3);font-size:9px;letter-spacing:.1em;border-bottom:none;padding-bottom:3px;color:var(--cyan)">ASIGNACIÓN</th>
+            <th colspan="2" style="background:#0F2544;color:var(--text3);font-size:9px;letter-spacing:.1em;border-bottom:none;padding-bottom:3px;color:var(--purple)">VERIFICACIÓN</th>
+            <th colspan="2" style="background:#0F2544;color:var(--text3);font-size:9px;letter-spacing:.1em;border-bottom:none;padding-bottom:3px">ESTATUS</th>
           </tr>
           <tr>
             <th style="width:34px;text-align:center">#</th>
             <th data-c="emb" onclick="sort(this)" style="min-width:100px">No. Embarque</th>
-            <th data-c="nom" onclick="sort(this)" style="min-width:160px">Nombre</th>
-            <th data-c="tra" onclick="sort(this)" style="min-width:110px">Unidad</th>
+            <th data-c="nom" onclick="sort(this)" style="min-width:160px">Cliente</th>
             <th data-c="sem" onclick="sort(this)" style="min-width:140px">Semáforo</th>
-            <th data-c="pal" onclick="sort(this)" style="min-width:65px">Pallets</th>
-            <th data-c="res" onclick="sort(this)" style="min-width:65px">Restos</th>
-            <th data-c="pt"  onclick="sort(this)" style="min-width:80px">% Tareas</th>
-            <th data-c="pr"  onclick="sort(this)" style="min-width:80px">% Restos</th>
-            <th style="min-width:80px;color:var(--amber)">Picking falt.</th>
-            <th style="min-width:80px;text-align:center">Transporte</th>
-            <th style="min-width:110px;color:var(--cyan)">Precarga</th>
-            <th style="min-width:150px;color:var(--cyan)">Montacarguista</th>
+            <th class="col-cortina" style="min-width:75px">Cortina</th>
+            <th data-c="pal" onclick="sort(this)" style="min-width:60px">Pallets</th>
+            <th data-c="pt"  onclick="sort(this)" style="min-width:75px">% Tareas</th>
+            <th data-c="pr"  onclick="sort(this)" style="min-width:75px">% Restos</th>
+            <th class="col-picking" style="min-width:80px;color:var(--amber)">Picking pend.</th>
+            <th class="col-precarga" style="min-width:110px;color:var(--cyan)">Precarga</th>
+            <th class="col-monta" style="min-width:150px;color:var(--cyan)">Montacarguista</th>
+            <th class="col-trans" style="min-width:80px;text-align:center">Transporte</th>
+            <th data-c="tra" onclick="sort(this)" style="min-width:100px">Unidad</th>
+            <th class="col-verif" style="min-width:150px;color:var(--purple)">Verificador</th>
+            <th class="col-custom" style="min-width:80px;text-align:center;color:var(--purple)">Custom.</th>
             <th style="min-width:120px;color:var(--cyan)">Estatus op.</th>
-            <th style="min-width:150px;color:var(--cyan)">Verificador</th>
-            <th style="min-width:80px;text-align:center;color:var(--cyan)">Custom.</th>
-            <th style="min-width:140px">Alerta / Estado</th>
+            <th class="col-alerta" style="min-width:130px">Alerta</th>
           </tr>
         </thead>
         <tbody id="tb"></tbody>
@@ -710,6 +729,10 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     </div>
   </div>
 
+  <!-- CLIENTES -->
+  <div id="p-cl" class="hidden">
+    <div id="clContent"></div>
+  </div>
 
 </div><!-- /view-emb -->
 
@@ -734,6 +757,126 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 
 </div><!-- /view-desc -->
 
+<!-- VISTA INCIDENCIAS -->
+<div id="view-inc" class="hidden">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px">
+    <div class="kpi" style="border-top:2px solid var(--red)"><div class="kpi-v" id="incKtotal" style="color:var(--red)">0</div><div class="kpi-l">Total incidencias</div></div>
+    <div class="kpi" style="border-top:2px solid var(--amber)"><div class="kpi-v" id="incKturno" style="color:var(--amber)">0</div><div class="kpi-l">Este turno</div></div>
+    <div class="kpi" style="border-top:2px solid var(--purple)"><div class="kpi-v" id="incKtipos" style="color:var(--purple)">0</div><div class="kpi-l">Tipos distintos</div></div>
+  </div>
+
+  <!-- Formulario nueva incidencia -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-ttl">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Registrar nueva incidencia
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px">
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Quien reporta</div>
+        <div id="incColabWrap" style="position:relative">
+          <input id="incColab" class="edt-sel" type="text" placeholder="Escribe nombre o número..." style="width:100%;height:32px;font-size:12px">
+        </div>
+        <input id="incColabId" type="hidden">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Colaborador con incidencia</div>
+        <div id="incColabIncWrap" style="position:relative">
+          <input id="incColabInc" class="edt-sel" type="text" placeholder="Escribe nombre o número..." style="width:100%;height:32px;font-size:12px">
+        </div>
+        <input id="incColabIncId" type="hidden">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">No. Embarque</div>
+        <div style="display:flex;gap:6px">
+          <input id="incEmb" class="edt-sel" type="text" placeholder="ej. 1569426" style="flex:1;height:32px;font-size:12px">
+          <button class="btn" onclick="incBuscarEmb()" style="height:32px;padding:0 10px;font-size:11px">Buscar</button>
+        </div>
+        <div id="incEmbInfo" style="font-size:10px;color:var(--cyan);margin-top:4px"></div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Tipo de incidencia</div>
+        <select id="incTipo" class="edt-sel" onchange="incTipoChange()" style="height:32px;width:100%">
+          <option value="">— Seleccionar —</option>
+          <option value="SOBRANTE">SOBRANTE</option>
+          <option value="FALTANTE">FALTANTE</option>
+          <option value="PALLET DE MÁS">PALLET DE MÁS</option>
+          <option value="DAÑOS">DAÑOS</option>
+          <option value="CÓDIGOS CAMBIADOS">CÓDIGOS CAMBIADOS</option>
+          <option value="OTROS">OTROS (especificar)</option>
+        </select>
+        <input id="incTipoOtro" class="edt-sel hidden" type="text" placeholder="Describe la incidencia..." style="margin-top:6px;width:100%;height:32px;font-size:12px">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">SKU <span style="color:var(--text3);font-weight:400">(código de producto)</span></div>
+        <input id="incSku" class="edt-sel" type="text" placeholder="ej. 1008016299" style="height:32px;width:100%;font-size:12px;font-family:'IBM Plex Mono',monospace">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Cantidad <span style="color:var(--text3);font-weight:400">(unidad)</span></div>
+        <div style="display:flex;gap:6px">
+          <input id="incCantidad" class="edt-sel" type="number" min="0" step="0.1" placeholder="ej. 2" style="height:32px;width:80px;font-size:12px">
+          <select id="incUnidad" class="edt-sel" style="height:32px;flex:1;font-size:12px">
+            <option value="cs">cs (cases)</option>
+            <option value="pzas">pzas</option>
+            <option value="kg">kg</option>
+            <option value="pallets">pallets</option>
+            <option value="cajas">cajas</option>
+            <option value="unidades">unidades</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Descripción (opcional)</div>
+        <input id="incDesc" class="edt-sel" type="text" placeholder="Detalles adicionales..." style="height:32px;width:100%;font-size:12px">
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Foto (opcional)</div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--navy2);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;height:32px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span id="incFotoLbl" style="font-size:11px;color:var(--text3)">Seleccionar foto</span>
+          <input id="incFoto" type="file" accept="image/*" capture="environment" class="hidden" onchange="incFotoChange(this)">
+        </label>
+      </div>
+    </div>
+    <div id="incFotoPreview" style="margin-bottom:10px;display:none">
+      <img id="incFotoImg" style="max-height:120px;border-radius:6px;border:1px solid var(--border2)">
+      <button onclick="incFotoLimpiar()" class="btn" style="margin-left:8px;font-size:10px;color:var(--red)">✕ Quitar</button>
+    </div>
+    <button class="btn ok" onclick="incGuardar()">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      Guardar incidencia
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+    <select id="incFiltTipo" onchange="incRender()" class="edt-sel" style="height:30px;min-width:160px">
+      <option value="">Todos los tipos</option>
+      <option value="SOBRANTE">SOBRANTE</option>
+      <option value="FALTANTE">FALTANTE</option>
+      <option value="PALLET DE MÁS">PALLET DE MÁS</option>
+      <option value="DAÑOS">DAÑOS</option>
+      <option value="CÓDIGOS CAMBIADOS">CÓDIGOS CAMBIADOS</option>
+      <option value="OTROS">OTROS</option>
+    </select>
+    <select id="incFiltPeriodo" onchange="incRender()" class="edt-sel" style="height:30px;min-width:140px">
+      <option value="turno">Este turno</option>
+      <option value="dia">Hoy</option>
+      <option value="semana">Esta semana</option>
+      <option value="mes">Este mes</option>
+      <option value="todos">Todos</option>
+    </select>
+    <button class="btn" onclick="incExportar()" style="height:30px;font-size:11px">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      Exportar CSV
+    </button>
+  </div>
+
+  <!-- Lista de incidencias -->
+  <div id="incLista"></div>
+</div><!-- /view-inc -->
+
+
 </div><!-- /shell -->
 
 <script>
@@ -753,77 +896,126 @@ function hLoad(){
 hLoad(); // cargar al inicio
 
 // ─── SUPERVISORES / MONTACARGUISTAS DATA ──────────────────────────────────────
-const SUPS = {
-  '10012354':'IVAN AGUILAR HERNANDEZ',
-  '10049966':'SANCHEZ GONZALEZ ENRIQUE',
-  '10046786':'ESTRADA FLORES CESAR'
-};
-const MONTACARGUISTAS = [
-  {id:'10012425',nombre:'HERNANDEZ MARTINEZ JOSE GUADALUPE'},
-  {id:'10070250',nombre:'OLVERA RAMON OSCAR'},
-  {id:'10012393',nombre:'ROJAS GONZALEZ RAUL'},
-  {id:'10012400',nombre:'REYNALDOS MORAN DAVID'},
-  {id:'10038863',nombre:'ROBLES GONZALEZ ERIC MARIO'},
-  {id:'10012480',nombre:'ALVAREZ MEJIA LUIS ENRIQUE'},
-  {id:'10088114',nombre:'LOPEZ OBLEA VICTOR EDUARDO'},
-  {id:'10012394',nombre:'MARTINEZ CASIANO JUAN ANTONIO'},
-  {id:'10098493',nombre:'CRUZ CRUZ DIEGO'},
-  {id:'10012461',nombre:'ALBERTO MENDOZA GARCIA'},
-  {id:'10098494',nombre:'LEONARDO AXEL CRUZ CRUZ'},
-  {id:'10084872',nombre:'DAVILA MERCADO RAMIRO'},
-  {id:'10092387',nombre:'TAPIA FLORES LUIS ARMANDO'},
-  {id:'10051343',nombre:'ANASTACIO JUAREZ ANGEL YAHIR'},
-  {id:'10012385',nombre:'COLIN PARRA LUIS FERNANDO'},
-  {id:'10030292',nombre:'CRUZ IGLESIAS DIAZ'},
-  {id:'10046141',nombre:'MEDINA RODRIGUEZ CRISTIAN MANUEL'},
-  {id:'10104186',nombre:'RICARDO MARCOS VIDAL'},
-  {id:'10012503',nombre:'GONZALEZ GONZALEZ DIEGO'},
-  {id:'10012405',nombre:'SIERRA GUZMAN GONZALO'},
-  {id:'10077243',nombre:'FABIO BAODAI MARTINEZ QUINTERO'},
-  {id:'10111130',nombre:'MARTINEZ MATIAS IRVIN'}
-];
-
-function montaOpts(sel){
-  return '<option value="">— Asignar —</option>'+
-    MONTACARGUISTAS.map(m=>`<option value="${m.id}"${sel===m.id?' selected':''}>${m.id} — ${m.nombre}</option>`).join('');
-}
-
-// ─── TOGGLE PANEL CARGA ──────────────────────────────────────────────────────
-function toggleCarga(){
-  const body=g('cargaBody'), chev=g('cargaChevron');
-  const open=body.style.display!=='none';
-  body.style.display=open?'none':'block';
-  chev.style.transform=open?'rotate(-90deg)':'rotate(0deg)';
-}
-
-// ─── VERIFICADORES ────────────────────────────────────────────────────────────
-const VERIFICADORES = [
-  {id:'10049147',nombre:'FLORES GARCIA MARCO ANTONIO',puesto:'Supervisor OP'},
+// Full personnel list — all roles
+const ALL_PERSONAL = [
+  {id:'10049147',nombre:'FLORES GARCIA MARCO ANTONIO',puesto:'Supervisor de OP'},
   {id:'10077324',nombre:'FUENTES SANCHEZ LUIS ALBERTO',puesto:'Verificador PT'},
   {id:'10044308',nombre:'QUINTERO MARTINEZ SAUL',puesto:'Verificador PT'},
-  {id:'10012354',nombre:'IVAN AGUILAR HERNANDEZ',puesto:'Supervisor OP'},
+  {id:'10012425',nombre:'HERNANDEZ MARTINEZ JOSE GUADALUPE',puesto:'Montacarguista'},
+  {id:'10070250',nombre:'OLVERA RAMON OSCAR',puesto:'Montacarguista'},
+  {id:'10012393',nombre:'ROJAS GONZALEZ RAUL',puesto:'Montacarguista'},
+  {id:'10012400',nombre:'REYNALDOS MORAN DAVID',puesto:'Montacarguista'},
+  {id:'10038863',nombre:'ROBLES GONZALEZ ERIC MARIO',puesto:'Montacarguista'},
+  {id:'10012480',nombre:'ALVAREZ MEJIA LUIS ENRIQUE',puesto:'Montacarguista'},
+  {id:'10088114',nombre:'LOPEZ OBLEA VICTOR EDUARDO',puesto:'Montacarguista'},
+  {id:'10113379',nombre:'SANCHEZ MORENO JOSUE ANTONIO',puesto:'Cargadores Master'},
+  {id:'10115329',nombre:'VASQUEZ LUIS DYLAN JOSEFT',puesto:'Cargadores Master'},
+  {id:'10115374',nombre:'CASTAÑEDA CARRILLO ALEXIS',puesto:'Ayudante Gral. PT'},
+  {id:'10114975',nombre:'SEBASTIAN VIGUERAS ALBERTO',puesto:'Cargadores Master'},
+  {id:'10104185',nombre:'ALAN SANCHEZ HUAZO',puesto:'Ayudante Gral. PT'},
+  {id:'10112938',nombre:'ROSALES CORONA MARIO ANGEL',puesto:'Ayudante Gral. PT'},
+  {id:'10113327',nombre:'MARTINEZ ANGELES ELEAZAR',puesto:'Cargadores Master'},
+  {id:'10080847',nombre:'MARTINEZ GONZALEZ MARCELO',puesto:'Ayudante Gral. PT'},
+  {id:'10077635',nombre:'TINOCO CEBALLOS CARLOS',puesto:'Ayudante Gral. PT'},
+  {id:'10012354',nombre:'IVAN AGUILAR HERNANDEZ',puesto:'Supervisor de OP'},
+  {id:'10090353',nombre:'MARTINEZ FERNANDEZ JORGE LUIS',puesto:'Ayudante Gral. PT'},
+  {id:'10045618',nombre:'SANCHEZ HERNANDEZ LUIS ANTONIO',puesto:'Ayudante Gral. PT'},
+  {id:'10112197',nombre:'JIMENEZ HERNANDEZ ROGELIO',puesto:'Ayudante Gral. PT'},
+  {id:'10105239',nombre:'CHAVEZ GONZALEZ VICTOR MANUEL',puesto:'Ayudante Gral. PT'},
+  {id:'10116625',nombre:'VILLANUEVA DE JESUS CRISTIAN',puesto:'Ayudante Gral. PT'},
+  {id:'10112615',nombre:'JOSE ZAMORA NORBERTO',puesto:'Cargadores Master'},
+  {id:'10076384',nombre:'LOPEZ SANCHEZ EMMANUEL',puesto:'Ayudante Gral. PT'},
+  {id:'10085561',nombre:'ALBARRAN REYES PEDRO CRUZ',puesto:'Ayudante Gral. PT'},
+  {id:'10094890',nombre:'RAMIREZ PEREZ CUAUHTEMOC',puesto:'Ayudante Gral. PT'},
+  {id:'10116140',nombre:'GONZALEZ HERNANDEZ ALEXANDER',puesto:'Cargadores Master'},
+  {id:'10116072',nombre:'ARIAS VENEGAS JOSE',puesto:'Cargadores Master'},
+  {id:'10115806',nombre:'CARBAJAL GONZALEZ JOHAN RICARDO',puesto:'Ayudante Gral. PT'},
+  {id:'10012394',nombre:'MARTINEZ CASIANO JUAN ANTONIO',puesto:'Montacarguista'},
+  {id:'10098493',nombre:'CRUZ CRUZ DIEGO',puesto:'Montacarguista'},
+  {id:'10012461',nombre:'ALBERTO MENDOZA GARCIA',puesto:'Montacarguista'},
+  {id:'10098494',nombre:'LEONARDO AXEL CRUZ CRUZ',puesto:'Montacarguista'},
+  {id:'10084872',nombre:'DAVILA MERCADO RAMIRO',puesto:'Montacarguista'},
+  {id:'10092387',nombre:'TAPIA FLORES LUIS ARMANDO',puesto:'Montacarguista'},
   {id:'10025171',nombre:'FUENTES PEREZ ARTURO',puesto:'Verificador PT'},
   {id:'10072188',nombre:'SALGADO CARRILLO MONSERRAT',puesto:'Verificador PT'},
   {id:'10012427',nombre:'SANDOVAL JIMENEZ JOSE ADALBERTO',puesto:'Verificador PT'},
-  {id:'10049966',nombre:'SANCHEZ GONZALEZ ENRIQUE',puesto:'Supervisor OP'},
+  {id:'10049966',nombre:'SANCHEZ GONZALEZ ENRIQUE',puesto:'Supervisor de OP'},
   {id:'10030022',nombre:'MORALES ALONSO ABRAHAM',puesto:'Verificador PT'},
   {id:'10020317',nombre:'OBREGON RAMIREZ OSVALDO',puesto:'Verificador PT'},
-  {id:'10012361',nombre:'MARIA DEL ROSARIO SANCHEZ LOPEZ',puesto:'Coordinador OP'},
-  {id:'10076460',nombre:'GONZALEZ GABINO MARLEN',puesto:'Supervisor LI'},
+  {id:'10114311',nombre:'IBARRA JAIMES CRISTIAN GIOVANI',puesto:'Ayudante Gral. PT'},
+  {id:'10112195',nombre:'SANTOS CRUZ SERGIO ALEJANDRO',puesto:'Cargadores Master'},
+  {id:'10112411',nombre:'GARDUÑO MARTINEZ CRISTIAN ULISES',puesto:'Cargadores'},
+  {id:'10042231',nombre:'ORTIZ PEREZ ANGEL ELADIO',puesto:'Ayudante Gral. PT'},
+  {id:'10106043',nombre:'CABRERA REYES AURELIO MIGUEL',puesto:'Ayudante Gral. PT'},
+  {id:'10106664',nombre:'CABRERA REYES EDUARDO',puesto:'Ayudante Gral. PT'},
+  {id:'10113245',nombre:'JORGE ELPIDIO HERNANDEZ MANCINAS',puesto:'Cargadores'},
+  {id:'10114116',nombre:'SEBASTIAN CARRANZA HERNANDEZ',puesto:'Ayudante Gral. PT'},
+  {id:'10115419',nombre:'JAIMES SANCHEZ BRANDON JAIR',puesto:'Ayudante Gral. PT'},
+  {id:'',nombre:'GARCIA ALBARRAN BRYAN DE JESUS',puesto:'Cargadores Master'},
+  {id:'10112675',nombre:'SEVILLA SANCHEZ JOSE LUIS',puesto:'Cargadores'},
+  {id:'10116142',nombre:'URBANO SANTOS ALEXIS JOAQUIN',puesto:'Ayudante Gral. PT'},
+  {id:'10116632',nombre:'BALDIT VAZQUEZ ADRIAN',puesto:'Ayudante Gral. PT'},
+  {id:'10051343',nombre:'ANASTACIO JUAREZ ANGEL YAHIR',puesto:'Montacarguista'},
+  {id:'10012385',nombre:'COLIN PARRA LUIS FERNANDO',puesto:'Montacarguista'},
+  {id:'10030292',nombre:'CRUZ IGLESIAS DIAZ',puesto:'Montacarguista'},
+  {id:'10046141',nombre:'MEDINA RODRIGUEZ CRISTIAN MANUEL',puesto:'Montacarguista'},
+  {id:'10104186',nombre:'RICARDO MARCOS VIDAL',puesto:'Montacarguista'},
+  {id:'10012503',nombre:'GONZALEZ GONZALEZ DIEGO',puesto:'Montacarguista'},
+  {id:'10012405',nombre:'SIERRA GUZMAN GONZALO',puesto:'Montacarguista'},
+  {id:'10012361',nombre:'MARIA DEL ROSARIO SANCHEZ LOPEZ',puesto:'Coordinador Operaciones PT'},
+  {id:'10076460',nombre:'GONZALEZ GABINO MARLEN',puesto:'Supervisor de LI'},
   {id:'10097826',nombre:'GABRIEL GONZALEZ GONZALEZ',puesto:'Verificador LI'},
-  {id:'10046786',nombre:'ESTRADA FLORES CESAR',puesto:'Supervisor OP'},
-  {id:'10051974',nombre:'GARDUÑO MARTINEZ BERENICE',puesto:'Analista OP'},
+  {id:'10102640',nombre:'ENRIQUEZ DOMINGUEZ JESUS',puesto:'Ayudante Gral. LT'},
+  {id:'10094858',nombre:'ROMAN MIGUELES DIEGO',puesto:'Ayudante Gral. LT'},
+  {id:'10012465',nombre:'VELASCO MARTINEZ MARICRUZ',puesto:'Ayudante Gral. LT'},
+  {id:'10111020',nombre:'APOLONIO PIÑA ELIAB',puesto:'Ayudante Gral. LT'},
+  {id:'10096511',nombre:'MARTINEZ GARCIA KEVIN ALBERTO',puesto:'Ayudante Gral. LT'},
+  {id:'10116886',nombre:'MORA RAMIREZ VICTOR MANUEL',puesto:'Ayudante Gral. PT'},
+  {id:'10116885',nombre:'VIDAL RAMIREZ BRYAN RICARDO',puesto:'Ayudante Gral. PT'},
+  {id:'10058480',nombre:'GONZALEZ SANCHEZ SAMUEL',puesto:'Ayudante Gral. PT'},
+  {id:'10117025',nombre:'AGUILERA DIAZ OSWALDO',puesto:'Ayudante Gral. PT'},
+  {id:'10116882',nombre:'PALMA SERRANO ROLANDO',puesto:'Ayudante Gral. PT'},
+  {id:'10046786',nombre:'ESTRADA FLORES CESAR',puesto:'Supervisor de OP'},
+  {id:'10077243',nombre:'FABIO BAODAI MARTINEZ QUINTERO',puesto:'Montacarguista'},
+  {id:'10111130',nombre:'MARTINEZ MATIAS IRVIN',puesto:'Montacarguista'},
+  {id:'10117672',nombre:'CORRALES JIMENEZ ANGEL DE JESUS',puesto:'Ayudante Gral. PT'},
 ];
+
+// Derived filtered lists
+const MONTACARGUISTAS = ALL_PERSONAL.filter(p=>p.puesto==='Montacarguista');
+const VERIFICADORES   = ALL_PERSONAL.filter(p=>p.puesto.includes('Verificador')||p.puesto.includes('Supervisor')||p.puesto.includes('Coordinador'));
+const SUPS = Object.fromEntries(ALL_PERSONAL.filter(p=>p.puesto.includes('Supervisor')).map(p=>[p.id,p.nombre]));
+
+function personalOpts(sel, filtro=''){
+  const lista = filtro ? ALL_PERSONAL.filter(p=>p.puesto.toLowerCase().includes(filtro.toLowerCase())) : ALL_PERSONAL;
+  return '<option value="">— Seleccionar —</option>'+
+    lista.map(p=>`<option value="${p.id||p.nombre}"${(p.id||p.nombre)===sel?' selected':''}>[${p.puesto}] ${p.nombre}</option>`).join('')+
+    '<option value="__manual__">✎ Ingresar manual</option>';
+}
+
+function montaOpts(sel){
+  return '<option value="">— Asignar —</option>'+
+    MONTACARGUISTAS.map(m=>`<option value="${m.id}"${m.id===sel?' selected':''}>${m.id} — ${m.nombre}</option>`).join('');
+}
 
 function verificOpts(sel){
   return '<option value="">— Verificador —</option>'+
     VERIFICADORES.map(v=>`<option value="${v.id}"${v.id===sel?' selected':''}>${v.nombre}</option>`).join('')+
-    `<option value="__manual__"${sel&&!VERIFICADORES.find(v=>v.id===sel)&&sel!=='__manual__'?'':''}>✎ Ingresar manual</option>`;
+    `<option value="__manual__">✎ Ingresar manual</option>`;
 }
 function getVerifNombre(id){
   if(!id) return '';
   const v=VERIFICADORES.find(v=>v.id===id);
   return v?v.nombre:id;
+}
+
+// ─── TOGGLE PANEL CARGA ──────────────────────────────────────────────────────
+function toggleCarga(){
+  const body=g('cargaBody'), chev=g('cargaChevron');
+  if(!body||!chev) return;
+  const open = body.style.display!=='none';
+  body.style.display = open ? 'none' : 'block';
+  chev.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)';
 }
 
 function updateTopbarSup(){
@@ -1071,7 +1263,7 @@ function build(){
   S.rows=[];
 
   // ── BASE = SEMAFORO. Iterate semaforo rows only ──
-  semRows.forEach(r=>{
+  semRows.forEach((r,semIdx)=>{
     const k=nk(fc(r,['embarque','No. De Embarque','Embarque']));
     if(!k||k.length<3) return;
 
@@ -1088,7 +1280,7 @@ function build(){
 
     S.rows.push({
       emb: k,
-      nom: fc(r,['Nombre','nombre','Cliente','cliente','Destino','destino','CLIENTE','DESTINO']) || '',
+      nom: fc(r,['Nombre','nombre','Cliente','cliente','Destino','destino','CLIENTE','DESTINO']) || fc(r,['NOMBRE']) || '',
       tra: fc(D,['Unidad','unidad','Tipo trailer','Tipo Trailer','trailer'])||fc(r,['Tipo trailer','Tipo Trailer','trailer','Unidad'])||'',
       sem: (()=>{
         const v=fc(r,['SEMAFORO CARGA','Semaforo Carga','semaforo','SEMÁFORO']);
@@ -1125,7 +1317,6 @@ function build(){
         if(!isNaN(d)) return d.toISOString().slice(0,19).replace('T',' ');
         return s;
       })(),
-      ci:  fc(r,['FECHA Y HORA CITA','Fecha y Hora Cita','fecha cita','cita']) || '',
       // From PTR
       pal: fc(P,['Pallets','pallets']) || '',
       res: fc(P,['Restos','restos'])   || '',
@@ -1148,6 +1339,9 @@ function build(){
       custom:   false, // customizado
       customBy: '',  // quien customizó
       prio:     false,
+      prioNum:  0,
+      semOrder: semIdx,
+      tipo_sem: fc(r,['TIPO','tipo']) || '',  // WM / NAC / HFS from semaforo
       _wmsMatch, _wmsEmb
     });
     // Restore saved edits; default estop to PENDIENTE if not saved
@@ -1178,6 +1372,7 @@ function build(){
   document.getElementById('tabs').classList.remove('hidden');
   document.getElementById('btnExp').classList.remove('hidden');
   document.getElementById('btnReporte').classList.remove('hidden');
+  document.getElementById('btnRecalc').classList.remove('hidden');
   g('stp1').classList.remove('active'); g('stp1').classList.add('done');
   g('stp2').classList.add('active');
   document.getElementById('st').textContent=S.rows.length+' fletes del semáforo activos.';
@@ -1331,7 +1526,7 @@ function applyNew(){
       tr:fc(D,['T. Restos','T.Restos','t restos'])||'',
       ar:fc(D,['A. Restos','A.Restos','a restos'])||'',
       tf:fc(D,['T. Faltantes','T.Faltantes','faltantes'])||'',
-      con:fc(D,['# Contenedor','contenedor','Contenedor'])||'',
+      con:fc(D,['# Contenedor','contenedor','Contenedor'])||fc(r,['CORTINA','cortina'])||'',
       com:saved.com||fc(D,['Comentarios:','Comentarios','comentarios','comentario'])||'',
       tu:turno, al:'', est:'NUEVO',
       precarga:saved.precarga||'', monta:saved.monta||'',
@@ -1454,7 +1649,8 @@ function sortedForPosition(arr){
   const normalRows=arr.filter(r=>!r.prio).sort((a,b)=>{
     const pa=semPri(a),pb=semPri(b); if(pa!==pb) return pa-pb;
     if(pa===2&&pb===2){ const da=new Date(a.ci),db=new Date(b.ci); if(!isNaN(da)&&!isNaN(db)) return da-db; }
-    return 0;
+    // Same priority group → respect original semaforo order
+    return (a.semOrder||0)-(b.semOrder||0);
   });
   prioRows.forEach(pr=>{
     const pos=Math.max(1,Math.min(pr.prioNum||1,normalRows.length+1))-1;
@@ -1512,6 +1708,7 @@ function render(){
       const da=new Date(a.ci), db=new Date(b.ci);
       if(!isNaN(da)&&!isNaN(db)) return da-db;
     }
+    return (a.semOrder||0)-(b.semOrder||0);
     const c=S.sc;
     let av=a[c],bv=b[c];
     if(av===''||av===null) av=S.sa?'\uFFFF':'';
@@ -1580,81 +1777,81 @@ function render(){
       <td style="text-align:center;padding:4px 6px"><span class="pos-num${isDesplazado?'" style="color:var(--purple)':''}">${posNum}</span></td>
       <td class="m" style="font-weight:700;font-size:11px;color:${r.prio?'#FACC15':'var(--text)'}">
         ${es(r.emb)}
-        ${r._wmsMatch?`<div style="font-size:9px;color:var(--amber);font-family:'IBM Plex Mono',monospace;margin-top:2px" title="Flete SAP no encontrado en Detalle — vinculado por WMS ${r._wmsEmb}">WMS: ${r._wmsEmb}</div>`:''}
+        ${r._wmsMatch?`<div style="font-size:9px;color:var(--amber);font-family:'IBM Plex Mono',monospace;margin-top:2px">WMS:${r._wmsEmb}</div>`:''}
       </td>
-      <td style="max-width:170px;overflow:hidden;text-overflow:ellipsis;font-size:11.5px" title="${es(r.nom)}">${es(r.nom)}</td>
-      <td style="font-size:10.5px;color:var(--text2)">${es(r.tra)||'—'}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;font-size:11px" title="${es(r.nom)}">${es(r.nom)}</td>
       <td>${(()=>{
         let urgente=false;
         if(r.ci){const d=new Date(r.ci);if(!isNaN(d)){const h=(d-new Date())/3600000;if(h>=0&&h<2)urgente=true;}}
         const badgeCls=urgente?'br':scl(r.sem);
         const label=urgente?(r.sem||'Sin estado')+' ⚠':(r.sem||'—');
-        return `<span class="b ${badgeCls}" data-cita="${r.ci||''}">${es(label)}</span>`;
+        return `<span class="b ${badgeCls}" data-cita="${r.ci||''}" style="white-space:nowrap">${es(label)}</span>`;
+      })()}</td>
+      <td>${(()=>{
+        if(r.con) return `<span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--cyan);font-weight:600">${fmtCortina(r.con)}</span>`;
+        return `<input class="edt" type="text" value="" placeholder="— cortina —" onchange="upd(${idx},'con',this.value);render()" style="min-width:65px">`;
       })()}</td>
       <td class="m" style="text-align:right;font-size:11px">${r.pal||'—'}</td>
-      <td class="m" style="text-align:right;font-size:11px">${r.res||'—'}</td>
       <td>${bar(r.pt)}</td>
       <td>${bar(r.pr)}</td>
       <td>${restHtml}</td>
-      <td>${transBadge}</td>
       <td>${(()=>{
-        // Precarga is ALWAYS active (picking also needs precarga even without pallets)
         const esHistorico = r._semNuevo && r._prevPrecarga;
         const esNuevoSinAsignar = r._semNuevo && !r.precarga;
         if(r.precarga){
-          const cls = esHistorico ? 'tag-hist' : 'tag-nuevo';
-          const style = esHistorico
-            ? '' // amber ya está en tag-hist
-            : 'background:rgba(6,182,212,.15);color:#67E8F9;border:1px solid rgba(6,182,212,.3);font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:5px;display:inline-block';
-          return esHistorico
-            ? `<span class="tag-hist" title="Del turno anterior">${es(r.precarga)}</span>`
-            : `<span style="${style}">${es(r.precarga)}</span>`;
+          const tagStyle = esHistorico
+            ? 'class="tag-hist"'
+            : 'style="background:rgba(6,182,212,.15);color:#67E8F9;border:1px solid rgba(6,182,212,.3);font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:5px;display:inline-flex;align-items:center;gap:5px"';
+          return `<span ${tagStyle}>${es(r.precarga)}<button onclick="editPrecarga(${idx})" style="background:none;border:none;cursor:pointer;opacity:.5;color:inherit;padding:0;font-size:10px" title="Editar">✎</button></span>`;
         }
-        const inputStyle = esNuevoSinAsignar
-          ? 'border:1.5px solid var(--cyan);background:rgba(6,182,212,.08);border-radius:6px;animation:pulse-nuevo 1.4s ease-in-out infinite'
-          : '';
-        return `<input class="edt" type="text" value="" placeholder="— asignar —"
-          style="${inputStyle}"
-          onchange="upd(${idx},'precarga',this.value);render()" title="Precarga">`;
+        const inputStyle = esNuevoSinAsignar ? 'border:1.5px solid var(--cyan);background:rgba(6,182,212,.08);border-radius:6px;animation:pulse-nuevo 1.4s ease-in-out infinite' : '';
+        return `<input class="edt" type="text" value="" placeholder="— precarga —" style="${inputStyle}" onchange="upd(${idx},'precarga',this.value);render()">`;
       })()}</td>
       <td>${(()=>{
         const esHistorico = r._semNuevo && r._prevMonta;
-        const esNuevoSinAsignar = r._semNuevo && !r.monta;
         if(r.monta){
           const nombre = MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta;
           return esHistorico
-            ? `<span class="tag-hist" title="Del turno anterior">${es(nombre)}</span>`
-            : `<span style="background:rgba(6,182,212,.15);color:#67E8F9;border:1px solid rgba(6,182,212,.3);font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;display:inline-block">${es(nombre)}</span>`;
+            ? `<span class="tag-hist">${es(nombre)}</span>`
+            : `<span style="background:rgba(6,182,212,.15);color:#67E8F9;border:1px solid rgba(6,182,212,.3);font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;display:inline-flex;align-items:center;gap:5px">${es(nombre)}<button onclick="upd(${idx},'monta','');render()" style="background:none;border:none;cursor:pointer;opacity:.5;color:inherit;font-size:10px;padding:0">✕</button></span>`;
         }
-        const selStyle = esNuevoSinAsignar
-          ? 'border:1.5px solid var(--cyan);background:rgba(6,182,212,.08);animation:pulse-nuevo 1.4s ease-in-out infinite'
-          : '';
-        return `<select class="edt-sel" onchange="upd(${idx},'monta',this.value);render()"
-          style="min-width:180px;${selStyle}">${montaOpts('')}</select>`;
+        const esNuevoSinAsignar = r._semNuevo && !r.monta;
+        const inputStyle = esNuevoSinAsignar ? 'border:1.5px solid var(--cyan);background:rgba(6,182,212,.08);animation:pulse-nuevo 1.4s ease-in-out infinite' : '';
+        return `<div style="position:relative">
+          <input class="edt-sel ac-monta-${idx}" type="text" placeholder="Buscar montacarguista..." style="width:100%;min-width:160px;${inputStyle}"
+            oninput="acFilter(this,MONTACARGUISTAS,${idx},'monta')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-${idx}');if(d)d.remove()},200)">
+        </div>`;
       })()}</td>
+      <td style="text-align:center">${transBadge}</td>
+      <td style="font-size:10px;color:var(--text2)">${es(r.tra)||'—'}</td>
+      <td>${(()=>{
+        if(r.verif){
+          const vn=getVerifNombre(r.verif);
+          return `<span style="font-size:10px;color:var(--purple);font-weight:500;display:inline-flex;align-items:center;gap:4px">${es(vn)}<button onclick="upd(${idx},'verif','');render()" style="background:none;border:none;cursor:pointer;opacity:.5;color:inherit;font-size:10px;padding:0">✕</button></span>`;
+        }
+        return `<div style="position:relative">
+          <input class="edt-sel" type="text" placeholder="Buscar verificador..." style="width:100%;min-width:140px"
+            oninput="acFilter(this,VERIFICADORES,${idx},'verif')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-v-${idx}');if(d)d.remove()},200)">
+        </div>`;
+      })()}</td>
+      <td style="text-align:center">
+        <label style="display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;margin-bottom:4px">
+          <input type="checkbox" ${r.custom?'checked':''} onchange="updCustom(${idx},this.checked)" style="width:14px;height:14px;accent-color:var(--green);cursor:pointer">
+          <span style="font-size:9.5px;color:${r.custom?'var(--green)':'var(--text3)'}">${r.custom?'✓ Sí':'No'}</span>
+        </label>
+        ${r.customBy
+          ? `<span style="font-size:9px;color:var(--purple);display:block;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${es(r.customBy)}">${es(r.customBy)}<button onclick="upd(${idx},'customBy','');render()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:9px;padding:0;margin-left:2px">✕</button></span>`
+          : `<div style="position:relative"><input class="edt-sel" type="text" placeholder="¿Quién?" style="width:80px;font-size:9.5px;height:22px;padding:2px 5px" oninput="acFilter(this,ALL_PERSONAL,${idx},'customBy')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-c-${idx}');if(d)d.remove()},200)"></div>`
+        }
+      </td>
       <td><select class="edt-sel" onchange="upd(${idx},'estop',this.value)">${
         ['','POR CARGAR','PENDIENTE','CARGADO'].map(v=>`<option value="${v}"${(r.estop||'PENDIENTE')===v?' selected':''}>${v||'— estatus —'}</option>`).join('')
       }</select></td>
-      <td>${(()=>{
-        if(r.verif&&!VERIFICADORES.find(v=>v.id===r.verif)){
-          return `<span style="font-size:10px;color:var(--cyan);font-weight:500">${es(r.verif)}</span>
-            <button class="btn" style="font-size:9px;padding:1px 6px;margin-left:4px" onclick="clearVerif(${idx})">✕</button>`;
-        }
-        return `<select class="edt-sel" onchange="updVerif(${idx},this.value)" style="min-width:140px">${verificOpts(r.verif)}</select>`;
-      })()}</td>
-      <td style="text-align:center">
-        <label style="display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer">
-          <input type="checkbox" ${r.custom?'checked':''} onchange="updCustom(${idx},this.checked)"
-            style="width:14px;height:14px;accent-color:var(--green);cursor:pointer">
-          <span style="font-size:9.5px;color:${r.custom?'var(--green)':'var(--text3)'}">${r.custom?'✓ Sí':'No'}</span>
-        </label>
-        ${r.custom&&r.customBy?`<div style="font-size:9px;color:var(--text3);margin-top:1px;max-width:70px;overflow:hidden;text-overflow:ellipsis">${es(r.customBy)}</div>`:''}
-      </td>
-      <td style="min-width:140px">${stateHtml||restHtml}</td>
+      <td style="min-width:120px;font-size:10px">${stateHtml||''}</td>
     </tr>`;
   }).join('');
 
-  const na=rows.filter(r=>r.al).length;
+
   const nn=rows.filter(r=>r.est==='NUEVO').length;
   const nFuera=rows.filter(r=>semPri(r)===1).length;
   const nCon=rows.filter(r=>hasTrans(r)).length;
@@ -1674,6 +1871,111 @@ function upd(idx,field,val){
   if(!S.userEdits[emb]) S.userEdits[emb]={};
   S.userEdits[emb][field]=val;
 }
+// ─── CARGAR DESDE GUARDADO ────────────────────────────────────────────────────
+// Renders the tracker using whatever is already in S.rows (loaded from Firebase
+// or localStorage on page load) without requiring any new file uploads.
+function cargarDesdeGuardado(){
+  if(!S.rows || !S.rows.length){
+    // Try loading from localStorage as fallback
+    try{
+      const saved = localStorage.getItem('trx_state');
+      if(saved){
+        const parsed = JSON.parse(saved);
+        if(parsed.rows && parsed.rows.length){
+          Object.assign(S, parsed);
+        }
+      }
+    }catch(e){}
+  }
+
+  if(!S.rows || !S.rows.length){
+    // Show message in the build panel
+    const st = g('st'); if(st) st.textContent = '';
+    const dbg = g('dbg');
+    if(dbg){
+      dbg.classList.remove('hidden');
+      dbg.textContent = 'No hay datos guardados aún. Carga el semáforo y Detalle al menos una vez primero.';
+    }
+    return;
+  }
+
+  // Show all UI elements
+  g('kRow').classList.remove('hidden');
+  g('tabs').classList.remove('hidden');
+  g('btnExp').classList.remove('hidden');
+  g('btnRecalc').classList.remove('hidden');
+  g('btnReporte').classList.remove('hidden');
+
+  // Recalculate and render everything
+  kpi(); render(); alerts(); badge();
+  if(typeof kpiVerif === 'function') kpiVerif();
+  updateTopbarSup();
+
+  // Flash button
+  const btn = g('btnDesdeGuardado');
+  if(btn){
+    btn.style.background = 'rgba(16,185,129,.15)';
+    btn.textContent = '✓ Cargado';
+    setTimeout(()=>{
+      btn.style.background = '';
+      btn.textContent = 'Cargar guardado';
+    }, 2000);
+  }
+}
+
+function recalcular(){
+  if(!S.rows.length){ alert('No hay datos cargados aún.'); return; }
+  kpi(); render(); alerts(); badge();
+  if(typeof kpiVerif==='function') kpiVerif();
+  if(g('p-rs')&&!g('p-rs').classList.contains('hidden')) renderResumen();
+  const btn=g('btnRecalc'); if(!btn) return;
+  const origStyle=btn.getAttribute('style');
+  btn.style.borderColor='var(--green)'; btn.style.color='var(--green)';
+  btn.textContent='✓ Actualizado';
+  setTimeout(()=>{
+    btn.setAttribute('style',origStyle||'');
+    btn.innerHTML='↺ Actualizar vista';
+  }, 2000);
+}
+
+function editPrecarga(idx){
+  const r=S.rows[idx];
+  const nuevo=prompt('Editar precarga para flete '+r.emb+':', r.precarga||'');
+  if(nuevo===null) return;
+  upd(idx,'precarga',nuevo.trim());
+  S.rows[idx]._prevPrecarga='';
+  render();
+  if(g('p-rs')&&!g('p-rs').classList.contains('hidden')) renderResumen();
+}
+
+function acFilter(inp, lista, idx, field){
+  const dropId='ac-drop-'+field.slice(0,1)+'-'+idx;
+  let drop=document.getElementById(dropId);
+  if(!drop){
+    drop=document.createElement('div');
+    drop.id=dropId;
+    drop.style.cssText='position:absolute;left:0;right:0;top:100%;background:var(--card);border:1px solid var(--border2);border-radius:6px;z-index:9999;max-height:160px;overflow-y:auto;display:none;box-shadow:0 4px 16px rgba(0,0,0,.4)';
+    inp.parentNode.appendChild(drop);
+  }
+  const q=inp.value.toLowerCase().trim();
+  if(!q){drop.style.display='none';return;}
+  const hits=lista.filter(p=>(p.nombre||'').toLowerCase().includes(q)||String(p.id||'').includes(q)).slice(0,8);
+  if(!hits.length){drop.style.display='none';return;}
+  drop.innerHTML=hits.map((p,i)=>`<div style="padding:6px 10px;cursor:pointer;font-size:11px;border-bottom:1px solid var(--border)" onmousedown="event.preventDefault()">
+    <span style="font-weight:500">${p.nombre}</span>
+    ${p.puesto?`<span style="font-size:9.5px;color:var(--text3);margin-left:5px">${p.puesto}</span>`:''}
+  </div>`).join('');
+  [...drop.children].forEach((el,i)=>{
+    el.addEventListener('click',()=>{
+      inp.value=hits[i].nombre;
+      drop.style.display='none';
+      const val=hits[i].id||hits[i].nombre;
+      upd(idx,field,field==='verif'?hits[i].id||hits[i].nombre:val);
+      render();
+    });
+  });
+  drop.style.display='block';
+}
 function updVerif(idx,val){
   if(val==='__manual__'){
     const manual=prompt('Ingresa el nombre del verificador:');
@@ -1688,12 +1990,7 @@ function updCustom(idx,checked){
   const emb=S.rows[idx].emb;
   if(!S.userEdits[emb]) S.userEdits[emb]={};
   S.userEdits[emb].custom=checked;
-  if(checked){
-    const verif=S.rows[idx].verif?getVerifNombre(S.rows[idx].verif):'';
-    const quien=verif||(prompt('\u00bfQui\u00e9n est\u00e1 customizando?')||'');
-    S.rows[idx].customBy=quien;
-    S.userEdits[emb].customBy=quien;
-  } else { S.rows[idx].customBy=''; if(S.userEdits[emb]) S.userEdits[emb].customBy=''; }
+  if(!checked){ S.rows[idx].customBy=''; S.userEdits[emb].customBy=''; }
   kpi(); render(); kpiVerif();
 }
 function kpiVerif(){
@@ -1902,21 +2199,370 @@ function alerts(){
 function swTab(el,t){
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
-  ['tk','up','al','rs','dc','vf'].forEach(x=>g('p-'+x).classList.toggle('hidden',x!==t));
+  ['tk','up','al','rs','dc','vf','cl'].forEach(x=>g('p-'+x).classList.toggle('hidden',x!==t));
   if(t==='tk') render();
   if(t==='al') alerts();
   if(t==='rs') renderResumen();
   if(t==='dc') renderDescargas();
-  if(t==='vf'){kpiVerif();}
+  if(t==='vf') kpiVerif();
+  if(t==='cl') renderClientes();
+}
+
+// ─── MÓDULO CLIENTES ──────────────────────────────────────────────────────────
+const GRUPOS_CLIENTES = [
+  // WM = Walmart / Bodega Aurrera (campo TIPO = 'WM' en semaforo)
+  {id:'walmart', label:'Walmart / Bodega Aurrera', color:'#0071CE',
+   keys:['wal-mart','walmart','bodega aurrera','cedis wal mart','nva wal-mart']},
+  // NAC Soriana
+  {id:'soriana', label:'Soriana', color:'#E8421C',
+   keys:['soriana']},
+  // NAC Chedraui (CEDIS + Palomas + Villahermosa + Teoloyucan)
+  {id:'chedraui', label:'Chedraui (CEDIS)', color:'#007DC5',
+   keys:['chedraui']},
+  // IB / CEDIS (otros NAC que no sean soriana ni chedraui)
+  // En este semaforo no hay más NAC, pero lo dejamos para futuros semaforos
+  {id:'ib', label:'IB / CEDIS', color:'#7C3AED',
+   keys:['cedis ib','cedis nacional','ib ']},
+  // HFS — TODO lo demás (CCF, City Club, 3B, OXXO, SUCURSAL DSF, etc.)
+  {id:'hfs', label:'HFS', color:'#0EA5E9', keys:[]},
+];
+
+// Client grouping uses TIPO field stored in r.tipo_sem if available,
+// otherwise falls back to name matching
+
+
+function getGrupo(nom, tipo){
+  const n=(nom||'').toLowerCase().trim();
+  const t=(tipo||'').toLowerCase().trim();
+  // Use TIPO field first
+  if(t==='wm') return GRUPOS_CLIENTES.find(g=>g.id==='walmart');
+  if(t==='nac'){
+    if(n.includes('soriana'))  return GRUPOS_CLIENTES.find(g=>g.id==='soriana');
+    if(n.includes('chedraui')) return GRUPOS_CLIENTES.find(g=>g.id==='chedraui');
+    return GRUPOS_CLIENTES.find(g=>g.id==='ib');
+  }
+  // Name-based fallback (catches WM when tipo is missing or HFS but name says WM/Walmart)
+  if(n.startsWith('wm ')||n.includes('wal-mart')||n.includes('walmart')||
+     n.includes('bodega aurrera')||n.includes('cedis wal mart')||n.includes('nva wal')){
+    return GRUPOS_CLIENTES.find(g=>g.id==='walmart');
+  }
+  if(n.includes('soriana'))  return GRUPOS_CLIENTES.find(g=>g.id==='soriana');
+  if(n.includes('chedraui')) return GRUPOS_CLIENTES.find(g=>g.id==='chedraui');
+  // Default = HFS
+  return GRUPOS_CLIENTES.find(g=>g.id==='hfs');
+}
+
+function progBar(label,done,total,color){
+  if(total===0) return '';
+  const p=Math.round((done/total)*100);
+  return '<div style="margin-bottom:5px"><div style="display:flex;justify-content:space-between;font-size:9.5px;color:var(--text3);margin-bottom:2px"><span>'+label+'</span><span style=\"font-family:IBM Plex Mono,monospace\">'+done+'/'+total+' ('+p+'%)</span></div><div style="height:5px;background:var(--border2);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+p+'%;background:'+color+';border-radius:3px;transition:width .5s"></div></div></div>';
+}
+
+function renderClientes(){
+  const el=g('clContent'); if(!el) return;
+  const rows=S.rows;
+  if(!rows.length){
+    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3);font-size:13px">Carga el semaforo primero.</div>';
+    return;
+  }
+  const grupos={};
+  GRUPOS_CLIENTES.forEach(gr=>{grupos[gr.id]={...gr,fletes:[]};});
+  rows.forEach(r=>{ const gr=getGrupo(r.nom, r.tipo_sem); grupos[gr.id].fletes.push(r); });
+
+  const totFletes=rows.length;
+  const totPicking=rows.reduce((a,r)=>{const tr=parseFloat(r.tr)||0,ar=parseFloat(r.ar)||0;return tr>0?a+Math.max(0,tr-ar):a;},0);
+  const totCustom=rows.filter(r=>r.custom).length;
+  const totCargados=rows.filter(r=>r.estop==='CARGADO').length;
+  const totTarComp=rows.filter(r=>(parseFloat(r.pal)||0)>0&&r.pt===100).length;
+
+  let html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:18px">'+
+    '<div class="kpi" style="border-top:2px solid var(--blue)"><div class="kpi-v" style="color:var(--blue)">'+totFletes+'</div><div class="kpi-l">Total fletes</div></div>'+
+    '<div class="kpi" style="border-top:2px solid var(--green)"><div class="kpi-v" style="color:var(--green)">'+totCargados+'</div><div class="kpi-l">Cargados</div></div>'+
+    '<div class="kpi" style="border-top:2px solid var(--amber)"><div class="kpi-v" style="color:var(--amber)">'+totPicking.toLocaleString('es-MX')+'</div><div class="kpi-l">Picking pend.</div></div>'+
+    '<div class="kpi" style="border-top:2px solid var(--purple)"><div class="kpi-v" style="color:var(--purple)">'+totCustom+'</div><div class="kpi-l">Customizados</div></div>'+
+    '<div class="kpi" style="border-top:2px solid var(--cyan)"><div class="kpi-v" style="color:var(--cyan)">'+totTarComp+'</div><div class="kpi-l">Tareas completas</div></div>'+
+    '</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px">';
+
+  Object.values(grupos).filter(gr=>gr.fletes.length>0).forEach(gr=>{
+    const fl=gr.fletes;
+    const gPick=fl.reduce((a,r)=>{const tr=parseFloat(r.tr)||0,ar=parseFloat(r.ar)||0;return tr>0?a+Math.max(0,tr-ar):a;},0);
+    const gCust=fl.filter(r=>r.custom).length;
+    const gCarg=fl.filter(r=>r.estop==='CARGADO').length;
+    const gPend=fl.filter(r=>r.estop!=='CARGADO').length;
+    const gTarComp=fl.filter(r=>(parseFloat(r.pal)||0)>0&&r.pt===100).length;
+    const gTarPend=fl.filter(r=>(parseFloat(r.pal)||0)>0&&(r.pt===null||r.pt<100)).length;
+    const gPickComp=fl.filter(r=>{const tr=parseFloat(r.tr)||0,ar=parseFloat(r.ar)||0;return tr>0&&Math.max(0,tr-ar)===0;}).length;
+    const gPickNA=fl.filter(r=>!r.tr||parseFloat(r.tr)===0).length;
+
+    const pickVal=gPick>0?gPick.toLocaleString('es-MX'):(gPickNA===fl.length?'N/A':'Completo');
+    const pickClr=gPick>0?'var(--amber)':'var(--green)';
+
+    const fleteRows=fl.map(r=>{
+      const trN=parseFloat(r.tr)||0,arN=parseFloat(r.ar)||0;
+      const pp=trN>0?Math.max(0,trN-arN):null;
+      const estClr=r.estop==='CARGADO'?'var(--green)':r.estop==='EN PROCESO'?'var(--amber)':'var(--text3)';
+      return '<div style="display:flex;align-items:center;gap:5px;padding:4px 0;border-bottom:1px solid var(--border);font-size:10px">'+
+        '<span style="font-family:IBM Plex Mono,monospace;font-weight:600;min-width:65px">'+es(r.emb)+'</span>'+
+        '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2)" title="'+es(r.nom)+'">'+es(r.nom)+'</span>'+
+        '<span class="b '+scl(r.sem)+'" style="font-size:8px;padding:1px 4px;white-space:nowrap">'+es(r.sem||'—')+'</span>'+
+        (pp!==null?'<span style="font-size:9px;color:'+(pp===0?'var(--green)':'var(--amber)')+';font-weight:600;white-space:nowrap">'+( pp===0?'✓pk':pp+'pk')+'</span>':'')+
+        (r.custom?'<span style="font-size:9px;color:var(--green)">✓</span>':'')+
+        '<span style="font-size:9px;color:'+estClr+';font-weight:600;white-space:nowrap">'+( r.estop||'—')+'</span>'+
+        '</div>';
+    }).join('');
+
+    html+=
+      '<div style="background:var(--card);border:1px solid var(--border2);border-radius:10px;overflow:hidden">'+
+      '<div style="border-left:4px solid '+gr.color+';padding:10px 14px;background:'+gr.color+'12">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between">'+
+          '<div><div style="font-size:13px;font-weight:600">'+gr.label+'</div>'+
+          '<div style="font-size:10.5px;color:var(--text3)">'+fl.length+' flete'+(fl.length!==1?'s':'')+' activos</div></div>'+
+          '<div style="text-align:right"><div style="font-size:22px;font-weight:700;font-family:IBM Plex Mono,monospace;color:'+gr.color+'">'+gCarg+'<span style="font-size:13px;color:var(--text3)">/ '+fl.length+'</span></div>'+
+          '<div style="font-size:9px;color:var(--text3)">cargados</div></div>'+
+        '</div></div>'+
+      '<div style="padding:10px 14px">'+
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">'+
+          [
+            {v:gPend,    l:'Pendientes', c:gPend>0?'var(--amber)':'var(--green)'},
+            {v:pickVal,  l:'Pick.pend.',  c:pickClr},
+            {v:gCust,    l:'Custom.',     c:gCust>0?'var(--green)':'var(--text3)'},
+          ].map(s=>'<div style="text-align:center;padding:5px;background:var(--navy2);border-radius:6px"><div style="font-size:14px;font-weight:700;font-family:IBM Plex Mono,monospace;color:'+s.c+'">'+s.v+'</div><div style="font-size:9px;color:var(--text3)">'+s.l+'</div></div>').join('')+
+        '</div>'+
+        progBar('Carga',gCarg,fl.length,gr.color)+
+        (gTarComp+gTarPend>0?progBar('Tareas',gTarComp,gTarComp+gTarPend,gr.color):'')+
+        '<div style="margin-top:8px;max-height:160px;overflow-y:auto">'+fleteRows+'</div>'+
+      '</div></div>';
+  });
+
+  html+='</div>';
+  el.innerHTML=html;
 }
 
 // ─── VISTA SWITCH ─────────────────────────────────────────────────────────────
 function switchView(v){
-  g('view-emb').classList.toggle('hidden', v!=='emb');
-  g('view-desc').classList.toggle('hidden', v!=='desc');
-  g('vsw-emb').classList.toggle('active', v==='emb');
-  g('vsw-desc').classList.toggle('active', v==='desc');
+  ['emb','desc','inc'].forEach(x=>{
+    g('view-'+x).classList.toggle('hidden', x!==v);
+    g('vsw-'+x).classList.toggle('active', x===v);
+  });
   if(v==='desc') dvRender();
+  if(v==='inc')  incRender();
+}
+
+// ─── COLUMN VISIBILITY (nth-child CSS injection) ─────────────────────────────
+const hiddenCols = new Set();
+let colStyleEl = null;
+function getColStyle(){
+  if(!colStyleEl){ colStyleEl=document.createElement('style'); colStyleEl.id='col-vis'; document.head.appendChild(colStyleEl); }
+  return colStyleEl;
+}
+function toggleColPanel(){ g('colPanel').classList.toggle('hidden'); }
+function toggleColNth(n, hide){
+  if(hide) hiddenCols.add(n); else hiddenCols.delete(n);
+  applyColStyles();
+}
+function applyColStyles(){
+  const rules=[...hiddenCols].map(n=>
+    `#tk-table th:nth-child(${n}),#tk-table td:nth-child(${n}){display:none}`
+  ).join('\n');
+  getColStyle().textContent=rules;
+}
+function resetCols(){
+  hiddenCols.clear(); applyColStyles();
+  document.querySelectorAll('#colPanel input[type=checkbox]').forEach(cb=>cb.checked=false);
+}
+
+// ─── AUTOCOMPLETE helper ──────────────────────────────────────────────────────
+function makeAC(inputEl, lista, onSelect){
+  const drop=document.createElement('div');
+  drop.style.cssText='position:absolute;left:0;right:0;top:100%;background:var(--card);border:1px solid var(--border2);border-radius:6px;z-index:9999;max-height:180px;overflow-y:auto;display:none;box-shadow:0 4px 16px rgba(0,0,0,.4)';
+  inputEl.parentNode.style.position='relative';
+  inputEl.parentNode.appendChild(drop);
+  inputEl.addEventListener('input',()=>{
+    const q=inputEl.value.toLowerCase().trim();
+    if(!q){drop.style.display='none';return;}
+    const hits=lista.filter(p=>(p.nombre||'').toLowerCase().includes(q)||String(p.id||'').includes(q)).slice(0,10);
+    if(!hits.length){drop.style.display='none';return;}
+    drop.innerHTML=hits.map(p=>`<div style="padding:6px 10px;cursor:pointer;font-size:11px;border-bottom:1px solid var(--border)" onmousedown="event.preventDefault()" onclick="event.stopPropagation()">
+      <span style="font-weight:500">${p.nombre}</span>
+      ${p.puesto?`<span style="font-size:9.5px;color:var(--text3);margin-left:6px">${p.puesto}</span>`:''}
+    </div>`).join('');
+    [...drop.children].forEach((el,i)=>{
+      el.addEventListener('click',()=>{
+        inputEl.value=hits[i].nombre; drop.style.display='none';
+        onSelect(hits[i].id||hits[i].nombre, hits[i].nombre);
+      });
+    });
+    drop.style.display='block';
+  });
+  inputEl.addEventListener('blur',()=>setTimeout(()=>drop.style.display='none',200));
+  inputEl.addEventListener('keydown',e=>{
+    if(e.key==='Escape') drop.style.display='none';
+    if(e.key==='Enter'&&drop.style.display!=='none'){
+      drop.querySelector('div')?.click(); e.preventDefault();
+    }
+  });
+}
+
+const INC = { registros:[] };
+
+// Initialize autocompletes after page loads
+window.addEventListener('load', ()=>{
+  // Incidencias: quien reporta
+  const inpColab=g('incColab');
+  if(inpColab) makeAC(inpColab, ALL_PERSONAL, (id,nombre)=>{ g('incColabId').value=id; });
+
+  // Incidencias: colaborador con incidencia
+  const inpColabInc=g('incColabInc');
+  if(inpColabInc) makeAC(inpColabInc, ALL_PERSONAL, (id,nombre)=>{ g('incColabIncId').value=id; });
+});
+
+// Load from localStorage
+(function(){
+  try{ const d=localStorage.getItem('trx_incidencias'); if(d) INC.registros=JSON.parse(d); }catch(e){}
+})();
+
+function incSave(){
+  try{ localStorage.setItem('trx_incidencias',JSON.stringify(INC.registros)); }catch(e){}
+}
+
+function incTipoChange(){
+  const v=g('incTipo').value;
+  g('incTipoOtro').classList.toggle('hidden', v!=='OTROS');
+}
+
+function incBuscarEmb(){
+  const emb=nk(g('incEmb').value.trim());
+  const r=S.rows.find(x=>x.emb===emb);
+  if(r){ g('incEmbInfo').textContent=`✓ ${r.nom} · ${r.sem||'—'}`; }
+  else { g('incEmbInfo').textContent=emb?'No encontrado en semáforo actual':''; }
+}
+
+let incFotoData='';
+function incFotoChange(inp){
+  const file=inp.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    incFotoData=e.target.result;
+    g('incFotoImg').src=incFotoData;
+    g('incFotoPreview').style.display='flex';
+    g('incFotoLbl').textContent=file.name;
+  };
+  reader.readAsDataURL(file);
+}
+function incFotoLimpiar(){
+  incFotoData='';
+  g('incFotoPreview').style.display='none';
+  g('incFotoLbl').textContent='Seleccionar foto';
+  g('incFoto').value='';
+}
+
+function incGuardar(){
+  const emb=g('incEmb').value.trim();
+  let tipo=g('incTipo').value;
+  if(tipo==='OTROS') tipo=g('incTipoOtro').value.trim()||'OTROS';
+  if(!emb){ alert('Ingresa el número de embarque.'); return; }
+  if(!tipo){ alert('Selecciona el tipo de incidencia.'); return; }
+  const r=S.rows.find(x=>x.emb===nk(emb));
+  const hora=new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
+  INC.registros.push({
+    id:Date.now(),
+    emb:emb.trim(), nom:r?.nom||'',
+    tipo, desc:g('incDesc').value.trim(),
+    colab: g('incColab')?.value||'',
+    colabInc: g('incColabInc')?.value||'',
+    sku:g('incSku').value.trim(),
+    cantidad:g('incCantidad').value.trim(),
+    unidad:g('incUnidad').value,
+    foto:incFotoData,
+    hora, ts:Date.now(),
+    turno:S.sessionTurno, sup:S.sessionSup
+  });
+  incSave();
+  // Reset form
+  g('incEmb').value=''; g('incTipo').value=''; g('incDesc').value='';
+  g('incSku').value=''; g('incCantidad').value='';
+  if(g('incColab')) g('incColab').value='';
+  if(g('incColabInc')) g('incColabInc').value='';
+  g('incTipoOtro').value=''; g('incTipoOtro').classList.add('hidden');
+  g('incEmbInfo').textContent=''; incFotoLimpiar();
+  incRender();
+}
+
+function incRender(){
+  const tipo=g('incFiltTipo')?.value||'';
+  const periodo=g('incFiltPeriodo')?.value||'turno';
+  const now=new Date();
+
+  let regs=[...INC.registros].reverse();
+  if(tipo) regs=regs.filter(r=>r.tipo===tipo);
+  if(periodo==='turno') regs=regs.filter(r=>r.turno===S.sessionTurno&&r.sup===S.sessionSup);
+  else if(periodo==='dia') regs=regs.filter(r=>new Date(r.ts).toDateString()===now.toDateString());
+  else if(periodo==='semana'){
+    const w=new Date(now); w.setDate(w.getDate()-7);
+    regs=regs.filter(r=>r.ts>=w.getTime());
+  } else if(periodo==='mes'){
+    const m=new Date(now); m.setDate(m.getDate()-30);
+    regs=regs.filter(r=>r.ts>=m.getTime());
+  }
+
+  // KPIs
+  if(g('incKtotal')) g('incKtotal').textContent=INC.registros.length;
+  if(g('incKturno')) g('incKturno').textContent=INC.registros.filter(r=>r.turno===S.sessionTurno&&r.sup===S.sessionSup).length;
+  const tipos=new Set(INC.registros.map(r=>r.tipo));
+  if(g('incKtipos')) g('incKtipos').textContent=tipos.size;
+
+  // Badge
+  const pendInc=INC.registros.filter(r=>r.turno===S.sessionTurno&&r.sup===S.sessionSup).length;
+  if(g('incBdg')) g('incBdg').innerHTML=pendInc?`<span class="b br" style="font-size:9px;padding:1px 6px">${pendInc}</span>`:'';
+
+  const lst=g('incLista'); if(!lst) return;
+  if(!regs.length){
+    lst.innerHTML=`<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px">Sin incidencias registradas para el filtro seleccionado.</div>`;
+    return;
+  }
+
+  const colores={'SOBRANTE':'var(--amber)','FALTANTE':'var(--red)','PALLET DE MÁS':'var(--purple)','DAÑOS':'var(--red)','CÓDIGOS CAMBIADOS':'var(--cyan)'};
+  lst.innerHTML=regs.map(r=>`
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:8px;border-left:3px solid ${colores[r.tipo]||'var(--text3)'}">
+      <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700">${es(r.emb)}</span>
+            <span class="b" style="background:rgba(239,68,68,.15);color:#FCA5A5;border:1px solid rgba(239,68,68,.3);font-size:9px">${es(r.tipo)}</span>
+            ${r.sku?`<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);padding:1px 6px;border-radius:4px">SKU: ${es(r.sku)}</span>`:''}
+            ${r.cantidad?`<span style="font-size:10px;color:var(--text2);font-weight:600">${es(r.cantidad)} ${es(r.unidad||'')}</span>`:''}
+            <span style="font-size:10px;color:var(--text3)">${r.hora}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:2px">${es(r.nom)||'—'}</div>
+          ${r.colab?`<div style="font-size:10px;color:var(--text3)">Reportado por: <strong>${es(r.colab)}</strong></div>`:''}
+          ${r.desc?`<div style="font-size:11px;color:var(--text3)">${es(r.desc)}</div>`:''}
+        </div>
+        ${r.foto?`<img src="${r.foto}" style="max-height:70px;max-width:90px;border-radius:6px;border:1px solid var(--border2);object-fit:cover;cursor:pointer" onclick="incVerFoto('${r.id}')" title="Ver foto">`:''}
+        <button onclick="incEliminar(${r.id})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;opacity:.5;padding:2px" title="Eliminar">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function incVerFoto(id){
+  const r=INC.registros.find(x=>x.id===parseInt(id));
+  if(!r||!r.foto) return;
+  const w=window.open(''); w.document.write(`<img src="${r.foto}" style="max-width:100%;max-height:100vh">`);
+}
+
+function incEliminar(id){
+  if(!confirm('¿Eliminar esta incidencia?')) return;
+  INC.registros=INC.registros.filter(r=>r.id!==id);
+  incSave(); incRender();
+}
+
+function incExportar(){
+  const regs=[...INC.registros];
+  const h=['ID','Embarque','Cliente','Tipo','SKU','Cantidad','Unidad','Descripción','Hora','Turno'];
+  const d=regs.map(r=>[r.id,r.emb,r.nom,r.tipo,r.sku||'',r.cantidad||'',r.unidad||'',r.desc,r.hora,r.turno]);
+  const csv=[h,...d].map(row=>row.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='incidencias_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
 }
 
 // ─── VISTA DESCARGAS SIMPLIFICADA ─────────────────────────────────────────────
@@ -1960,6 +2606,33 @@ const ORIGENES_PRESET = {
 function dvOrigenOpts(sel){
   return '<option value="">— Origen —</option>'+
     ORIGENES_LIST.map(o=>`<option value="${o}"${o===sel?' selected':''}>${o}</option>`).join('');
+}
+
+function dvAcMonta(inp, i){
+  const dropId='dv-drop-'+i;
+  let drop=document.getElementById(dropId);
+  if(!drop){
+    drop=document.createElement('div');
+    drop.id=dropId;
+    drop.style.cssText='position:absolute;left:0;right:0;top:100%;background:var(--card);border:1px solid var(--border2);border-radius:6px;z-index:9999;max-height:160px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.4)';
+    inp.parentNode.appendChild(drop);
+  }
+  const q=inp.value.toLowerCase().trim();
+  if(!q){drop.style.display='none';return;}
+  const hits=MONTACARGUISTAS.filter(m=>m.nombre.toLowerCase().includes(q)||m.id.includes(q)).slice(0,8);
+  if(!hits.length){drop.style.display='none';return;}
+  drop.innerHTML=hits.map(m=>`<div style="padding:6px 10px;cursor:pointer;font-size:11px;border-bottom:1px solid var(--border)" onmousedown="event.preventDefault()">
+    <span style="font-weight:500">${m.nombre}</span>
+    <span style="font-size:9px;color:var(--text3);margin-left:5px;font-family:'IBM Plex Mono',monospace">${m.id}</span>
+  </div>`).join('');
+  [...drop.children].forEach((el,j)=>{
+    el.addEventListener('click',()=>{
+      DV.registros[i].monta=hits[j].id;
+      drop.remove();
+      dvRender();
+    });
+  });
+  drop.style.display='block';
 }
 
 function dvMontaOpts(sel){
@@ -2074,9 +2747,16 @@ function dvRender(){
         <div style="flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;min-width:0">
           <div>
             <div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Montacarguista</div>
-            <select class="edt-sel" onchange="dvSet(${i},'monta',this.value)" style="width:100%;font-size:11px">
-              ${dvMontaOpts(r.monta)}
-            </select>
+            ${r.monta
+              ? `<div style="display:flex;align-items:center;gap:5px">
+                   <span style="font-size:10.5px;color:var(--cyan);font-weight:500;flex:1">${es(MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta)}</span>
+                   <button onclick="DV.registros[${i}].monta='';dvRender()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:0">✕</button>
+                 </div>`
+              : `<div style="position:relative">
+                   <input class="edt-sel" type="text" placeholder="Buscar..." style="width:100%;font-size:11px;height:30px"
+                     oninput="dvAcMonta(this,${i})" onblur="setTimeout(()=>{const d=document.getElementById('dv-drop-${i}');if(d)d.remove()},200)">
+                 </div>`
+            }
           </div>
           <div>
             <div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Cortina</div>
@@ -2324,19 +3004,8 @@ function renderResumen(){
     return true;
   });
 
-  // Prioridad marcada primero, luego semaforo priority order
-  rows.sort((a,b)=>{
-    // Marcados como prioridad van al tope
-    if(a.prio && !b.prio) return -1;
-    if(!a.prio && b.prio) return 1;
-    const pa=semPri(a),pb=semPri(b);
-    if(pa!==pb) return pa-pb;
-    if(pa===2&&pb===2){
-      const da=new Date(a.ci||0),db=new Date(b.ci||0);
-      if(!isNaN(da)&&!isNaN(db)&&da.getTime()!==db.getTime()) return da-db;
-    }
-    return 0;
-  });
+  // Use sortedForPosition so prioNum is consistent with Tracker maestro
+  rows = sortedForPosition([...rows]);
 
   // KPI chips
   const totFuera=rows.filter(r=>semPri(r)===1).length;
@@ -2662,29 +3331,127 @@ function generarReporte(){
     </table>
   </div>`;
 
-  // ── Descargas por cortina ──
-  const descActivas=CORTINAS_DATA.filter(c=>dcGet(c.n).descargas>0||dcGet(c.n).monta);
-  const descHtml = descActivas.length ? `<div class="rep-section">
-    <div class="rep-section-ttl">Control de descargas — cortinas activas en el turno</div>
-    <table class="rep-table" style="table-layout:fixed;width:100%">
-      <colgroup><col style="width:10%"><col style="width:18%"><col style="width:28%"><col style="width:10%"><col style="width:34%"></colgroup>
-      <thead><tr><th>Cortina</th><th>Origen</th><th>Montacarguista</th><th>Descargas</th><th>Últimos registros</th></tr></thead>
-      <tbody>${descActivas.map(c=>{
-        const d=dcGet(c.n);
-        const mn=d.monta?MONTACARGUISTAS.find(m=>m.id===d.monta)?.nombre||d.monta:'—';
-        const logs=d.log.slice(-3).map(l=>`${l.hora}`).join(', ')||'—';
-        return `<tr>
-          <td style="font-family:'IBM Plex Mono',monospace;font-weight:700">CORTINA ${c.n}</td>
-          <td>${es(d.origen||c.orig||'—')}</td>
-          <td style="word-break:break-word;font-size:10.5px">${es(mn)}</td>
-          <td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;color:${d.descargas>0?'var(--green)':'var(--text3)'};font-size:14px">${d.descargas}</td>
-          <td style="font-size:10px;color:var(--text3)">${logs}</td>
-        </tr>`;}).join('')}
-      </tbody>
-    </table>
-  </div>` : '';
+  // ── Customizados por colaborador ──
+  const customAll = cur.filter(r=>r.custom);
+  const customMap = {};
+  customAll.forEach(r=>{
+    const k=r.customBy||'(Sin asignar)';
+    if(!customMap[k]) customMap[k]={nombre:k, count:0, fletes:[]};
+    customMap[k].count++; customMap[k].fletes.push(r.emb);
+  });
+  const customRows=Object.values(customMap).sort((a,b)=>b.count-a.count);
+  const totalCustom=customAll.length;
+  const pendCustom=cur.length-totalCustom;
 
-  g('repContent').innerHTML = kpiHtml + montaHtml + historialHtml + descHtml + fletesHtml;
+  const customHtml=`<div class="rep-section">
+    <div class="rep-section-ttl">Customización del turno</div>
+    <div class="rep-kpis" style="margin-bottom:12px">
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--green)">${totalCustom}</div><div class="rep-kpi-l">Customizados</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--red)">${pendCustom}</div><div class="rep-kpi-l">Pendientes</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--cyan)">${customRows.length}</div><div class="rep-kpi-l">Colaboradores</div></div>
+    </div>
+    ${customRows.length?`<table class="rep-table" style="table-layout:fixed;width:100%">
+      <colgroup><col style="width:50%"><col style="width:15%"><col style="width:35%"></colgroup>
+      <thead><tr><th>Colaborador</th><th>Customizados</th><th>Fletes</th></tr></thead>
+      <tbody>${customRows.map(r=>`<tr>
+        <td style="font-weight:500">${es(r.nombre)}</td>
+        <td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--green)">${r.count}</td>
+        <td style="font-size:10px;color:var(--text3)">${r.fletes.slice(0,6).join(', ')}${r.fletes.length>6?'…':''}</td>
+      </tr>`).join('')}</tbody>
+    </table>`:'<p style="font-size:12px;color:var(--text3)">Sin customizaciones registradas.</p>'}
+  </div>`;
+
+  // ── Verificaciones por verificador ──
+  const verifMap = {};
+  cur.filter(r=>r.verif).forEach(r=>{
+    const nombre=getVerifNombre(r.verif);
+    if(!verifMap[r.verif]) verifMap[r.verif]={id:r.verif, nombre, count:0, fletes:[]};
+    verifMap[r.verif].count++; verifMap[r.verif].fletes.push(r.emb);
+  });
+  const verifRows=Object.values(verifMap).sort((a,b)=>b.count-a.count);
+  const totalVerif=cur.filter(r=>r.verif).length;
+  const pendVerif=cur.length-totalVerif;
+
+  const verifHtml=`<div class="rep-section">
+    <div class="rep-section-ttl">Verificaciones del turno</div>
+    <div class="rep-kpis" style="margin-bottom:12px">
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--purple)">${totalVerif}</div><div class="rep-kpi-l">Con verificador</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--red)">${pendVerif}</div><div class="rep-kpi-l">Sin asignar</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--cyan)">${verifRows.length}</div><div class="rep-kpi-l">Verificadores activos</div></div>
+    </div>
+    ${verifRows.length?`<table class="rep-table" style="table-layout:fixed;width:100%">
+      <colgroup><col style="width:10%"><col style="width:45%"><col style="width:10%"><col style="width:35%"></colgroup>
+      <thead><tr><th>#</th><th>Verificador</th><th>Conteos</th><th>Fletes asignados</th></tr></thead>
+      <tbody>${verifRows.map((v,i)=>`<tr>
+        <td style="font-family:'IBM Plex Mono',monospace;color:${i===0?'var(--amber)':'var(--text3)'};font-weight:700">${i+1}</td>
+        <td style="font-weight:500">${es(v.nombre)}</td>
+        <td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--purple)">${v.count}</td>
+        <td style="font-size:10px;color:var(--text3)">${v.fletes.slice(0,6).join(', ')}${v.fletes.length>6?'…':''}</td>
+      </tr>`).join('')}</tbody>
+    </table>`:'<p style="font-size:12px;color:var(--text3)">Sin verificadores asignados.</p>'}
+  </div>`;
+
+  // ── Tareas por montacarguista ──
+  const tareaMap = {};
+  cur.filter(r=>r.monta).forEach(r=>{
+    const nombre=MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta;
+    if(!tareaMap[r.monta]) tareaMap[r.monta]={id:r.monta, nombre, tareasComp:0, tareasPend:0, fletes:[]};
+    const pal=parseFloat(r.pal)||0;
+    if(pal>0){
+      if(r.pt===100) tareaMap[r.monta].tareasComp++;
+      else tareaMap[r.monta].tareasPend++;
+    }
+    tareaMap[r.monta].fletes.push(r.emb);
+  });
+  const tareaRows=Object.values(tareaMap).sort((a,b)=>b.tareasComp-a.tareasComp);
+
+  const tareaHtml=tareaRows.length?`<div class="rep-section">
+    <div class="rep-section-ttl">Tareas por montacarguista</div>
+    <table class="rep-table" style="table-layout:fixed;width:100%">
+      <colgroup><col style="width:10%"><col style="width:38%"><col style="width:13%"><col style="width:13%"><col style="width:26%"></colgroup>
+      <thead><tr><th>#Acreedor</th><th>Montacarguista</th><th>Completas</th><th>Pendientes</th><th>Fletes</th></tr></thead>
+      <tbody>${tareaRows.map(t=>`<tr>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:10px">${t.id}</td>
+        <td style="font-weight:500;word-break:break-word">${es(t.nombre)}</td>
+        <td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--green)">${t.tareasComp}</td>
+        <td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;color:${t.tareasPend>0?'var(--amber)':'var(--text3)'}">${t.tareasPend}</td>
+        <td style="font-size:10px;color:var(--text3)">${t.fletes.slice(0,5).join(', ')}${t.fletes.length>5?'…':''}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>`:'';
+
+  // ── Descargas del turno (desde DV.historial + turno actual) ──
+  const descDV=[...DV.registros];
+  DV.historial.forEach(b=>b.registros.forEach(r=>descDV.push(r)));
+  const descByMonta={};
+  descDV.forEach(r=>{
+    if(!r.monta) return;
+    const nombre=MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta;
+    if(!descByMonta[r.monta]) descByMonta[r.monta]={nombre, count:0, cortinas:new Set()};
+    descByMonta[r.monta].count++;
+    if(r.cortina) descByMonta[r.monta].cortinas.add(r.cortina);
+  });
+  const descMontaRows=Object.values(descByMonta).sort((a,b)=>b.count-a.count);
+  const totalDesc=descDV.length;
+
+  const descResHtml=`<div class="rep-section">
+    <div class="rep-section-ttl">Descargas del turno</div>
+    <div class="rep-kpis" style="margin-bottom:12px">
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--amber)">${totalDesc}</div><div class="rep-kpi-l">Total descargas</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--cyan)">${descMontaRows.length}</div><div class="rep-kpi-l">Montacarguistas</div></div>
+    </div>
+    ${descMontaRows.length?`<table class="rep-table" style="table-layout:fixed;width:100%">
+      <colgroup><col style="width:50%"><col style="width:15%"><col style="width:35%"></colgroup>
+      <thead><tr><th>Montacarguista</th><th>Descargas</th><th>Cortinas</th></tr></thead>
+      <tbody>${descMontaRows.map(d=>`<tr>
+        <td style="font-weight:500">${es(d.nombre)}</td>
+        <td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--amber)">${d.count}</td>
+        <td style="font-size:10px;color:var(--text3)">${[...d.cortinas].map(c=>'C'+c).join(', ')||'—'}</td>
+      </tr>`).join('')}</tbody>
+    </table>`:'<p style="font-size:12px;color:var(--text3)">Sin descargas registradas.</p>'}
+  </div>`;
+
+  g('repContent').innerHTML = kpiHtml + customHtml + verifHtml + tareaHtml + descResHtml + montaHtml + historialHtml + descHtml + fletesHtml;
   g('modalReporte').classList.remove('hidden');
 }
 
@@ -2816,6 +3583,8 @@ function fbSave(){
         sessionSup: S.sessionSup,
         ts: Date.now()
       };
+      // Also save to localStorage as offline backup
+      try{ localStorage.setItem('trx_state', JSON.stringify({rows:payload.rows, userEdits:payload.userEdits, sessionTurno:payload.sessionTurno, sessionSup:payload.sessionSup})); }catch(e){}
       const ref = FB.doc(FB.db, 'tracker', DOC_ID);
       await FB.setDoc(ref, payload);
     }catch(e){ console.error('fbSave error',e); }
@@ -2839,8 +3608,9 @@ function startSync(){
       if(data.posAlerts)    S.posAlerts     = data.posAlerts;
       if(data.sessionTurno) S.sessionTurno  = data.sessionTurno;
       if(data.sessionSup)   S.sessionSup    = data.sessionSup;
-      // Refresh UI
-      kpi(); render(); alerts(); badge();
+      // Auto-render if we have rows
+      if(S.rows && S.rows.length) cargarDesdeGuardado();
+      else { kpi(); render(); alerts(); badge(); }
       if(g('p-rs')&&!g('p-rs').classList.contains('hidden')) renderResumen();
       if(g('p-vf')&&!g('p-vf').classList.contains('hidden')) kpiVerif();
     }
