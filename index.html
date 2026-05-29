@@ -1301,13 +1301,14 @@ function build(){
     const D = detMap[k] || comMap[k] || {};
     const _wmsMatch = !detMap[k] && !!comMap[k];
     const _wmsEmb = _wmsMatch ? nk(fc(comMap[k],['No. Embarque','embarque'])) : '';
-    // For PTR: use WMS number if matched via comentarios, otherwise use SAP number
     const ptrKey = _wmsMatch ? _wmsEmb : k;
     const P = ptrMap[ptrKey] || ptrMap[k] || {};
-    // Only hide if Detalle confirms 100% carga (ya ejecutado)
-    // Fletes NOT in Detalle still show - they just have no progress data yet
+
+    // Hide if flete not found in Detalle at all (no longer active)
+    if(!Object.keys(D).length) return;
+
     const pcVal = pct(fc(D,['% Carga','%Carga','carga']));
-    if(pcVal===100) return; // executed → hide
+    if(pcVal===100) return; // 100% executed → hide
 
     S.rows.push({
       emb: k,
@@ -1819,7 +1820,7 @@ function render(){
         return `<span class="b ${badgeCls}" data-cita="${r.ci||''}" style="white-space:nowrap">${es(label)}</span>`;
       })()}</td>
       <td>${(()=>{
-        if(r.con) return `<span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--cyan);font-weight:600">${fmtCortina(r.con)}</span>`;
+        if(r.con) return `<span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--cyan);font-weight:600;display:inline-flex;align-items:center;gap:4px">${fmtCortina(r.con)}<button onclick="upd(${idx},'con','');render()" style="background:none;border:none;cursor:pointer;opacity:.5;color:inherit;font-size:10px;padding:0" title="Editar">✎</button></span>`;
         return `<input class="edt" type="text" value="" placeholder="— cortina —" onchange="upd(${idx},'con',this.value);render()" style="min-width:65px">`;
       })()}</td>
       <td class="m" style="text-align:right;font-size:11px">${r.pal||'—'}</td>
