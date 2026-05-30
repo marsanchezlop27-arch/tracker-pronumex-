@@ -125,7 +125,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .arr{color:var(--text3);padding:0 4px;font-size:14px}
 
 /* CARD */
-.card{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:20px;margin-bottom:14px}
+.card{margin-bottom:10px;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:20px;margin-bottom:14px}
 .card-ttl{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:var(--cyan);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
 .card-ttl::after{content:'';flex:1;height:1px;background:var(--border)}
 
@@ -217,6 +217,7 @@ tr.rf{background:rgba(239,68,68,.06)}
 .edt-sel:focus{outline:none;border-color:var(--blue)}
 .edt-sel option{background:var(--navy2)}
 /* ESTATUS badges */
+.est-pv{background:rgba(6,182,212,.18);color:#67E8F9;border:1px solid rgba(6,182,212,.3)}
 .est-pc{background:rgba(239,68,68,.18);color:#FCA5A5;border:1px solid rgba(239,68,68,.3)}
 .est-ep{background:rgba(245,158,11,.18);color:#FCD34D;border:1px solid rgba(245,158,11,.3)}
 .est-pe{background:rgba(139,92,246,.18);color:#C4B5FD;border:1px solid rgba(139,92,246,.3)}
@@ -315,6 +316,9 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     <input class="lm-inp" type="password" id="lmPass" placeholder="••••••••" autocomplete="current-password"
       onkeydown="if(event.key==='Enter')lmLogin()">
     <button class="lm-btn" onclick="lmLogin()">Entrar</button>
+    <div style="text-align:center;margin-top:10px">
+      <button onclick="lmGuest()" style="background:none;border:none;color:#64748B;font-size:12px;cursor:pointer;text-decoration:underline">Entrar como invitado (solo lectura)</button>
+    </div>
     <div class="lm-err" id="lmErr"></div>
   </div>
 </div>
@@ -368,6 +372,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     Incidencias <span id="incBdg" style="margin-left:2px"></span>
   </button>
 
+
 </div>
 
 <!-- VISTA EMBARQUES -->
@@ -417,38 +422,38 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     </div>
     <span id="cargaChevron" style="font-size:18px;color:var(--text3);transition:transform .2s">▾</span>
   </div>
-  <div id="cargaBody">
+  <div id="cargaBody" class="admin-only">
     <div class="card-ttl">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
       Paso 1 — carga los archivos del turno inicial
     </div>
-    <div class="bi">Carga los <strong>3 archivos del turno con el que vas a trabajar</strong>: el semáforo, el Detalle de avance y el PTR. Cuando te llegue el siguiente semáforo lo actualizas desde la pestaña "Actualizar turno".</div>
+    <div class="bi">Carga uno o más archivos. Puedes subir solo el <strong>Detalle</strong> o <strong>PTR</strong> para actualizar sin tocar el semáforo ya cargado. En Detalle y PTR puedes seleccionar <strong>varios archivos</strong> a la vez.</div>
     <div class="slots">
       <div class="slot" id="sl-sem" onclick="pick('sem')">
         <div class="slot-ico" style="color:#F59E0B"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-        <div style="flex:1;min-width:0"><div class="slot-lbl">Semáforo del turno</div><div class="slot-nm" id="nm-sem">Sin cargar</div></div>
+        <div style="flex:1;min-width:0"><div class="slot-lbl">Semáforo del turno <span style="color:var(--text3);font-size:9px">opcional si ya hay uno</span></div><div class="slot-nm" id="nm-sem">Sin cargar</div></div>
         <span class="slot-chk hidden" id="ck-sem">✓</span>
         <input type="file" accept=".xlsx,.xls" class="hidden" id="fi-sem" onchange="load('sem',this)">
       </div>
       <div class="slot" id="sl-det" onclick="pick('det')">
         <div class="slot-ico" style="color:#378ADD"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
-        <div style="flex:1;min-width:0"><div class="slot-lbl">Detalle (% avance)</div><div class="slot-nm" id="nm-det">Sin cargar</div></div>
+        <div style="flex:1;min-width:0"><div class="slot-lbl">Detalle (% avance) <span style="color:var(--text3);font-size:9px">opcional · múltiples</span></div><div class="slot-nm" id="nm-det">Sin cargar</div></div>
         <span class="slot-chk hidden" id="ck-det">✓</span>
-        <input type="file" accept=".xlsx,.xls" class="hidden" id="fi-det" onchange="load('det',this)">
+        <input type="file" accept=".xlsx,.xls" class="hidden" multiple id="fi-det" onchange="loadMulti('det',this)">
       </div>
       <div class="slot" id="sl-ptr" onclick="pick('ptr')">
         <div class="slot-ico" style="color:#10B981"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-        <div style="flex:1;min-width:0"><div class="slot-lbl">PTR (pallets / restos)</div><div class="slot-nm" id="nm-ptr">Sin cargar</div></div>
+        <div style="flex:1;min-width:0"><div class="slot-lbl">PTR (pallets / restos) <span style="color:var(--text3);font-size:9px">opcional · múltiples</span></div><div class="slot-nm" id="nm-ptr">Sin cargar</div></div>
         <span class="slot-chk hidden" id="ck-ptr">✓</span>
-        <input type="file" accept=".xlsx,.xls" class="hidden" id="fi-ptr" onchange="load('ptr',this)">
+        <input type="file" accept=".xlsx,.xls" class="hidden" multiple id="fi-ptr" onchange="loadMulti('ptr',this)">
       </div>
     </div>
     <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
-      <button class="btn primary" onclick="build()">
+      <button class="btn primary admin-only" onclick="build()">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Construir tracker
       </button>
-      <button class="btn" onclick="reset()">
+      <button class="btn admin-only" onclick="reset()">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
         Reiniciar
       </button>
@@ -461,10 +466,12 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <!-- KPI -->
   <div class="kpis hidden" id="kRow">
     <div class="kpi kt"><div class="kpi-v" id="kT">0</div><div class="kpi-l">Total fletes</div></div>
+    <div class="kpi" style="border-top:2px solid var(--green)"><div class="kpi-v" id="kConTrans" style="color:var(--green)">0</div><div class="kpi-l">Con transporte</div></div>
+    <div class="kpi" style="border-top:2px solid var(--red)"><div class="kpi-v" id="kSinTrans" style="color:var(--red)">0</div><div class="kpi-l">Sin transporte</div></div>
+    <div class="kpi" style="border-top:2px solid var(--cyan)"><div class="kpi-v" id="kVerificados" style="color:var(--cyan)">0</div><div class="kpi-l">Verificados</div></div>
     <div class="kpi kf"><div class="kpi-v" id="kF">0</div><div class="kpi-l">Fuera de tiempo</div></div>
-    <div class="kpi ka"><div class="kpi-v" id="kA">0</div><div class="kpi-l">Hora adelantada</div></div>
     <div class="kpi" style="border-top:2px solid var(--purple)"><div class="kpi-v" id="kTarea" style="color:var(--purple)">0</div><div class="kpi-l">Tareas faltantes</div></div>
-    <div class="kpi" style="border-top:2px solid var(--cyan)"><div class="kpi-v" id="kPallet" style="color:var(--cyan)">0</div><div class="kpi-l">Total pallets</div></div>
+    <div class="kpi" style="border-top:2px solid var(--cyan)"><div class="kpi-v" id="kPallet" style="color:var(--cyan)">0</div><div class="kpi-l">Pallets pend.</div></div>
     <div class="kpi" style="border-top:2px solid var(--amber)"><div class="kpi-v" id="kPicking" style="color:var(--amber)">0</div><div class="kpi-l">Picking faltante</div></div>
   </div>
 
@@ -499,6 +506,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       Clientes
     </div>
 
+
   </div>
 
   <!-- TRACKER -->
@@ -521,7 +529,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       </select>
       <select id="fEstop" onchange="render()">
         <option value="">Todos los estatus op.</option>
-        <option>POR CARGAR</option><option>PENDIENTE</option><option>CARGADO</option>
+        <option>POR VERIFICAR</option><option>POR CARGAR</option><option>PENDIENTE</option><option>CARGADO</option>
       </select>
       <select id="fTrans" onchange="render()">
         <option value="">Con y sin transporte</option>
@@ -641,7 +649,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
         <select id="fRsEst" onchange="renderResumen()"
           style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 9px;font-size:12px;font-family:'IBM Plex Sans',sans-serif;height:30px">
           <option value="">Todos los estatus</option>
-          <option>POR CARGAR</option><option>PENDIENTE</option><option>CARGADO</option>
+          <option>POR VERIFICAR</option><option>POR CARGAR</option><option>PENDIENTE</option><option>CARGADO</option>
         </select>
         <select id="fRsTrans" onchange="renderResumen()"
           style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 9px;font-size:12px;font-family:'IBM Plex Sans',sans-serif;height:30px">
@@ -733,8 +741,10 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <div id="p-vf" class="hidden">
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:14px">
       <div class="kpi" style="border-top:2px solid var(--blue)"><div class="kpi-v" id="kvTotal" style="color:var(--blue)">0</div><div class="kpi-l">Total fletes</div></div>
+      <div class="kpi" style="border-top:2px solid var(--cyan)"><div class="kpi-v" id="kvVerif" style="color:var(--cyan)">0</div><div class="kpi-l">Verificados</div></div>
+      <div class="kpi" style="border-top:2px solid var(--amber)"><div class="kpi-v" id="kvPendVerif" style="color:var(--amber)">0</div><div class="kpi-l">Pend. verificar</div></div>
       <div class="kpi" style="border-top:2px solid var(--green)"><div class="kpi-v" id="kvOk" style="color:var(--green)">0</div><div class="kpi-l">Customizados</div></div>
-      <div class="kpi" style="border-top:2px solid var(--red)"><div class="kpi-v" id="kvPend" style="color:var(--red)">0</div><div class="kpi-l">Pendientes custom.</div></div>
+      <div class="kpi" style="border-top:2px solid var(--red)"><div class="kpi-v" id="kvPend" style="color:var(--red)">0</div><div class="kpi-l">Pend. custom.</div></div>
     </div>
     <!-- Top verificadores -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -764,7 +774,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <div id="p-cl" class="hidden">
     <div id="clContent"></div>
   </div>
-
 </div><!-- /view-emb -->
 
 <!-- VISTA DESCARGAS -->
@@ -914,6 +923,14 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 // ─── STATE ────────────────────────────────────────────────────────────────────
 const S = { rows:[], buf:{}, sc:'ci', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[] };
 
+// ─── AUTH CONSTANTS ────────────────────────────────────────────────────────────
+const ADMIN_EMAILS = ['admin@pronumex.com','marsanchezlop27@gmail.com'];
+const DOC_ID = 'turno-activo';
+let fbIsAdmin = false;
+let fbReady = false;
+let fbUnsubscribe = null;
+let currentUserEmail = '';
+
 // ─── HISTORIAL PERSISTENTE (localStorage) ────────────────────────────────────
 function hSave(){
   try{ localStorage.setItem('trx_historial', JSON.stringify(S.turnoHistorial)); }catch(e){}
@@ -1034,6 +1051,18 @@ function verificOpts(sel){
     VERIFICADORES.map(v=>`<option value="${v.id}"${v.id===sel?' selected':''}>${v.nombre}</option>`).join('')+
     `<option value="__manual__">✎ Ingresar manual</option>`;
 }
+function getTransNombre(unidad){
+  if(!unidad) return '';
+  const k=String(unidad).trim().toUpperCase();
+  if(S.transMap&&S.transMap[k]) return S.transMap[k];
+  // Try partial match
+  if(S.transMap){
+    const partial=Object.entries(S.transMap).find(([tk])=>tk.includes(k)||k.includes(tk));
+    if(partial) return partial[1];
+  }
+  return unidad; // fallback: show raw value
+}
+
 function getVerifNombre(id){
   if(!id) return '';
   const v=VERIFICADORES.find(v=>v.id===id);
@@ -1222,17 +1251,22 @@ function toObjects(aoa){
 // Find a value in an object by partial key match (case-insensitive)
 // Handles duplicate XLSX headers (XLSX.js appends _1,_2), prefers first match
 function fc(obj,keys){
+  if(!obj) return '';
   const okeys=Object.keys(obj);
   for(const k of keys){
     const kl=k.toLowerCase().trim();
-    // Exact first: find key that contains the search term, prefer shorter key (not _1 suffix)
-    const matches=okeys.filter(ok=>{
-      const okl=ok.toLowerCase().trim();
-      return okl===kl||okl.includes(kl)||okl.replace(/_\d+$/,'')===kl;
-    }).sort((a,b)=>a.length-b.length); // shorter = no suffix = prefer
-    for(const found of matches){
-      if(obj[found]!==''&&obj[found]!==null&&obj[found]!==undefined)
-        return obj[found];
+    // Score matches: exact=3, ends-with=2, includes=1
+    const scored=[];
+    for(const ok of okeys){
+      const okl=ok.toLowerCase().trim().replace(/_\d+$/,'');
+      if(okl===kl)                scored.push([ok,3]);
+      else if(okl.endsWith(kl)||kl.endsWith(okl)) scored.push([ok,2]);
+      else if(okl.includes(kl)||kl.includes(okl)) scored.push([ok,1]);
+    }
+    scored.sort((a,b)=>b[1]-a[1]||a[0].length-b[0].length);
+    for(const [found] of scored){
+      const v=obj[found];
+      if(v!==''&&v!==null&&v!==undefined) return v;
     }
   }
   return '';
@@ -1240,6 +1274,7 @@ function fc(obj,keys){
 
 // ─── FILE LOADING ─────────────────────────────────────────────────────────────
 function pick(k){ document.getElementById('fi-'+k).click(); }
+
 async function load(k,inp){
   const f=inp.files[0]; if(!f) return;
   document.getElementById('nm-'+k).textContent=f.name;
@@ -1249,16 +1284,64 @@ async function load(k,inp){
   document.getElementById('st').textContent='"'+f.name+'" listo.';
 }
 
+// Load multiple files — merges all rows from all uploaded files into one buf array
+async function loadMulti(k,inp){
+  const files=[...inp.files]; if(!files.length) return;
+  const bufs = await Promise.all(files.map(f=>f.arrayBuffer()));
+  S.buf[k]=bufs; // store as array of ArrayBuffers
+  const names=files.map(f=>f.name).join(', ');
+  document.getElementById('nm-'+k).textContent=files.length>1?files.length+' archivos: '+names:files[0].name;
+  document.getElementById('sl-'+k).classList.add('ok');
+  document.getElementById('ck-'+k).classList.remove('hidden');
+  document.getElementById('st').textContent=files.length+' archivo(s) de '+k+' listos.';
+}
+
+// Parse a buf slot — handles single ArrayBuffer or array of ArrayBuffers
+// Returns merged array-of-arrays (all rows from all files)
+function parseSlot(buf){
+  if(!buf) return [];
+  const bufs=Array.isArray(buf)?buf:[buf];
+  const all=[];
+  bufs.forEach(b=>{
+    try{
+      const rows=parseFile(b);
+      // Skip header row of subsequent files (same header repeated) by checking if first row duplicates
+      if(all.length>0 && rows.length>0){
+        // Try to find where data starts (skip rows that look like headers)
+        const dataRows=rows.slice(1); // drop first row (header) from subsequent files
+        all.push(...dataRows);
+      } else {
+        all.push(...rows);
+      }
+    }catch(e){ console.warn('parseSlot error',e); }
+  });
+  return all;
+}
+
 // ─── BUILD ────────────────────────────────────────────────────────────────────
 function build(){
-  const miss=['sem','det','ptr'].filter(k=>!S.buf[k]);
-  if(miss.length){ document.getElementById('st').textContent='Faltan: '+miss.join(', '); return; }
+  // Need at least one file loaded
+  if(!S.buf.sem && !S.buf.det && !S.buf.ptr){
+    document.getElementById('st').textContent='Carga al menos un archivo.'; return;
+  }
+  // Need semaforo OR existing rows (second-shift update)
+  if(!S.buf.sem && !S.rows.length){
+    document.getElementById('st').textContent='Para el primer build se necesita el Semáforo.'; return;
+  }
 
   document.getElementById('dbg').classList.add('hidden');
 
-  const semRows = toObjects(parseFile(S.buf.sem));
-  const detRows = toObjects(parseFile(S.buf.det));
-  const ptrRows = toObjects(parseFile(S.buf.ptr));
+  // If no new semaforo, keep using existing rows as base (second-shift update)
+  S.buildTs = Date.now(); // timestamp when semaforo was loaded
+  const semRows = S.buf.sem ? toObjects(parseSlot(S.buf.sem)) : null;
+  if(!semRows && S.rows.length){
+    // Only updating Detalle/PTR — patch existing rows without rebuilding semaforo
+    patchExistingRows();
+    return;
+  }
+  if(!semRows){ document.getElementById('st').textContent='Carga el Semáforo primero.'; return; }
+  const detRows = S.buf.det ? toObjects(parseSlot(S.buf.det)) : [];
+  const ptrRows = S.buf.ptr ? toObjects(parseSlot(S.buf.ptr)) : [];
 
   // Build lookup maps from DETALLE and PTR (supporting data)
   const detMap={};
@@ -1313,7 +1396,7 @@ function build(){
     S.rows.push({
       emb: k,
       nom: fc(r,['Nombre','nombre','Cliente','cliente','Destino','destino','CLIENTE','DESTINO']) || fc(r,['NOMBRE']) || '',
-      tra: fc(D,['Unidad','unidad','Tipo trailer','Tipo Trailer','trailer'])||fc(r,['Tipo trailer','Tipo Trailer','trailer','Unidad'])||'',
+      tra: fc(D,['Transportista','transportista','Unidad','unidad','Tipo trailer'])||fc(r,['Tipo trailer','trailer','Unidad'])||'',
       sem: (()=>{
         const v=fc(r,['SEMAFORO CARGA','Semaforo Carga','semaforo','SEMÁFORO']);
         if(!v&&v!==0) return '';
@@ -1359,7 +1442,8 @@ function build(){
       tr:  fc(D,['T. Restos','T.Restos','t restos','T.RESTOS','TOTAL RESTOS'])    || '',
       ar:  fc(D,['A. Restos','A.Restos','a restos'])    || '',
       tf:  fc(D,['T. Faltantes','T.Faltantes','faltantes']) || '',
-      con: fc(D,['Cortina','cortina','# Contenedor','Contenedor']) || '',
+      con: fc(D,['Cortina','cortina']) || '',              // Cortina = DI-42 (rampa)
+      contenedor: fc(D,['# Contenedor','contenedor','Contenedor']) || '', // Container ID for grouping
       com: fc(D,['Comentarios:','Comentarios','comentarios','comentario']) || '',
       tu:  'PRIMERO',
       al:  '',
@@ -1399,7 +1483,10 @@ function build(){
   S.detMap = detMap;
   S.comMap = comMap;
   S.ptrMap = ptrMap;
-  kpi(); render(); alerts(); badge(); kpiVerif && kpiVerif();
+  kpi(); render(); alerts(); badge();
+  if(typeof kpiVerif==='function') kpiVerif();
+  // Auto-detect shared containers in Eventos after build
+  if(typeof evDetectarSilencioso==='function') evDetectarSilencioso();
   document.getElementById('kRow').classList.remove('hidden');
   document.getElementById('tabs').classList.remove('hidden');
   document.getElementById('btnExp').classList.remove('hidden');
@@ -1617,6 +1704,19 @@ function pct(v){
   if(n>0&&n<1) return Math.round(n*100);
   return Math.round(n);
 }
+// Live semaforo time — recomputes remaining from original semSec minus elapsed since build
+function liveSem(r){
+  if(r.semSec===null||r.semSec===undefined) return r.sem||'';
+  if(r.semSec===-1) return 'Fuera de Tiempo';
+  const elapsedSec = S.buildTs ? Math.floor((Date.now()-S.buildTs)/1000) : 0;
+  const remaining = r.semSec - elapsedSec;
+  if(remaining <= 0) return 'Fuera de Tiempo';
+  const h=Math.floor(remaining/3600), m=Math.floor((remaining%3600)/60), s=remaining%60;
+  if(h>0) return h+'h '+m+'m restantes';
+  if(m>0) return m+'m '+s+'s restantes';
+  return s+'s restantes';
+}
+
 function scl(v){
   const s=String(v||'').toLowerCase();
   if(s.includes('fuera')) return 'br';
@@ -1702,7 +1802,7 @@ function sort(th){
 
 // ─── ESTATUS OP badge ─────────────────────────────────────────────────────────
 function estBadge(v){
-  const map={'POR CARGAR':'est-pc','EN PROCESO':'est-ep','PENDIENTE':'est-pe','CARGADO':'est-ca','VERIFICANDO':'est-vf','CANCELADO':'est-cx'};
+  const map={'POR VERIFICAR':'est-pv','POR CARGAR':'est-pc','EN PROCESO':'est-ep','PENDIENTE':'est-pe','CARGADO':'est-ca'};
   const cls=map[v]||'';
   return cls?`<span class="b ${cls}">${v}</span>`:`<span style="color:var(--text3);font-size:10px">—</span>`;
 }
@@ -1795,7 +1895,7 @@ function render(){
       : r.prio         ? '<span class="b ba" style="font-size:9px">⭐ PRIORIDAD</span>'
       : '';
 
-    const opts=['','POR CARGAR','PENDIENTE','CARGADO'].map(v=>
+    const opts=['','POR VERIFICAR','POR CARGAR','PENDIENTE','CARGADO'].map(v=>
       `<option${r.estop===v?' selected':''}>${v}</option>`).join('');
 
     const transBadge = hasTrans(r)
@@ -1815,8 +1915,8 @@ function render(){
       <td>${(()=>{
         let urgente=false;
         if(r.ci){const d=new Date(r.ci);if(!isNaN(d)){const h=(d-new Date())/3600000;if(h>=0&&h<2)urgente=true;}}
-        const badgeCls=urgente?'br':scl(r.sem);
-        const label=urgente?(r.sem||'Sin estado')+' ⚠':(r.sem||'—');
+        const badgeCls=urgente?'br':scl(liveSemVal);
+        const liveSemVal=liveSem(r); const label=urgente?(liveSemVal||'Sin estado')+' ⚠':(liveSemVal||'—');
         return `<span class="b ${badgeCls}" data-cita="${r.ci||''}" style="white-space:nowrap">${es(label)}</span>`;
       })()}</td>
       <td>${(()=>{
@@ -1877,7 +1977,7 @@ function render(){
         }
       </td>
       <td><select class="edt-sel" onchange="upd(${idx},'estop',this.value)">${
-        ['','POR CARGAR','PENDIENTE','CARGADO'].map(v=>`<option value="${v}"${(r.estop||'PENDIENTE')===v?' selected':''}>${v||'— estatus —'}</option>`).join('')
+        ['','POR VERIFICAR','POR CARGAR','PENDIENTE','CARGADO'].map(v=>`<option value="${v}"${(r.estop||'PENDIENTE')===v?' selected':''}>${v||'— estatus —'}</option>`).join('')
       }</select></td>
       <td style="min-width:120px;font-size:10px">${stateHtml||''}</td>
     </tr>`;
@@ -2028,9 +2128,12 @@ function updCustom(idx,checked){
 function kpiVerif(){
   const total=S.rows.length;
   const ok=S.rows.filter(r=>r.custom).length;
-  if(g('kvTotal')) g('kvTotal').textContent=total;
-  if(g('kvOk'))    g('kvOk').textContent=ok;
-  if(g('kvPend'))  g('kvPend').textContent=total-ok;
+  const verif=S.rows.filter(r=>r.estop==='POR CARGAR'||r.estop==='POR VERIFICAR').length;
+  if(g('kvTotal'))     g('kvTotal').textContent=total;
+  if(g('kvVerif'))     g('kvVerif').textContent=verif;
+  if(g('kvPendVerif')) g('kvPendVerif').textContent=total-verif;
+  if(g('kvOk'))        g('kvOk').textContent=ok;
+  if(g('kvPend'))      g('kvPend').textContent=total-ok;
   renderVerif();
 }
 
@@ -2097,26 +2200,35 @@ function listo(i){
 function kpi(){
   const r=S.rows;
   g('kT').textContent=r.length;
-  g('kF').textContent=r.filter(x=>x.sem.includes('Fuera')).length;
-  g('kA').textContent=r.filter(x=>x.al).length;
+  g('kF').textContent=r.filter(x=>(x.sem||'').includes('Fuera')).length;
+
+  // Con / Sin transporte
+  const conTrans=r.filter(x=>hasTrans(x)).length;
+  if(g('kConTrans')) g('kConTrans').textContent=conTrans;
+  if(g('kSinTrans')) g('kSinTrans').textContent=r.length-conTrans;
+
+  // Verificados = estatus POR CARGAR o POR VERIFICAR
+  const verificados=r.filter(x=>x.estop==='POR CARGAR'||x.estop==='POR VERIFICAR').length;
+  if(g('kVerificados')) g('kVerificados').textContent=verificados;
 
   // Tareas faltantes: fletes con pallets y pt < 100
-  const tareasFletes=r.filter(x=>{
+  g('kTarea').textContent=r.filter(x=>{
+    const pal=parseFloat(x.pal)||0;
+    return pal>0&&(x.pt===null||x.pt<100);
+  }).length;
+
+  // Pallets pendientes = pallets de fletes con tareas pendientes (pt < 100 o null)
+  const palPend=r.filter(x=>{
     const pal=parseFloat(x.pal)||0;
     return pal>0 && (x.pt===null||x.pt<100);
-  });
-  g('kTarea').textContent=tareasFletes.length;
+  }).reduce((acc,x)=>acc+(parseFloat(x.pal)||0),0);
+  g('kPallet').textContent=palPend.toLocaleString('es-MX');
 
-  // Total pallets
-  const totPal=r.reduce((acc,x)=>acc+(parseFloat(x.pal)||0),0);
-  g('kPallet').textContent=totPal.toLocaleString('es-MX');
-
-  // Picking faltante: si tiene T.Restos → restar A.Restos (0 si vacío)
-  // Flete sin T.Restos → no aplica picking → no suma
+  // Picking faltante
   const totPick=r.reduce((acc,x)=>{
     const tr=parseFloat(x.tr);
-    if(isNaN(tr)||tr===0) return acc;   // sin picking → skip
-    const ar=parseFloat(x.ar)||0;       // A.Restos vacío = 0
+    if(isNaN(tr)||tr===0) return acc;
+    const ar=parseFloat(x.ar)||0;
     return acc+Math.max(0,tr-ar);
   },0);
   g('kPicking').textContent=totPick.toLocaleString('es-MX');
@@ -2238,6 +2350,195 @@ function swTab(el,t){
   if(t==='dc') renderDescargas();
   if(t==='vf') kpiVerif();
   if(t==='cl') renderClientes();
+
+}
+
+// ─── EVENTOS ESPECIALES ───────────────────────────────────────────────────────
+const EV = { eventos:[] };
+(function(){
+  try{ const d=localStorage.getItem('trx_eventos'); if(d) EV.eventos=JSON.parse(d); }catch(e){}
+})();
+function evSave(){ try{ localStorage.setItem('trx_eventos',JSON.stringify(EV.eventos)); }catch(e){} }
+
+function evDetectarSilencioso(){
+  // Auto-detect: group fletes by # Contenedor (transport container ID)
+  const grupos={};
+  S.rows.forEach(r=>{
+    if(!r.contenedor) return;
+    const k=String(r.contenedor).trim();
+    if(!grupos[k]) grupos[k]=[];
+    grupos[k].push(r);
+  });
+  Object.entries(grupos).filter(([,fl])=>fl.length>1).forEach(([contenedor,fletes])=>{
+    // Already registered for this semaforo cycle? skip
+    if(EV.eventos.find(e=>e.contenedor===contenedor&&e.semaforo===S.sessionTurno)) return;
+    const transId=String(fletes.find(f=>f.tra)?.tra||'').trim();
+    const transNom=getTransNombre(transId);
+    const transLabel=transId+(transNom&&transNom!==transId?' - '+transNom:'');
+    const totalCajas=fletes.reduce((a,f)=>{const p=S.ptrMap[f.emb]||{};return a+(parseFloat(fc(p,['Total Cajas','Cajas']))||0);},0);
+    const totalPallets=fletes.reduce((a,f)=>a+(parseFloat(f.pal)||0),0);
+    EV.eventos.push({
+      id:Date.now()+Math.random(),
+      contenedor, linea:transId,
+      transportistaCod:transId, transportistaNom:transNom!==transId?transNom:'',
+      fletes:fletes.map(f=>({emb:f.emb,nom:f.nom,estop:f.estop||''})),
+      cajas:totalCajas, pallets:totalPallets,
+      notas:'Transportista '+transLabel+' se lleva '+fletes.length+' fletes en mismo contenedor',
+      semaforo:S.sessionTurno||'',
+      hora:new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
+      ts:Date.now(), contado:false, contadoHora:''
+    });
+  });
+  evSave(); evBadge();
+}
+
+function evDetectarAutomatico(){
+  const grupos={};
+  S.rows.forEach(r=>{
+    if(!r.contenedor) return;
+    const k=String(r.contenedor).trim();
+    if(!grupos[k]) grupos[k]=[];
+    grupos[k].push(r);
+  });
+  const multiples=Object.entries(grupos).filter(([,fl])=>fl.length>1);
+  if(!multiples.length){ alert('No se encontraron fletes con el mismo # Contenedor en el Detalle actual.'); return; }
+  let nuevos=0;
+  multiples.forEach(([contenedor,fletes])=>{
+    if(EV.eventos.find(e=>e.contenedor===contenedor&&e.semaforo===S.sessionTurno)) return;
+    // tra field has Transportista ID (numeric like 703320) or Unidad (CAJA-53)
+    const transId=String(fletes.find(f=>f.tra)?.tra||'').trim();
+    const transNom=getTransNombre(transId);
+    const transLabel=transId+(transNom&&transNom!==transId?' - '+transNom:'');
+    const totalCajas=fletes.reduce((a,f)=>{
+      const p=S.ptrMap[f.emb]||{}; return a+(parseFloat(fc(p,['Total Cajas','Cajas']))||0);
+    },0);
+    const totalPallets=fletes.reduce((a,f)=>a+(parseFloat(f.pal)||0),0);
+    const nota='Transportista '+transLabel+' se lleva '+fletes.length+' fletes en mismo contenedor';
+    EV.eventos.push({
+      id:Date.now()+nuevos,
+      contenedor, linea:transId,
+      transportistaCod:transId, transportistaNom:transNom!==transId?transNom:'',
+      fletes:fletes.map(f=>({emb:f.emb,nom:f.nom,estop:f.estop||''})),
+      cajas:totalCajas, pallets:totalPallets, notas:nota,
+      semaforo:S.sessionTurno||'',
+      hora:new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
+      ts:Date.now()+nuevos, contado:false, contadoHora:''
+    });
+    nuevos++;
+  });
+  evSave(); evRender(); evBadge();
+  alert(nuevos?'Se registraron '+nuevos+' evento(s) automaticamente.':'Todos los contenedores compartidos ya estaban registrados.');
+}
+
+function evGuardar(){
+  const contenedor=g('evContenedor').value.trim();
+  const linea=g('evLinea').value.trim();
+  const fletesRaw=g('evFletes').value;
+  const fletes=fletesRaw.split(/[,\s]+/).map(s=>s.trim()).filter(Boolean);
+  const notas=g('evNotas').value.trim();
+  if(!contenedor){ alert('Ingresa el numero de contenedor.'); return; }
+  if(!fletes.length){ alert('Ingresa al menos un flete.'); return; }
+  const fletesInfo=fletes.map(f=>{
+    const k=nk(f); const r=S.rows.find(x=>x.emb===k);
+    return {emb:k,nom:r?.nom||'',estop:r?.estop||''};
+  });
+  const unidad=fletesInfo.map(f=>S.rows.find(x=>x.emb===f.emb)?.tra||'').find(Boolean)||'';
+  const transNom=getTransNombre(unidad);
+  const autoC=(parseFloat(g('evCajas').value)||0)||fletesInfo.reduce((a,f)=>{
+    const p=S.ptrMap[f.emb]||{}; return a+(parseFloat(fc(p,['Total Cajas','Cajas']))||0);
+  },0);
+  const autoP=parseFloat(g('evPallets').value)||0;
+  const autoNota=notas||(fletes.length>1?'Transportista '+(unidad||'—')+(transNom&&transNom!==unidad?' - '+transNom:'')+' se lleva '+fletes.length+' fletes en mismo contenedor':'');
+  EV.eventos.push({
+    id:Date.now(), contenedor, linea,
+    transportistaCod:unidad, transportistaNom:transNom!==unidad?transNom:'',
+    fletes:fletesInfo, cajas:autoC, pallets:autoP, notas:autoNota,
+    semaforo:S.sessionTurno||'',
+    hora:new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
+    ts:Date.now(), contado:false, contadoHora:''
+  });
+  evSave();
+  ['evContenedor','evLinea','evFletes','evCajas','evPallets','evNotas'].forEach(id=>{if(g(id))g(id).value='';});
+  if(g('evFletesInfo')) g('evFletesInfo').textContent='';
+  evRender(); evBadge();
+}
+
+function evMarcarContado(id){
+  const ev=EV.eventos.find(e=>e.id===id); if(!ev) return;
+  ev.contado=!ev.contado;
+  ev.contadoHora=ev.contado?new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}):'';
+  evSave(); evRender(); evBadge();
+}
+
+function evEliminar(id){
+  if(!confirm('Eliminar este evento?')) return;
+  EV.eventos=EV.eventos.filter(e=>e.id!==id);
+  evSave(); evRender(); evBadge();
+}
+
+function evBadge(){
+  const alertas=EV.eventos.filter(ev=>{
+    if(ev.contado) return false;
+    return ev.fletes.some(f=>{
+      const r=S.rows.find(x=>x.emb===f.emb);
+      return r&&(r.estop==='CARGADO'||r.estop==='POR CARGAR');
+    });
+  }).length;
+  if(g('evBdg')) g('evBdg').innerHTML=alertas?'<span class="b br" style="font-size:9px;padding:1px 6px">'+alertas+'</span>':'';
+  if(g('evKalerta')) g('evKalerta').textContent=alertas;
+  if(g('evKtotal')) g('evKtotal').textContent=EV.eventos.length;
+  if(g('evKcontado')) g('evKcontado').textContent=EV.eventos.filter(e=>e.contado).length;
+}
+
+function evRender(){
+  evBadge();
+  const lst=g('evLista'); if(!lst) return;
+  if(!EV.eventos.length){
+    lst.innerHTML='<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px">Sin eventos registrados.</div>';
+    return;
+  }
+  const sorted=[...EV.eventos].sort((a,b)=>b.ts-a.ts);
+  lst.innerHTML=sorted.map(ev=>{
+    const listoSinContar=!ev.contado&&ev.fletes.some(f=>{
+      const r=S.rows.find(x=>x.emb===f.emb);
+      return r&&(r.estop==='CARGADO'||r.estop==='POR CARGAR');
+    });
+    const borderClr=listoSinContar?'var(--red)':ev.contado?'var(--green)':'var(--border2)';
+    const fletesHtml=ev.fletes.map(f=>{
+      const r=S.rows.find(x=>x.emb===f.emb);
+      const estop=r?.estop||f.estop||'—';
+      const estClr=estop==='CARGADO'?'var(--green)':estop==='POR CARGAR'?'var(--cyan)':estop==='PENDIENTE'?'var(--amber)':'var(--text3)';
+      return '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border);font-size:10.5px">'+
+        '<span style="font-family:IBM Plex Mono,monospace;font-weight:700;min-width:70px">'+es(f.emb)+'</span>'+
+        '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2)">'+es(f.nom||r?.nom||'—')+'</span>'+
+        '<span style="font-size:9px;font-weight:600;color:'+estClr+'">'+estop+'</span></div>';
+    }).join('');
+    return '<div style="background:var(--card);border:1px solid var(--border2);border-radius:10px;margin-bottom:10px;overflow:hidden;border-left:4px solid '+borderClr+'">'+
+      '<div style="padding:10px 14px;background:var(--navy2);display:flex;align-items:center;flex-wrap:wrap;gap:8px">'+
+        '<div style="display:flex;flex-direction:column;gap:2px;flex:1">'+
+        '<span style="font-family:IBM Plex Mono,monospace;font-size:12px;font-weight:700">'+es(ev.contenedor)+'</span>'+
+        (ev.transportistaCod?'<span style="font-size:10px;color:var(--amber)">Transportista: '+es(ev.transportistaCod)+(ev.transportistaNom?' — '+es(ev.transportistaNom):'')+'</span>':'') +
+        (ev.linea&&!ev.transportistaCod?'<span style="font-size:10px;color:var(--text3)">'+es(ev.linea)+'</span>':'')+
+        '</div>'+
+        (listoSinContar?'<span class="b br" style="font-size:9px;animation:pulse-nuevo 1.4s infinite">⚡ LISTO SIN CONTAR</span>':'')+
+        (ev.contado?'<span class="b bg" style="font-size:9px">✓ Contado '+ev.contadoHora+'</span>':'')+
+        '<span style="font-size:10px;color:var(--text3);margin-left:auto">'+ev.hora+'</span>'+
+      '</div>'+
+      '<div style="padding:10px 14px">'+
+        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">'+
+          '<div style="text-align:center;background:var(--navy2);border-radius:6px;padding:6px"><div style="font-size:16px;font-weight:700;font-family:IBM Plex Mono,monospace;color:var(--cyan)">'+ev.fletes.length+'</div><div style="font-size:9px;color:var(--text3)">Fletes</div></div>'+
+          '<div style="text-align:center;background:var(--navy2);border-radius:6px;padding:6px"><div style="font-size:16px;font-weight:700;font-family:IBM Plex Mono,monospace;color:var(--amber)">'+(ev.cajas||'—')+'</div><div style="font-size:9px;color:var(--text3)">Cajas</div></div>'+
+          '<div style="text-align:center;background:var(--navy2);border-radius:6px;padding:6px"><div style="font-size:16px;font-weight:700;font-family:IBM Plex Mono,monospace;color:var(--purple)">'+(ev.pallets||'—')+'</div><div style="font-size:9px;color:var(--text3)">Pallets</div></div>'+
+        '</div>'+
+        '<div style="margin-bottom:8px">'+fletesHtml+'</div>'+
+        (ev.notas?'<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Notas: '+es(ev.notas)+'</div>':'')+
+        '<div style="display:flex;gap:8px">'+
+          '<button class="btn '+(ev.contado?'':'ok')+'" onclick="evMarcarContado('+ev.id+')" style="font-size:11px">'+(ev.contado?'Marcar sin contar':'Marcar como contado')+'</button>'+
+          '<button class="btn" onclick="evEliminar('+ev.id+')" style="font-size:11px;color:var(--red);border-color:rgba(239,68,68,.3)">Eliminar</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
 }
 
 // ─── MÓDULO CLIENTES ──────────────────────────────────────────────────────────
@@ -2311,7 +2612,7 @@ function renderClientes(){
     '<div class="kpi" style="border-top:2px solid var(--blue)"><div class="kpi-v" style="color:var(--blue)">'+totFletes+'</div><div class="kpi-l">Total fletes</div></div>'+
     '<div class="kpi" style="border-top:2px solid var(--green)"><div class="kpi-v" style="color:var(--green)">'+totCargados+'</div><div class="kpi-l">Cargados</div></div>'+
     '<div class="kpi" style="border-top:2px solid var(--amber)"><div class="kpi-v" style="color:var(--amber)">'+totPicking.toLocaleString('es-MX')+'</div><div class="kpi-l">Picking pend.</div></div>'+
-    '<div class="kpi" style="border-top:2px solid var(--purple)"><div class="kpi-v" style="color:var(--purple)">'+totCustom+'</div><div class="kpi-l">Customizados</div></div>'+
+
     '<div class="kpi" style="border-top:2px solid var(--cyan)"><div class="kpi-v" style="color:var(--cyan)">'+totTarComp+'</div><div class="kpi-l">Tareas completas</div></div>'+
     '</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px">';
 
@@ -2357,7 +2658,6 @@ function renderClientes(){
           [
             {v:gPend,    l:'Pendientes', c:gPend>0?'var(--amber)':'var(--green)'},
             {v:pickVal,  l:'Pick.pend.',  c:pickClr},
-            {v:gCust,    l:'Custom.',     c:gCust>0?'var(--green)':'var(--text3)'},
           ].map(s=>'<div style="text-align:center;padding:5px;background:var(--navy2);border-radius:6px"><div style="font-size:14px;font-weight:700;font-family:IBM Plex Mono,monospace;color:'+s.c+'">'+s.v+'</div><div style="font-size:9px;color:var(--text3)">'+s.l+'</div></div>').join('')+
         '</div>'+
         progBar('Carga',gCarg,fl.length,gr.color)+
@@ -2438,7 +2738,33 @@ function makeAC(inputEl, lista, onSelect){
 const INC = { registros:[] };
 
 // Initialize autocompletes after page loads
+// Live semaforo ticker — re-render active tab every 30s to update countdowns
+setInterval(()=>{
+  if(!S.rows.length) return;
+  const activeTab=document.querySelector('.tab.active');
+  if(!activeTab) return;
+  const t=activeTab.getAttribute('onclick')||'';
+  const m=t.match(/swTab\(this,'(\w+)'\)/);
+  if(!m) return;
+  if(m[1]==='tk') render();
+  else if(m[1]==='rs') renderResumen();
+  else if(m[1]==='al') alerts();
+}, 30000);
+
 window.addEventListener('load', ()=>{
+  // Eventos: live flete lookup
+  const evFletesInp=g('evFletes');
+  if(evFletesInp){
+    evFletesInp.addEventListener('input',()=>{
+      const fletes=evFletesInp.value.split(/[,\s]+/).map(s=>nk(s.trim())).filter(Boolean);
+      const found=fletes.map(k=>{
+        const r=S.rows.find(x=>x.emb===k);
+        return r?'✓ '+k+': '+r.nom.slice(0,30):'? '+k+': no encontrado en semaforo';
+      });
+      const el=g('evFletesInfo');
+      if(el) el.innerHTML=found.map(s=>'<div>'+s+'</div>').join('');
+    });
+  }
   // Incidencias: quien reporta
   const inpColab=g('incColab');
   if(inpColab) makeAC(inpColab, ALL_PERSONAL, (id,nombre)=>{ g('incColabId').value=id; });
@@ -3084,7 +3410,7 @@ function renderResumen(){
     const semLabel=semUrgente?(r.sem||'Sin estado')+' ⚠':(r.sem||'—');
     const semCell=`<div><span class="b ${semBadgeCls}" data-cita="${r.ci||''}">${es(semLabel)}</span>${r.con?`<div style="margin-top:4px;font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;font-weight:600">${fmtCortina(r.con)}</div>`:''}</div>`;
 
-    const opts=['','POR CARGAR','PENDIENTE','CARGADO'].map(v=>
+    const opts=['','POR VERIFICAR','POR CARGAR','PENDIENTE','CARGADO'].map(v=>
       `<option value="${v}"${(r.estop||'PENDIENTE')===v?' selected':''}>${v||'— estatus —'}</option>`).join('');
 
     // Transporte badge
@@ -3554,33 +3880,86 @@ function reset(){
   g('stp1').className='step active'; g('stp2').className='step'; g('stp3').className='step';
 }
 
-// ─── FIREBASE SYNC ────────────────────────────────────────────────────────────
-let fbReady = false;
-let fbIsAdmin = false;
-let fbUnsubscribe = null;
-const ADMIN_EMAIL = 'admin@pronumex.com'; // change to your admin email if different
-const DOC_ID = 'turno_activo';
 
-// Wait for Firebase module to load
+
 function waitForFB(cb){ if(window.FB) cb(); else setTimeout(()=>waitForFB(cb), 100); }
 
 waitForFB(()=>{
-  // Auth state
   FB.onAuth(async (user)=>{
     if(!user){
-      // Not logged in — show login modal
       g('loginModal').classList.remove('hidden');
       return;
     }
+    currentUserEmail = user.email||'';
+    fbIsAdmin = ADMIN_EMAILS.includes(currentUserEmail);
     g('loginModal').classList.add('hidden');
-    fbIsAdmin = user.email === ADMIN_EMAIL || true; // all logged-in users can edit for now
-    // Show viewer banner with user info
-    g('viewerBanner').classList.remove('hidden');
-    g('viewerMsg').textContent = `Conectado como ${user.email} — sincronización en tiempo real activa`;
-    // Start live sync
+    applyRole();
     startSync();
   });
 });
+
+function lmGuest(){
+  // Sign in anonymously as read-only viewer
+  waitForFB(()=>{
+    import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js")
+      .then(({signInAnonymously})=>signInAnonymously(FB.auth))
+      .catch(()=>{
+        // Fallback: just show viewer mode without Firebase auth
+        fbIsAdmin=false; currentUserEmail='invitado';
+        g('loginModal').classList.add('hidden');
+        applyRole();
+        startSync();
+      });
+  });
+}
+
+function applyRole(){
+  const banner=g('viewerBanner');
+  if(fbIsAdmin){
+    banner.style.background='rgba(139,92,246,.12)';
+    banner.style.borderBottomColor='rgba(139,92,246,.3)';
+    banner.style.color='#C4B5FD';
+    g('viewerMsg').innerHTML='<strong>Admin:</strong> '+currentUserEmail+' — edición completa habilitada';
+    // Show all admin controls
+    document.querySelectorAll('.admin-only').forEach(el=>el.classList.remove('hidden'));
+    document.querySelectorAll('[data-guest-disable]').forEach(el=>{
+      el.removeAttribute('disabled'); el.style.pointerEvents=''; el.style.opacity='';
+    });
+  } else {
+    banner.style.background='rgba(16,185,129,.12)';
+    banner.style.borderBottomColor='rgba(16,185,129,.25)';
+    banner.style.color='#6EE7B7';
+    g('viewerMsg').innerHTML='<span style="opacity:.7">👁 Modo invitado — solo lectura · sincronización en tiempo real</span>';
+    // Hide admin-only controls
+    document.querySelectorAll('.admin-only').forEach(el=>el.classList.add('hidden'));
+    // Disable all inputs in tracker table
+    disableEditing();
+  }
+  banner.classList.remove('hidden');
+}
+
+function disableEditing(){
+  // Lock all interactive elements except download/export buttons
+  const editSelectors=['input.edt','input.edt-sel','select.edt-sel',
+    'button[onclick*="upd("]','button[onclick*="togglePrio"]',
+    'button[onclick*="editPrecarga"]','button[onclick*="editCortina"]',
+    'input[onchange*="upd("]','select[onchange*="upd("]'];
+  editSelectors.forEach(sel=>{
+    document.querySelectorAll(sel).forEach(el=>{
+      el.setAttribute('disabled','');
+      el.style.pointerEvents='none'; el.style.opacity='.45';
+    });
+  });
+  // Re-run after render
+  const origRender=window.render;
+  if(origRender&&!origRender._guestWrapped){
+    window.render=function(){
+      origRender.apply(this,arguments);
+      if(!fbIsAdmin) setTimeout(disableEditing,50);
+    };
+    window.render._guestWrapped=true;
+  }
+}
 
 function lmLogin(){
   const email = g('lmEmail').value.trim();
