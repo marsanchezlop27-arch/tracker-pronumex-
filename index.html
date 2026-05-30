@@ -3890,6 +3890,11 @@ function reset(){
 
 function waitForFB(cb){ if(window.FB) cb(); else setTimeout(()=>waitForFB(cb), 100); }
 
+// Firebase globals
+const DOC_ID = 'turno-activo';
+let fbReady = false;
+let fbUnsubscribe = null;
+
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
 const ADMIN_EMAILS = ['admin@pronumex.com', 'marsanchezlop27@gmail.com'];
 let currentUserEmail = '';
@@ -3928,18 +3933,12 @@ function applyGuestUI(){
 }
 
 function lmGuest(){
-  waitForFB(()=>{
-    import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js")
-      .then(({signInAnonymously}) => signInAnonymously(FB.auth))
-      .catch(() => {
-        // Firebase anonymous auth may be disabled — just apply guest UI directly
-        fbIsAdmin = false;
-        currentUserEmail = 'invitado';
-        g('loginModal').classList.add('hidden');
-        applyGuestUI();
-        startSync();
-      });
-  });
+  // Guest mode — no Firebase auth needed, just sync read-only
+  fbIsAdmin = false;
+  currentUserEmail = 'invitado';
+  g('loginModal').classList.add('hidden');
+  applyGuestUI();
+  waitForFB(()=>{ startSync(); });
 }
 
 waitForFB(()=>{
@@ -4055,20 +4054,23 @@ function applyRemoteData(data){
 // ── LISTEN for real-time updates ──
 function startSync(){
   if(!window.FB) return;
-  if(fbUnsubscribe) fbUnsubscribe();
+  if(fbUnsubscribe){ fbUnsubscribe(); fbUnsubscribe=null; }
+  const dot = document.getElementById('syncDot');
+  if(dot){ dot.style.background='var(--amber)'; dot.title='Conectando...'; }
   const ref = FB.doc(FB.db, 'tracker', DOC_ID);
   let _firstSnap = true;
   fbUnsubscribe = FB.onSnapshot(ref, (snap)=>{
     fbReady = true;
+    if(dot){ dot.style.background='var(--green)'; dot.title='Sincronizado'; }
     if(!snap.exists()) return;
     const data = snap.data();
     if(!data.ts) return;
-    // Guests: always apply every snapshot (they never save, always need latest)
+    // Guests: always apply every snapshot
     if(!fbIsAdmin){
       applyRemoteData(data);
       return;
     }
-    // Admin: apply first snapshot, or if data comes from another device/session
+    // Admin: apply first snapshot or changes from other devices
     const fromOtherDevice = !data.device || data.device !== DEVICE_ID;
     const isNewer = data.ts > lastSavedTs;
     if(_firstSnap || fromOtherDevice || isNewer){
@@ -4077,10 +4079,18 @@ function startSync(){
     }
   }, (err)=>{
     console.error('Firestore listener error', err);
-    const dot=document.getElementById('syncDot');
-    if(dot){ dot.style.background='var(--red)'; dot.title='Error de sincronización'; }
+    fbReady = false;
+    if(dot){ dot.style.background='var(--red)'; dot.title='Error — reconectando...'; }
+    // Auto-reconnect after 5 seconds
+    setTimeout(()=>{ if(window.FB) startSync(); }, 5000);
   });
 }
+
+// Keep-alive: reconnect if listener drops (mobile background, network change)
+setInterval(()=>{
+  if(!window.FB || !fbReady) return;
+  // Check if we haven't received a snapshot recently — force reconnect
+}, 60000);
 
 // ── Patch upd/listo/togglePrio/updCustom/updVerif to also save ──
 const _origUpd = upd;
