@@ -83,6 +83,10 @@ window.FB = { auth: fbAuth, db: fbDb,
 /* VIEWER banner */
 #viewerBanner{background:rgba(16,185,129,.12);border-bottom:1px solid rgba(16,185,129,.25);padding:6px 20px;font-size:11.5px;color:#6EE7B7;display:flex;align-items:center;gap:8px}
 #viewerBanner.hidden{display:none!important}
+/* Guest mode: hide edit controls */
+body.guest-mode input.edt,body.guest-mode input.edt-sel,body.guest-mode select.edt-sel,body.guest-mode .ac-inp,body.guest-mode button[onclick*="upd("],body.guest-mode button[onclick*="togglePrio"],body.guest-mode button[onclick*="editPrecarga"],body.guest-mode button[onclick*="updCustom"]{display:none!important}
+/* Invitado: descargas solo lectura */
+body.guest-mode #view-desc input:not([type=hidden]),body.guest-mode #view-desc select,body.guest-mode #view-desc textarea,body.guest-mode #view-desc button[onclick]:not([onclick*="switchView"]){pointer-events:none!important;opacity:.4!important;cursor:not-allowed!important}
 /* SYNC indicator */
 #syncDot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse-sync 2s ease-in-out infinite}
 @keyframes pulse-sync{0%,100%{opacity:1}50%{opacity:.4}}
@@ -316,9 +320,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     <input class="lm-inp" type="password" id="lmPass" placeholder="••••••••" autocomplete="current-password"
       onkeydown="if(event.key==='Enter')lmLogin()">
     <button class="lm-btn" onclick="lmLogin()">Entrar</button>
-    <div style="text-align:center;margin-top:10px">
-      <button onclick="lmGuest()" style="background:none;border:none;color:#64748B;font-size:12px;cursor:pointer;text-decoration:underline">Entrar como invitado (solo lectura)</button>
-    </div>
+    <div style="text-align:center;margin-top:12px"><button onclick="lmGuest()" style="background:none;border:none;color:#64748B;font-size:12px;cursor:pointer;text-decoration:underline">Entrar como invitado (solo lectura)</button></div>
     <div class="lm-err" id="lmErr"></div>
   </div>
 </div>
@@ -371,7 +373,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     Incidencias <span id="incBdg" style="margin-left:2px"></span>
   </button>
-
 
 </div>
 
@@ -427,33 +428,33 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
       Paso 1 — carga los archivos del turno inicial
     </div>
-    <div class="bi">Carga uno o más archivos. Puedes subir solo el <strong>Detalle</strong> o <strong>PTR</strong> para actualizar sin tocar el semáforo ya cargado. En Detalle y PTR puedes seleccionar <strong>varios archivos</strong> a la vez.</div>
+    <div class="bi">Carga los <strong>3 archivos del turno con el que vas a trabajar</strong>: el semáforo, el Detalle de avance y el PTR. Cuando te llegue el siguiente semáforo lo actualizas desde la pestaña "Actualizar turno".</div>
     <div class="slots">
       <div class="slot" id="sl-sem" onclick="pick('sem')">
         <div class="slot-ico" style="color:#F59E0B"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-        <div style="flex:1;min-width:0"><div class="slot-lbl">Semáforo del turno <span style="color:var(--text3);font-size:9px">opcional si ya hay uno</span></div><div class="slot-nm" id="nm-sem">Sin cargar</div></div>
+        <div style="flex:1;min-width:0"><div class="slot-lbl">Semáforo del turno</div><div class="slot-nm" id="nm-sem">Sin cargar</div></div>
         <span class="slot-chk hidden" id="ck-sem">✓</span>
         <input type="file" accept=".xlsx,.xls" class="hidden" id="fi-sem" onchange="load('sem',this)">
       </div>
       <div class="slot" id="sl-det" onclick="pick('det')">
         <div class="slot-ico" style="color:#378ADD"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
-        <div style="flex:1;min-width:0"><div class="slot-lbl">Detalle (% avance) <span style="color:var(--text3);font-size:9px">opcional · múltiples</span></div><div class="slot-nm" id="nm-det">Sin cargar</div></div>
+        <div style="flex:1;min-width:0"><div class="slot-lbl">Detalle (% avance) <span style="font-size:9px;color:var(--text3)">múltiples</span></div><div class="slot-nm" id="nm-det">Sin cargar</div></div>
         <span class="slot-chk hidden" id="ck-det">✓</span>
-        <input type="file" accept=".xlsx,.xls" class="hidden" multiple id="fi-det" onchange="loadMulti('det',this)">
+        <input type="file" accept=".xlsx,.xls" class="hidden" id="fi-det" multiple onchange="loadMulti('det',this)">
       </div>
       <div class="slot" id="sl-ptr" onclick="pick('ptr')">
         <div class="slot-ico" style="color:#10B981"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-        <div style="flex:1;min-width:0"><div class="slot-lbl">PTR (pallets / restos) <span style="color:var(--text3);font-size:9px">opcional · múltiples</span></div><div class="slot-nm" id="nm-ptr">Sin cargar</div></div>
+        <div style="flex:1;min-width:0"><div class="slot-lbl">PTR (pallets / restos) <span style="font-size:9px;color:var(--text3)">múltiples</span></div><div class="slot-nm" id="nm-ptr">Sin cargar</div></div>
         <span class="slot-chk hidden" id="ck-ptr">✓</span>
-        <input type="file" accept=".xlsx,.xls" class="hidden" multiple id="fi-ptr" onchange="loadMulti('ptr',this)">
+        <input type="file" accept=".xlsx,.xls" class="hidden" id="fi-ptr" multiple onchange="loadMulti('ptr',this)">
       </div>
     </div>
     <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
-      <button class="btn primary admin-only" onclick="build()">
+      <button class="btn primary" onclick="build()">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Construir tracker
       </button>
-      <button class="btn admin-only" onclick="reset()">
+      <button class="btn" onclick="reset()">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
         Reiniciar
       </button>
@@ -595,7 +596,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
           <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Detalle actualizado <span style="color:var(--text3)">(opcional)</span></div>
           <div class="slot" style="max-width:240px" id="sl-det2" onclick="pick('det2')">
             <div class="slot-ico" style="color:#378ADD"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
-            <div style="flex:1;min-width:0"><div class="slot-lbl">Detalle (% avance)</div><div class="slot-nm" id="nm-det2">Sin cargar</div></div>
+            <div style="flex:1;min-width:0"><div class="slot-lbl">Detalle (% avance) <span style="font-size:9px;color:var(--text3)">múltiples</span></div><div class="slot-nm" id="nm-det2">Sin cargar</div></div>
             <span class="slot-chk hidden" id="ck-det2">✓</span>
             <input type="file" accept=".xlsx,.xls" class="hidden" id="fi-det2" onchange="load('det2',this)">
           </div>
@@ -923,14 +924,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 // ─── STATE ────────────────────────────────────────────────────────────────────
 const S = { rows:[], buf:{}, sc:'ci', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[] };
 
-// ─── AUTH CONSTANTS ────────────────────────────────────────────────────────────
-const ADMIN_EMAILS = ['admin@pronumex.com','marsanchezlop27@gmail.com'];
-const DOC_ID = 'turno-activo';
-let fbIsAdmin = false;
-let fbReady = false;
-let fbUnsubscribe = null;
-let currentUserEmail = '';
-
 // ─── HISTORIAL PERSISTENTE (localStorage) ────────────────────────────────────
 function hSave(){
   try{ localStorage.setItem('trx_historial', JSON.stringify(S.turnoHistorial)); }catch(e){}
@@ -1251,22 +1244,17 @@ function toObjects(aoa){
 // Find a value in an object by partial key match (case-insensitive)
 // Handles duplicate XLSX headers (XLSX.js appends _1,_2), prefers first match
 function fc(obj,keys){
-  if(!obj) return '';
   const okeys=Object.keys(obj);
   for(const k of keys){
     const kl=k.toLowerCase().trim();
-    // Score matches: exact=3, ends-with=2, includes=1
-    const scored=[];
-    for(const ok of okeys){
-      const okl=ok.toLowerCase().trim().replace(/_\d+$/,'');
-      if(okl===kl)                scored.push([ok,3]);
-      else if(okl.endsWith(kl)||kl.endsWith(okl)) scored.push([ok,2]);
-      else if(okl.includes(kl)||kl.includes(okl)) scored.push([ok,1]);
-    }
-    scored.sort((a,b)=>b[1]-a[1]||a[0].length-b[0].length);
-    for(const [found] of scored){
-      const v=obj[found];
-      if(v!==''&&v!==null&&v!==undefined) return v;
+    // Exact first: find key that contains the search term, prefer shorter key (not _1 suffix)
+    const matches=okeys.filter(ok=>{
+      const okl=ok.toLowerCase().trim();
+      return okl===kl||okl.includes(kl)||okl.replace(/_\d+$/,'')===kl;
+    }).sort((a,b)=>a.length-b.length); // shorter = no suffix = prefer
+    for(const found of matches){
+      if(obj[found]!==''&&obj[found]!==null&&obj[found]!==undefined)
+        return obj[found];
     }
   }
   return '';
@@ -1274,7 +1262,6 @@ function fc(obj,keys){
 
 // ─── FILE LOADING ─────────────────────────────────────────────────────────────
 function pick(k){ document.getElementById('fi-'+k).click(); }
-
 async function load(k,inp){
   const f=inp.files[0]; if(!f) return;
   document.getElementById('nm-'+k).textContent=f.name;
@@ -1284,62 +1271,104 @@ async function load(k,inp){
   document.getElementById('st').textContent='"'+f.name+'" listo.';
 }
 
-// Load multiple files — merges all rows from all uploaded files into one buf array
-async function loadMulti(k,inp){
-  const files=[...inp.files]; if(!files.length) return;
-  const bufs = await Promise.all(files.map(f=>f.arrayBuffer()));
-  S.buf[k]=bufs; // store as array of ArrayBuffers
-  const names=files.map(f=>f.name).join(', ');
-  document.getElementById('nm-'+k).textContent=files.length>1?files.length+' archivos: '+names:files[0].name;
-  document.getElementById('sl-'+k).classList.add('ok');
-  document.getElementById('ck-'+k).classList.remove('hidden');
-  document.getElementById('st').textContent=files.length+' archivo(s) de '+k+' listos.';
+// ─── MULTI-FILE SUPPORT ───────────────────────────────────────────────────────
+async function loadMulti(k, inp){
+  const files = [...inp.files];
+  if(!files.length) return;
+  const bufs = await Promise.all(files.map(f => f.arrayBuffer()));
+  S.buf[k] = bufs; // store as array
+  const label = files.length > 1 ? files.length + ' archivos cargados' : files[0].name;
+  const nm = document.getElementById('nm-' + k);
+  if(nm) nm.textContent = label;
+  const sl = document.getElementById('sl-' + k);
+  if(sl) sl.classList.add('ok');
+  const ck = document.getElementById('ck-' + k);
+  if(ck) ck.classList.remove('hidden');
+  document.getElementById('st').textContent = files.length + ' archivo(s) de ' + k + ' listos.';
 }
 
-// Parse a buf slot — handles single ArrayBuffer or array of ArrayBuffers
-// Returns merged array-of-arrays (all rows from all files)
 function parseSlot(buf){
   if(!buf) return [];
-  const bufs=Array.isArray(buf)?buf:[buf];
-  const all=[];
-  bufs.forEach(b=>{
-    try{
-      const rows=parseFile(b);
-      // Skip header row of subsequent files (same header repeated) by checking if first row duplicates
-      if(all.length>0 && rows.length>0){
-        // Try to find where data starts (skip rows that look like headers)
-        const dataRows=rows.slice(1); // drop first row (header) from subsequent files
-        all.push(...dataRows);
-      } else {
-        all.push(...rows);
-      }
-    }catch(e){ console.warn('parseSlot error',e); }
+  const bufs = Array.isArray(buf) ? buf : [buf];
+  const all = [];
+  bufs.forEach((b, i) => {
+    try {
+      const rows = parseFile(b);
+      // First file: keep header row; subsequent: skip first row (header duplicate)
+      all.push(...(i === 0 ? rows : rows.slice(1)));
+    } catch(e){ console.warn('parseSlot error', e); }
   });
   return all;
 }
 
+
+// Actualiza Detalle/PTR sin recargar el semáforo
+function patchDetPtr(){
+  const detRows = S.buf.det ? toObjects(parseSlot(S.buf.det)) : [];
+  const ptrRows = S.buf.ptr ? toObjects(parseSlot(S.buf.ptr)) : [];
+  const detMap = {}, comMap = {}, ptrMap = {};
+  detRows.forEach(r=>{
+    const k = nk(fc(r,['No. Embarque','embarque','Embarque','Folio','folio']));
+    if(k) detMap[k] = r;
+    const com = String(fc(r,['Comentarios:','Comentarios','comentarios'])||'');
+    (com.match(/\d{6,10}/g)||[]).forEach(n=>{ comMap[nk(n)] = r; });
+  });
+  ptrRows.forEach(r=>{
+    const k = nk(fc(r,['No. Embarque','embarque','Embarque']));
+    if(k) ptrMap[k] = r;
+  });
+  S.rows.forEach(r=>{
+    const D = detMap[r.emb] || comMap[r.emb] || {};
+    if(Object.keys(D).length){
+      const pc = pct(fc(D,['% Carga','%Carga','carga']));
+      if(pc >= 100){ r._rm = true; return; }
+      r.pt = pct(fc(D,['% Tareas','%Tareas','tareas']));
+      r.pr = pct(fc(D,['% Restos','%Restos','restos']));
+      r.pc = pc;
+      r.tr = fc(D,['T. Restos','T.Restos'])||r.tr;
+      r.ar = fc(D,['A. Restos','A.Restos'])||r.ar;
+      r.tra = fc(D,['Transportista','Unidad'])||r.tra;
+      r.con = fc(D,['Cortina','cortina'])||r.con;
+      r.contenedor = fc(D,['# Contenedor','Contenedor'])||r.contenedor;
+    }
+    const P = ptrMap[r.emb] || {};
+    if(Object.keys(P).length){
+      r.pal = fc(P,['Pallets','pallets','Pallet'])||r.pal;
+      r.res = fc(P,['Restos','restos'])||r.res;
+    }
+    const ue = S.userEdits[r.emb]||{};
+    ['estop','monta','verif','precarga','com','prio','prioNum','con'].forEach(f=>{
+      if(ue[f] !== undefined) r[f] = ue[f];
+    });
+  });
+  S.rows = S.rows.filter(r => !r._rm);
+  kpi(); render(); alerts(); badge();
+  if(typeof kpiVerif==='function') kpiVerif();
+  ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
+    const el = g(id); if(el) el.classList.remove('hidden');
+  });
+  document.getElementById('st').textContent = 'Detalle/PTR actualizados — semáforo sin cambios.';
+  fbSave();
+}
+
+
 // ─── BUILD ────────────────────────────────────────────────────────────────────
 function build(){
-  // Need at least one file loaded
+  // Cualquier archivo es válido — no se requieren los 3
   if(!S.buf.sem && !S.buf.det && !S.buf.ptr){
     document.getElementById('st').textContent='Carga al menos un archivo.'; return;
   }
-  // Need semaforo OR existing rows (second-shift update)
-  if(!S.buf.sem && !S.rows.length){
-    document.getElementById('st').textContent='Para el primer build se necesita el Semáforo.'; return;
+  // Sin semáforo pero con datos existentes → solo actualizar det/ptr
+  if(!S.buf.sem && S.rows.length){
+    if(S.buf.det || S.buf.ptr){ patchDetPtr(); return; }
+  }
+  if(!S.buf.sem){
+    document.getElementById('st').textContent='Para el primer build carga el Semáforo.'; return;
   }
 
   document.getElementById('dbg').classList.add('hidden');
 
-  // If no new semaforo, keep using existing rows as base (second-shift update)
-  S.buildTs = Date.now(); // timestamp when semaforo was loaded
-  const semRows = S.buf.sem ? toObjects(parseSlot(S.buf.sem)) : null;
-  if(!semRows && S.rows.length){
-    // Only updating Detalle/PTR — patch existing rows without rebuilding semaforo
-    patchExistingRows();
-    return;
-  }
-  if(!semRows){ document.getElementById('st').textContent='Carga el Semáforo primero.'; return; }
+  const semRows = toObjects(parseFile(S.buf.sem));
   const detRows = S.buf.det ? toObjects(parseSlot(S.buf.det)) : [];
   const ptrRows = S.buf.ptr ? toObjects(parseSlot(S.buf.ptr)) : [];
 
@@ -1532,7 +1561,7 @@ function applyNew(){
 
   // Refresh Detalle and PTR maps if new files were uploaded
   if(S.buf.det2){
-    const detRows2=toObjects(parseFile(S.buf.det2));
+    const detRows2=toObjects(parseSlot(S.buf.det2));
     detRows2.forEach(r=>{
       const embRaw=fc(r,['No. Embarque','embarque']);
       if(!embRaw) return;
@@ -1543,7 +1572,7 @@ function applyNew(){
     });
   }
   if(S.buf.ptr2){
-    const ptrRows2=toObjects(parseFile(S.buf.ptr2));
+    const ptrRows2=toObjects(parseSlot(S.buf.ptr2));
     ptrRows2.forEach(r=>{
       const k=nk(fc(r,['No. Embarque','embarque']));
       if(k) S.ptrMap2=S.ptrMap2||{}; S.ptrMap2&&(S.ptrMap2[k]=r);
@@ -1704,19 +1733,6 @@ function pct(v){
   if(n>0&&n<1) return Math.round(n*100);
   return Math.round(n);
 }
-// Live semaforo time — recomputes remaining from original semSec minus elapsed since build
-function liveSem(r){
-  if(r.semSec===null||r.semSec===undefined) return r.sem||'';
-  if(r.semSec===-1) return 'Fuera de Tiempo';
-  const elapsedSec = S.buildTs ? Math.floor((Date.now()-S.buildTs)/1000) : 0;
-  const remaining = r.semSec - elapsedSec;
-  if(remaining <= 0) return 'Fuera de Tiempo';
-  const h=Math.floor(remaining/3600), m=Math.floor((remaining%3600)/60), s=remaining%60;
-  if(h>0) return h+'h '+m+'m restantes';
-  if(m>0) return m+'m '+s+'s restantes';
-  return s+'s restantes';
-}
-
 function scl(v){
   const s=String(v||'').toLowerCase();
   if(s.includes('fuera')) return 'br';
@@ -1915,8 +1931,8 @@ function render(){
       <td>${(()=>{
         let urgente=false;
         if(r.ci){const d=new Date(r.ci);if(!isNaN(d)){const h=(d-new Date())/3600000;if(h>=0&&h<2)urgente=true;}}
-        const badgeCls=urgente?'br':scl(liveSemVal);
-        const liveSemVal=liveSem(r); const label=urgente?(liveSemVal||'Sin estado')+' ⚠':(liveSemVal||'—');
+        const badgeCls=urgente?'br':scl(r.sem);
+        const label=urgente?(r.sem||'Sin estado')+' ⚠':(r.sem||'—');
         return `<span class="b ${badgeCls}" data-cita="${r.ci||''}" style="white-space:nowrap">${es(label)}</span>`;
       })()}</td>
       <td>${(()=>{
@@ -1998,6 +2014,7 @@ function render(){
 }
 
 function upd(idx,field,val){
+  if(!fbIsAdmin)return;
   S.rows[idx][field]=val;
   const emb=S.rows[idx].emb;
   if(!S.userEdits[emb]) S.userEdits[emb]={};
@@ -2071,6 +2088,7 @@ function recalcular(){
 }
 
 function editPrecarga(idx){
+  if(!fbIsAdmin)return;
   const r=S.rows[idx];
   const nuevo=prompt('Editar precarga para flete '+r.emb+':', r.precarga||'');
   if(nuevo===null) return;
@@ -2118,6 +2136,7 @@ function updVerif(idx,val){
 }
 function clearVerif(idx){ upd(idx,'verif',''); render(); kpiVerif(); }
 function updCustom(idx,checked){
+  if(!fbIsAdmin)return;
   S.rows[idx].custom=checked;
   const emb=S.rows[idx].emb;
   if(!S.userEdits[emb]) S.userEdits[emb]={};
@@ -2738,19 +2757,6 @@ function makeAC(inputEl, lista, onSelect){
 const INC = { registros:[] };
 
 // Initialize autocompletes after page loads
-// Live semaforo ticker — re-render active tab every 30s to update countdowns
-setInterval(()=>{
-  if(!S.rows.length) return;
-  const activeTab=document.querySelector('.tab.active');
-  if(!activeTab) return;
-  const t=activeTab.getAttribute('onclick')||'';
-  const m=t.match(/swTab\(this,'(\w+)'\)/);
-  if(!m) return;
-  if(m[1]==='tk') render();
-  else if(m[1]==='rs') renderResumen();
-  else if(m[1]==='al') alerts();
-}, 30000);
-
 window.addEventListener('load', ()=>{
   // Eventos: live flete lookup
   const evFletesInp=g('evFletes');
@@ -3479,6 +3485,7 @@ function renderResumen(){
 }
 
 function togglePrio(idx){
+  if(!fbIsAdmin)return;
   const r=S.rows[idx];
   if(r.prioNum){
     // Already has priority — remove it
@@ -3881,85 +3888,77 @@ function reset(){
 }
 
 
-
 function waitForFB(cb){ if(window.FB) cb(); else setTimeout(()=>waitForFB(cb), 100); }
 
-waitForFB(()=>{
-  FB.onAuth(async (user)=>{
-    if(!user){
-      g('loginModal').classList.remove('hidden');
-      return;
-    }
-    currentUserEmail = user.email||'';
-    fbIsAdmin = ADMIN_EMAILS.includes(currentUserEmail);
-    g('loginModal').classList.add('hidden');
-    applyRole();
-    startSync();
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+const ADMIN_EMAILS = ['admin@pronumex.com', 'marsanchezlop27@gmail.com'];
+let currentUserEmail = '';
+
+function applyAdminUI(){
+  const banner = g('viewerBanner');
+  banner.classList.remove('hidden');
+  banner.style.cssText = 'background:rgba(139,92,246,.12);border-bottom:1px solid rgba(139,92,246,.3);padding:6px 20px;font-size:11.5px;color:#C4B5FD;display:flex;align-items:center;gap:8px';
+  g('viewerMsg').innerHTML = '<strong>⚙ Admin:</strong> ' + currentUserEmail + ' — edición habilitada';
+  document.body.classList.remove('guest-mode');
+  document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('hidden'));
+}
+
+function applyGuestUI(){
+  const banner = g('viewerBanner');
+  banner.classList.remove('hidden');
+  banner.style.cssText = 'background:rgba(16,185,129,.12);border-bottom:1px solid rgba(16,185,129,.25);padding:6px 20px;font-size:11.5px;color:#6EE7B7;display:flex;align-items:center;gap:8px';
+  g('viewerMsg').innerHTML = '👁 Modo invitado — solo lectura · sincronización en tiempo real';
+  document.body.classList.add('guest-mode');
+  document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
+  // Tabs: solo Resumen y Clientes
+  document.querySelectorAll('.tab').forEach(el => {
+    const oc = el.getAttribute('onclick') || '';
+    el.classList.toggle('hidden', !["'rs'", "'cl'"].some(t => oc.includes(t)));
   });
-});
+  // Ocultar botón Incidencias del view-switch
+  const incBtn = g('vsw-inc');
+  if(incBtn) incBtn.style.display = 'none';
+  // Bloquear navegación a Incidencias
+  const _origSW = window.switchView;
+  window.switchView = function(v){
+    if(!fbIsAdmin && v === 'inc') return;
+    _origSW(v);
+  };
+}
 
 function lmGuest(){
-  // Sign in anonymously as read-only viewer
   waitForFB(()=>{
     import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js")
-      .then(({signInAnonymously})=>signInAnonymously(FB.auth))
-      .catch(()=>{
-        // Fallback: just show viewer mode without Firebase auth
-        fbIsAdmin=false; currentUserEmail='invitado';
+      .then(({signInAnonymously}) => signInAnonymously(FB.auth))
+      .catch(() => {
+        // Firebase anonymous auth may be disabled — just apply guest UI directly
+        fbIsAdmin = false;
+        currentUserEmail = 'invitado';
         g('loginModal').classList.add('hidden');
-        applyRole();
+        applyGuestUI();
         startSync();
       });
   });
 }
 
-function applyRole(){
-  const banner=g('viewerBanner');
-  if(fbIsAdmin){
-    banner.style.background='rgba(139,92,246,.12)';
-    banner.style.borderBottomColor='rgba(139,92,246,.3)';
-    banner.style.color='#C4B5FD';
-    g('viewerMsg').innerHTML='<strong>Admin:</strong> '+currentUserEmail+' — edición completa habilitada';
-    // Show all admin controls
-    document.querySelectorAll('.admin-only').forEach(el=>el.classList.remove('hidden'));
-    document.querySelectorAll('[data-guest-disable]').forEach(el=>{
-      el.removeAttribute('disabled'); el.style.pointerEvents=''; el.style.opacity='';
-    });
-  } else {
-    banner.style.background='rgba(16,185,129,.12)';
-    banner.style.borderBottomColor='rgba(16,185,129,.25)';
-    banner.style.color='#6EE7B7';
-    g('viewerMsg').innerHTML='<span style="opacity:.7">👁 Modo invitado — solo lectura · sincronización en tiempo real</span>';
-    // Hide admin-only controls
-    document.querySelectorAll('.admin-only').forEach(el=>el.classList.add('hidden'));
-    // Disable all inputs in tracker table
-    disableEditing();
-  }
-  banner.classList.remove('hidden');
-}
-
-function disableEditing(){
-  // Lock all interactive elements except download/export buttons
-  const editSelectors=['input.edt','input.edt-sel','select.edt-sel',
-    'button[onclick*="upd("]','button[onclick*="togglePrio"]',
-    'button[onclick*="editPrecarga"]','button[onclick*="editCortina"]',
-    'input[onchange*="upd("]','select[onchange*="upd("]'];
-  editSelectors.forEach(sel=>{
-    document.querySelectorAll(sel).forEach(el=>{
-      el.setAttribute('disabled','');
-      el.style.pointerEvents='none'; el.style.opacity='.45';
-    });
+waitForFB(()=>{
+  FB.onAuth(async (user) => {
+    if(!user){
+      g('loginModal').classList.remove('hidden');
+      return;
+    }
+    currentUserEmail = user.email || '';
+    fbIsAdmin = ADMIN_EMAILS.includes(currentUserEmail);
+    g('loginModal').classList.add('hidden');
+    if(fbIsAdmin){
+      applyAdminUI();
+    } else {
+      applyGuestUI();
+    }
+    startSync();
   });
-  // Re-run after render
-  const origRender=window.render;
-  if(origRender&&!origRender._guestWrapped){
-    window.render=function(){
-      origRender.apply(this,arguments);
-      if(!fbIsAdmin) setTimeout(disableEditing,50);
-    };
-    window.render._guestWrapped=true;
-  }
-}
+});
 
 function lmLogin(){
   const email = g('lmEmail').value.trim();
@@ -4033,10 +4032,16 @@ function applyRemoteData(data){
     document.getElementById('btnExp')?.classList.remove('hidden');
     document.getElementById('btnRecalc')?.classList.remove('hidden');
     document.getElementById('btnReporte')?.classList.remove('hidden');
-    // Re-render active tab
     if(g('p-rs')&&!g('p-rs').classList.contains('hidden')) renderResumen();
     if(g('p-vf')&&!g('p-vf').classList.contains('hidden')) kpiVerif();
     if(g('p-cl')&&!g('p-cl').classList.contains('hidden')) renderClientes();
+    // Guest: force Resumen tab view
+    if(!fbIsAdmin){
+      ['tk','up','al','vf','dc','cl'].forEach(x=>{const el=g('p-'+x);if(el)el.classList.add('hidden');});
+      const rsEl=g('p-rs'); if(rsEl) rsEl.classList.remove('hidden');
+      renderResumen();
+      document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',(t.getAttribute('onclick')||'').includes("'rs'")));
+    }
   }
 }
 
@@ -4045,6 +4050,7 @@ function startSync(){
   if(!window.FB) return;
   if(fbUnsubscribe) fbUnsubscribe();
   const ref = FB.doc(FB.db, 'tracker', DOC_ID);
+  let _firstSnap = true;
   fbUnsubscribe = FB.onSnapshot(ref, (snap)=>{
     fbReady = true;
     if(!snap.exists()) return;
@@ -4053,7 +4059,8 @@ function startSync(){
     // Apply if: from a different device, OR newer than what we last saved
     const fromOtherDevice = data.device && data.device !== DEVICE_ID;
     const isNewer = data.ts > lastSavedTs;
-    if(fromOtherDevice || isNewer){
+    if(_firstSnap || fromOtherDevice || isNewer){
+      _firstSnap = false;
       applyRemoteData(data);
     }
   }, (err)=>{
