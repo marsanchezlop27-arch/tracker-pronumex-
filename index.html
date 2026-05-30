@@ -4022,26 +4022,33 @@ function applyRemoteData(data){
   if(data.posAlerts)      S.posAlerts       = data.posAlerts;
   if(data.sessionTurno)   S.sessionTurno    = data.sessionTurno;
   if(data.sessionSup)     S.sessionSup      = data.sessionSup;
-  // Re-render everything
-  if(S.rows && S.rows.length){
+  if(!S.rows || !S.rows.length) return;
+
+  // Show UI chrome
+  ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.classList.remove('hidden');
+  });
+  if(typeof updateTopbarSup==='function') updateTopbarSup();
+
+  if(!fbIsAdmin){
+    // GUEST: show only Resumen tab, always re-render it
+    ['tk','up','al','vf','dc','cl'].forEach(x=>{
+      const el=g('p-'+x); if(el) el.classList.add('hidden');
+    });
+    const rsEl=g('p-rs'); if(rsEl) rsEl.classList.remove('hidden');
+    document.querySelectorAll('.tab').forEach(t=>{
+      t.classList.toggle('active',(t.getAttribute('onclick')||'').includes("'rs'"));
+    });
+    kpi(); alerts(); badge();
+    renderResumen();
+    if(typeof kpiVerif==='function') kpiVerif();
+  } else {
+    // ADMIN: render everything, keep current tab active
     kpi(); render(); alerts(); badge();
     if(typeof kpiVerif==='function') kpiVerif();
-    if(typeof updateTopbarSup==='function') updateTopbarSup();
-    document.getElementById('kRow')?.classList.remove('hidden');
-    document.getElementById('tabs')?.classList.remove('hidden');
-    document.getElementById('btnExp')?.classList.remove('hidden');
-    document.getElementById('btnRecalc')?.classList.remove('hidden');
-    document.getElementById('btnReporte')?.classList.remove('hidden');
     if(g('p-rs')&&!g('p-rs').classList.contains('hidden')) renderResumen();
     if(g('p-vf')&&!g('p-vf').classList.contains('hidden')) kpiVerif();
     if(g('p-cl')&&!g('p-cl').classList.contains('hidden')) renderClientes();
-    // Guest: force Resumen tab view
-    if(!fbIsAdmin){
-      ['tk','up','al','vf','dc','cl'].forEach(x=>{const el=g('p-'+x);if(el)el.classList.add('hidden');});
-      const rsEl=g('p-rs'); if(rsEl) rsEl.classList.remove('hidden');
-      renderResumen();
-      document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',(t.getAttribute('onclick')||'').includes("'rs'")));
-    }
   }
 }
 
@@ -4056,8 +4063,13 @@ function startSync(){
     if(!snap.exists()) return;
     const data = snap.data();
     if(!data.ts) return;
-    // Apply if: from a different device, OR newer than what we last saved
-    const fromOtherDevice = data.device && data.device !== DEVICE_ID;
+    // Guests: always apply every snapshot (they never save, always need latest)
+    if(!fbIsAdmin){
+      applyRemoteData(data);
+      return;
+    }
+    // Admin: apply first snapshot, or if data comes from another device/session
+    const fromOtherDevice = !data.device || data.device !== DEVICE_ID;
     const isNewer = data.ts > lastSavedTs;
     if(_firstSnap || fromOtherDevice || isNewer){
       _firstSnap = false;
