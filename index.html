@@ -3468,7 +3468,10 @@ function renderResumen(){
           style="${inputStyle}"
           onchange="upd(${idx},'precarga',this.value);renderResumen()" title="Precarga">`;
       })()}</td>
-      <td><select class="edt-sel" onchange="upd(${idx},'estop',this.value);renderResumen()">${opts}</select></td>
+      <td>${fbIsAdmin
+        ? `<select class="edt-sel" onchange="upd(${idx},'estop',this.value);renderResumen()">${opts}</select>`
+        : `<span class="b ${{'POR VERIFICAR':'bb','POR CARGAR':'bc','PENDIENTE':'bp','CARGADO':'bg','EN PROCESO':'ba'}[r.estop]||'bx'}" style="font-size:10px;white-space:nowrap">${es(r.estop||'PENDIENTE')}</span>`
+      }</td>
       <td style="text-align:center">${pendPickHtml}</td>
       <td style="text-align:center">${pendTareaHtml}</td>
       <td><input class="edt" type="text" value="${es(r.com||'')}" placeholder="—"
@@ -3913,7 +3916,7 @@ function applyGuestUI(){
   const banner = g('viewerBanner');
   banner.classList.remove('hidden');
   banner.style.cssText = 'background:rgba(16,185,129,.12);border-bottom:1px solid rgba(16,185,129,.25);padding:6px 20px;font-size:11.5px;color:#6EE7B7;display:flex;align-items:center;gap:8px';
-  g('viewerMsg').innerHTML = '👁 Modo invitado — solo lectura · sincronización en tiempo real';
+  g('viewerMsg').innerHTML = '👁 Invitado — solo lectura · en tiempo real';
   document.body.classList.add('guest-mode');
   document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
   // Tabs: solo Resumen y Clientes
@@ -3921,7 +3924,7 @@ function applyGuestUI(){
     const oc = el.getAttribute('onclick') || '';
     el.classList.toggle('hidden', !["'rs'", "'cl'"].some(t => oc.includes(t)));
   });
-  // Ocultar botón Incidencias del view-switch
+  // Ocultar Incidencias del view-switch
   const incBtn = g('vsw-inc');
   if(incBtn) incBtn.style.display = 'none';
   // Bloquear navegación a Incidencias
@@ -3930,6 +3933,15 @@ function applyGuestUI(){
     if(!fbIsAdmin && v === 'inc') return;
     _origSW(v);
   };
+  // IMPORTANTE: Ocultar Tracker maestro y mostrar solo Resumen
+  ['tk','up','al','vf','dc','cl'].forEach(x => {
+    const el = g('p-' + x); if(el) el.classList.add('hidden');
+  });
+  const rsEl = g('p-rs'); if(rsEl) rsEl.classList.remove('hidden');
+  // Activar tab Resumen
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', (t.getAttribute('onclick')||'').includes("'rs'"));
+  });
 }
 
 function lmGuest(){
