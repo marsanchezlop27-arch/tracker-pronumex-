@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tracker de Embarques — PRONUMEX</title>
+<title>Tracker de Embarques — MACRO TOLUCA</title>
 <script type="module">
 // ─── FIREBASE SDK ─────────────────────────────────────────────────────────────
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBD0iRmTA6xBBLfezVu046dGP7Q9GOS52k",
@@ -77,7 +78,7 @@ window.FB = { auth: fbAuth, db: fbDb,
 .lm-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
 .lm-inp{width:100%;background:var(--navy2);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:9px 12px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;margin-bottom:14px}
 .lm-inp:focus{outline:none;border-color:var(--cyan)}
-.lm-btn{width:100%;background:var(--blue);border:none;color:#fff;border-radius:7px;padding:10px;font-size:13px;font-weight:500;font-family:'IBM Plex Sans',sans-serif;cursor:pointer;margin-top:4px}
+.lm-btn{width:100%;background:var(--brand);border:none;color:#1a1a00;font-weight:700;border-radius:7px;padding:10px;font-size:13px;font-weight:500;font-family:'IBM Plex Sans',sans-serif;cursor:pointer;margin-top:4px}
 .lm-btn:hover{background:#1D4ED8}
 .lm-err{font-size:11.5px;color:var(--red);margin-top:8px;min-height:18px}
 /* VIEWER banner */
@@ -92,6 +93,7 @@ body.guest-mode #view-desc input:not([type=hidden]),body.guest-mode #view-desc s
 @keyframes pulse-sync{0%,100%{opacity:1}50%{opacity:.4}}
 
 :root{
+  --brand:#D0DF00;--brand-dark:#8a9400;--brand-bg:rgba(208,223,0,.13);
   --navy:#0A1628;--navy2:#0F1F3D;--blue:#1A56DB;--cyan:#06B6D4;
   --green:#10B981;--amber:#F59E0B;--red:#EF4444;--purple:#8B5CF6;
   --text:#E2E8F0;--text2:#94A3B8;--text3:#64748B;
@@ -101,14 +103,14 @@ body.guest-mode #view-desc input:not([type=hidden]),body.guest-mode #view-desc s
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--navy);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;min-height:100vh}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(26,86,219,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(26,86,219,0.04) 1px,transparent 1px);background-size:32px 32px;pointer-events:none;z-index:0}
-.topbar{position:sticky;top:0;z-index:100;background:rgba(10,22,40,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border2);padding:0 20px;display:flex;align-items:center;gap:14px;height:50px}
-.logo{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--cyan);letter-spacing:.08em}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(10,22,40,0.97);backdrop-filter:blur(12px);border-bottom:3px solid var(--brand);padding:0 20px;display:flex;align-items:center;gap:14px;height:50px}
+.logo{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--brand);letter-spacing:.08em}
 .sep{width:1px;height:18px;background:var(--border2)}
 .topbar-title{font-size:12px;color:var(--text2);flex:1}
 .clock{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text3)}
 .btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12px;font-family:'IBM Plex Sans',sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap}
 .btn:hover{background:rgba(255,255,255,.1)}
-.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#1a1a00;font-weight:600}
 .btn.primary:hover{background:#1D4ED8}
 .btn.ok{background:var(--green);border-color:var(--green);color:#fff}
 .btn.ok:hover{background:#059669}
@@ -312,7 +314,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 <!-- LOGIN MODAL -->
 <div id="loginModal">
   <div class="lm-box">
-    <div class="lm-logo">PRONUMEX // TRAXION</div>
+    <div class="lm-logo">MACRO TOLUCA KCMX // TRAXION</div>
     <div class="lm-sub">Ingresa tus credenciales para continuar</div>
     <div class="lm-lbl">Correo electrónico</div>
     <input class="lm-inp" type="email" id="lmEmail" placeholder="correo@empresa.com" autocomplete="username">
@@ -333,7 +335,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 </div>
 
 <div class="topbar">
-  <span class="logo">PRONUMEX // TRAXION</span>
+  <span class="logo">MACRO TOLUCA KCMX // TRAXION</span>
   <div class="sep"></div>
   <span class="topbar-title">Tracker de embarques — control por turno</span>
   <span id="topbarSup" style="font-size:11px;color:var(--cyan);font-weight:500;white-space:nowrap"></span>
@@ -368,6 +370,10 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <button class="vsw-btn" id="vsw-desc" onclick="switchView('desc')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
     Descargas
+  </button>
+  <button class="vsw-btn" id="vsw-hist" onclick="switchView('hist')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Histórico
   </button>
   <button class="vsw-btn" id="vsw-inc" onclick="switchView('inc')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -450,6 +456,14 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       </div>
     </div>
     <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;text-transform:uppercase">Turno</div>
+        <select id="tSelBuild" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 9px;font-size:12px;height:30px">
+          <option value="2">2do turno — 14:00 a 21:30</option>
+          <option value="1">1er turno — 06:00 a 14:00</option>
+          <option value="3">3er turno — 21:30 a 06:00</option>
+        </select>
+      </div>
       <button class="btn primary" onclick="build()">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Construir tracker
@@ -551,8 +565,8 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
           <tr>
             <th style="width:34px;text-align:center">#</th>
             <th data-c="emb" onclick="sort(this)" style="min-width:100px">No. Embarque</th>
-            <th data-c="nom" onclick="sort(this)" style="min-width:160px">Cliente</th>
-            <th data-c="sem" onclick="sort(this)" style="min-width:140px">Semáforo</th>
+            <th data-c="nom" onclick="sort(this)" style="min-width:200px">Cliente</th>
+            <th data-c="sem" onclick="sort(this)" style="min-width:160px">Semáforo</th>
             <th class="col-cortina" style="min-width:75px">Cortina</th>
             <th data-c="pal" onclick="sort(this)" style="min-width:60px">Pallets</th>
             <th data-c="pt"  onclick="sort(this)" style="min-width:75px">% Tareas</th>
@@ -561,7 +575,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
             <th class="col-precarga" style="min-width:110px;color:var(--cyan)">Precarga</th>
             <th class="col-monta" style="min-width:150px;color:var(--cyan)">Montacarguista</th>
             <th class="col-trans" style="min-width:80px;text-align:center">Transporte</th>
-            <th data-c="tra" onclick="sort(this)" style="min-width:100px">Unidad</th>
             <th class="col-verif" style="min-width:150px;color:var(--purple)">Verificador</th>
             <th class="col-custom" style="min-width:80px;text-align:center;color:var(--purple)">Custom.</th>
             <th style="min-width:120px;color:var(--cyan)">Estatus op.</th>
@@ -741,7 +754,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <!-- VERIFICACIÓN -->
   <div id="p-vf" class="hidden">
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:14px">
-      <div class="kpi" style="border-top:2px solid var(--blue)"><div class="kpi-v" id="kvTotal" style="color:var(--blue)">0</div><div class="kpi-l">Total fletes</div></div>
+      <div class="kpi" style="border-top:2px solid var(--brand)"><div class="kpi-v" id="kvTotal" style="color:var(--blue)">0</div><div class="kpi-l">Total fletes</div></div>
       <div class="kpi" style="border-top:2px solid var(--cyan)"><div class="kpi-v" id="kvVerif" style="color:var(--cyan)">0</div><div class="kpi-l">Verificados</div></div>
       <div class="kpi" style="border-top:2px solid var(--amber)"><div class="kpi-v" id="kvPendVerif" style="color:var(--amber)">0</div><div class="kpi-l">Pend. verificar</div></div>
       <div class="kpi" style="border-top:2px solid var(--green)"><div class="kpi-v" id="kvOk" style="color:var(--green)">0</div><div class="kpi-l">Customizados</div></div>
@@ -812,78 +825,59 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
       Registrar nueva incidencia
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px">
+    <!-- Fila 1: Quien reporta · Colaborador con incidencia · No. Embarque -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
       <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Quien reporta</div>
+        <div style="font-size:9.5px;color:var(--text3);margin-bottom:4px;text-transform:uppercase">Quien reporta</div>
         <div id="incColabWrap" style="position:relative">
-          <input id="incColab" class="edt-sel" type="text" placeholder="Escribe nombre o número..." style="width:100%;height:32px;font-size:12px">
+          <input id="incColab" class="edt-sel" type="text" placeholder="Nombre o número..." style="width:100%;height:30px;font-size:11px">
         </div>
         <input id="incColabId" type="hidden">
       </div>
       <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Colaborador con incidencia</div>
+        <div style="font-size:9.5px;color:var(--text3);margin-bottom:4px;text-transform:uppercase">Colaborador con incidencia</div>
         <div id="incColabIncWrap" style="position:relative">
-          <input id="incColabInc" class="edt-sel" type="text" placeholder="Escribe nombre o número..." style="width:100%;height:32px;font-size:12px">
+          <input id="incColabInc" class="edt-sel" type="text" placeholder="Nombre o número..." style="width:100%;height:30px;font-size:11px">
         </div>
         <input id="incColabIncId" type="hidden">
       </div>
       <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">No. Embarque</div>
-        <div style="display:flex;gap:6px">
-          <input id="incEmb" class="edt-sel" type="text" placeholder="ej. 1569426" style="flex:1;height:32px;font-size:12px">
-          <button class="btn" onclick="incBuscarEmb()" style="height:32px;padding:0 10px;font-size:11px">Buscar</button>
+        <div style="font-size:9.5px;color:var(--text3);margin-bottom:4px;text-transform:uppercase">No. Embarque</div>
+        <div style="display:flex;gap:5px">
+          <input id="incEmb" class="edt-sel" type="text" placeholder="ej. 1569426" style="flex:1;height:30px;font-size:11px">
+          <button class="btn" onclick="incBuscarEmb()" style="height:30px;padding:0 8px;font-size:11px">🔍</button>
         </div>
-        <div id="incEmbInfo" style="font-size:10px;color:var(--cyan);margin-top:4px"></div>
+        <div id="incEmbInfo" style="font-size:10px;color:var(--cyan);margin-top:3px"></div>
       </div>
-      <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Tipo de incidencia</div>
-        <select id="incTipo" class="edt-sel" onchange="incTipoChange()" style="height:32px;width:100%">
-          <option value="">— Seleccionar —</option>
-          <option value="SOBRANTE">SOBRANTE</option>
-          <option value="FALTANTE">FALTANTE</option>
-          <option value="PALLET DE MÁS">PALLET DE MÁS</option>
-          <option value="DAÑOS">DAÑOS</option>
-          <option value="CÓDIGOS CAMBIADOS">CÓDIGOS CAMBIADOS</option>
-          <option value="OTROS">OTROS (especificar)</option>
-        </select>
-        <input id="incTipoOtro" class="edt-sel hidden" type="text" placeholder="Describe la incidencia..." style="margin-top:6px;width:100%;height:32px;font-size:12px">
-      </div>
-      <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">SKU <span style="color:var(--text3);font-weight:400">(código de producto)</span></div>
-        <input id="incSku" class="edt-sel" type="text" placeholder="ej. 1008016299" style="height:32px;width:100%;font-size:12px;font-family:'IBM Plex Mono',monospace">
-      </div>
-      <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Cantidad <span style="color:var(--text3);font-weight:400">(unidad)</span></div>
-        <div style="display:flex;gap:6px">
-          <input id="incCantidad" class="edt-sel" type="number" min="0" step="0.1" placeholder="ej. 2" style="height:32px;width:80px;font-size:12px">
-          <select id="incUnidad" class="edt-sel" style="height:32px;flex:1;font-size:12px">
-            <option value="cs">cs (cases)</option>
-            <option value="pzas">pzas</option>
-            <option value="kg">kg</option>
-            <option value="pallets">pallets</option>
-            <option value="cajas">cajas</option>
-            <option value="unidades">unidades</option>
-          </select>
-        </div>
-      </div>
-      <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Descripción (opcional)</div>
-        <input id="incDesc" class="edt-sel" type="text" placeholder="Detalles adicionales..." style="height:32px;width:100%;font-size:12px">
-      </div>
-      <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Foto (opcional)</div>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--navy2);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;height:32px">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span id="incFotoLbl" style="font-size:11px;color:var(--text3)">Seleccionar foto</span>
-          <input id="incFoto" type="file" accept="image/*" capture="environment" class="hidden" onchange="incFotoChange(this)">
+    </div>
+    <!-- Fila 2: SKUs dinámicos (SKU · Cantidad · Unidad · Tipo) -->
+    <div style="margin-bottom:8px">
+      <div style="font-size:9.5px;color:var(--text3);margin-bottom:5px;text-transform:uppercase">SKU · Cantidad · Unidad · Tipo de incidencia</div>
+      <div id="incSkuList" style="display:grid;gap:5px;margin-bottom:5px"></div>
+      <button onclick="incAddSku()" style="background:var(--navy2);border:1px dashed var(--border2);color:var(--text3);border-radius:6px;padding:4px;font-size:11px;cursor:pointer;width:100%;text-align:center">+ Agregar otro SKU</button>
+    </div>
+    <!-- Fila 3: Foto -->
+    <div style="margin-bottom:10px">
+      <div style="font-size:9.5px;color:var(--text3);margin-bottom:4px;text-transform:uppercase">Foto (opcional)</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--navy2);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;height:30px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span style="font-size:11px;color:var(--text2)">📷 Galería</span>
+          <input id="incFoto" type="file" accept="image/*" multiple class="hidden" onchange="incFotoChange(this)">
         </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--navy2);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;height:30px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span style="font-size:11px;color:var(--text2)">📸 Cámara</span>
+          <input type="file" accept="image/*" capture="environment" class="hidden" onchange="incFotoChange(this)">
+        </label>
+        <span id="incFotoLbl" style="font-size:10px;color:var(--text3)"></span>
       </div>
     </div>
-    <div id="incFotoPreview" style="margin-bottom:10px;display:none">
-      <img id="incFotoImg" style="max-height:120px;border-radius:6px;border:1px solid var(--border2)">
-      <button onclick="incFotoLimpiar()" class="btn" style="margin-left:8px;font-size:10px;color:var(--red)">✕ Quitar</button>
-    </div>
-    <button class="btn ok" onclick="incGuardar()">
+    <div id="incFotoPreview" style="margin-bottom:10px;display:none;flex-wrap:wrap;gap:6px"></div>
+    <!-- Guardar -->
+    <input id="incTipo" type="hidden" value="">
+    <input id="incTipoOtro" type="hidden" value="">
+    <button class="btn ok" onclick="incGuardar()" style="width:100%;justify-content:center">
       <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
       Guardar incidencia
     </button>
@@ -914,8 +908,58 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   </div>
 
   <!-- Lista de incidencias -->
+  <!-- Gerencial: colaboradores -->
+  <div style="background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:14px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase">Ranking colaboradores con más incidencias</div>
+      <button onclick="incExportarGerencial()" style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer">📊 Exportar</button>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+      <button onclick="incExportarGerencial()" style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer">⬇ Descargar ranking</button>
+    </div>
+    <div id="incColabRank"></div>
+  </div>
+  <!-- Charts -->
+  <div id="incCharts" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    <div style="background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:14px">
+      <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:10px">Por tipo de incidencia</div>
+      <canvas id="chartTipo" height="160"></canvas>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:14px">
+      <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:10px">Por día (últimos 7 días)</div>
+      <canvas id="chartDia" height="160"></canvas>
+    </div>
+  </div>
   <div id="incLista"></div>
 </div><!-- /view-inc -->
+
+<div id="view-hist" class="hidden">
+  <!-- Sub-tabs -->
+  <div style="display:flex;gap:2px;background:var(--navy2);border-radius:8px;padding:3px;margin-bottom:14px;width:fit-content">
+    <button id="htab-emb" onclick="histSubTab('emb')" style="background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 16px;font-size:11px;font-weight:600;cursor:pointer">📦 Embarques</button>
+    <button id="htab-desc" onclick="histSubTab('desc')" style="background:none;color:var(--text3);border:none;border-radius:6px;padding:5px 16px;font-size:11px;font-weight:600;cursor:pointer">🚛 Descargas</button>
+  </div>
+  <!-- Embarques panel -->
+  <div id="hpan-emb">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="histSearch" class="edt-sel" type="text" placeholder="Buscar flete o cliente..." style="height:30px;font-size:11px;min-width:200px" oninput="renderHist()">
+        <button class="btn" onclick="exportHistCSV()" style="font-size:11px;border-color:var(--green);color:var(--green)">⬇ CSV</button>
+      </div>
+    </div>
+    <div id="histKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px"></div>
+    <div id="histContent"></div>
+  </div>
+  <!-- Descargas panel -->
+  <div id="hpan-desc" style="display:none">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <input id="histDescSearch" class="edt-sel" type="text" placeholder="Buscar montacarguista, origen, STO..." style="height:30px;font-size:11px;min-width:200px" oninput="renderHistDesc()">
+      <button class="btn" onclick="exportHistDescXLSX()" style="font-size:11px;border-color:var(--blue);color:var(--blue)">📊 Exportar Excel</button>
+    </div>
+    <div id="histDescKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px"></div>
+    <div id="histDescContent"></div>
+  </div>
+</div><!-- /view-hist -->
 
 
 </div><!-- /shell -->
@@ -1059,7 +1103,15 @@ function getTransNombre(unidad){
 function getVerifNombre(id){
   if(!id) return '';
   const v=VERIFICADORES.find(v=>v.id===id);
-  return v?v.nombre:id;
+  const n=v?v.nombre:id;
+  return n.split(' ')[0]; // first name only
+}
+
+function getMontaNombre(id){
+  if(!id) return '';
+  const m=MONTACARGUISTAS.find(m=>m.id===id);
+  const n=m?m.nombre:id;
+  return n.split(' ')[0]; // first name only
 }
 
 // ─── TOGGLE PANEL CARGA ──────────────────────────────────────────────────────
@@ -1354,18 +1406,40 @@ function patchDetPtr(){
 
 // ─── BUILD ────────────────────────────────────────────────────────────────────
 function build(){
-  // Cualquier archivo es válido — no se requieren los 3
-  if(!S.buf.sem && !S.buf.det && !S.buf.ptr){
-    document.getElementById('st').textContent='Carga al menos un archivo.'; return;
-  }
-  // Sin semáforo pero con datos existentes → solo actualizar det/ptr
-  if(!S.buf.sem && S.rows.length){
-    if(S.buf.det || S.buf.ptr){ patchDetPtr(); return; }
-  }
-  if(!S.buf.sem){
-    document.getElementById('st').textContent='Para el primer build carga el Semáforo.'; return;
+  const isFirstLoad = S.rows.length === 0;
+  if(isFirstLoad){
+    // Primera carga: los 3 archivos son obligatorios
+    const missing = [];
+    if(!S.buf.sem) missing.push('Semáforo');
+    if(!S.buf.det) missing.push('Detalle de avance');
+    if(!S.buf.ptr) missing.push('PTR');
+    if(missing.length){
+      document.getElementById('st').textContent =
+        'Faltan archivos obligatorios: '+missing.join(', ')+'.';
+      // Highlight missing slots
+      ['sem','det','ptr'].forEach(k=>{
+        const slot=document.getElementById('sl-'+k);
+        if(slot) slot.style.borderColor = S.buf[k] ? '' : 'var(--red)';
+      });
+      return;
+    }
+  } else {
+    // Actualizar turno: al menos el semáforo
+    if(!S.buf.sem && !S.buf.det && !S.buf.ptr){
+      document.getElementById('st').textContent='Carga al menos un archivo.'; return;
+    }
+    if(!S.buf.sem && S.rows.length){
+      if(S.buf.det || S.buf.ptr){ patchDetPtr(); return; }
+    }
+    // With existing data: sem is optional for update
+    if(!S.buf.sem && S.rows.length){
+      if(S.buf.det||S.buf.ptr){ patchDetPtr(); return; }
+    }
   }
 
+  // Read turno from selector (user choice overrides auto-detection)
+  const _tSelBuild = document.getElementById('tSelBuild');
+  if(_tSelBuild && isFirstLoad) S.sessionTurno = _tSelBuild.value;
   document.getElementById('dbg').classList.add('hidden');
 
   const semRows = toObjects(parseFile(S.buf.sem));
@@ -1431,16 +1505,13 @@ function build(){
         if(!v&&v!==0) return '';
         const s=String(v).trim();
         if(!s||s==='0') return '';
-        // Already a text status like "Fuera de Tiempo" or "En Tiempo"
         if(/[a-záéíóúñA-Z]{3,}/.test(s)) return s;
-        // Timedelta as "H:MM:SS" or "HH:MM:SS" → convert to readable
         const hmatch=s.match(/^(\d+):(\d{2}):(\d{2})/);
         if(hmatch){
           const h=parseInt(hmatch[1]),m=parseInt(hmatch[2]);
           if(h===0&&m===0) return 'En tiempo';
           return h>0?`${h}h ${m}m restantes`:`${m}m restantes`;
         }
-        // Decimal fraction of day (Excel stores time as fraction)
         const n=parseFloat(s);
         if(!isNaN(n)&&n>0&&n<10){
           const totalMin=Math.round(n*24*60);
@@ -1480,6 +1551,7 @@ function build(){
       precarga: '',
       monta:    '',
       estop:    '',  // will be set to PENDIENTE after saved check
+      evidencias: [],  // photos for this shipment
       verif:    '',  // verificador
       custom:   false, // customizado
       customBy: '',  // quien customizó
@@ -1516,6 +1588,8 @@ function build(){
   if(typeof kpiVerif==='function') kpiVerif();
   // Auto-detect shared containers in Eventos after build
   if(typeof evDetectarSilencioso==='function') evDetectarSilencioso();
+  // Save to semaforo historico
+  guardarHistoricoSemaforo();
   document.getElementById('kRow').classList.remove('hidden');
   document.getElementById('tabs').classList.remove('hidden');
   document.getElementById('btnExp').classList.remove('hidden');
@@ -1530,6 +1604,7 @@ function build(){
 function applyNew(){
   if(!S.buf.new){ showRes('err','Primero carga el archivo del nuevo semáforo.'); return; }
   const turno=document.getElementById('tSel').value;
+  S.sessionTurno = turno; // update session turno
   const newRows=toObjects(parseFile(S.buf.new));
 
   // 0. Snapshot CURRENT assignments into historial BEFORE wiping them
@@ -1733,6 +1808,7 @@ function pct(v){
   if(n>0&&n<1) return Math.round(n*100);
   return Math.round(n);
 }
+
 function scl(v){
   const s=String(v||'').toLowerCase();
   if(s.includes('fuera')) return 'br';
@@ -1824,6 +1900,30 @@ function estBadge(v){
 }
 
 // ─── RENDER TABLE ─────────────────────────────────────────────────────────────
+function initResizableCols(){
+  const tbl=document.getElementById('tb')?.closest('table'); if(!tbl) return;
+  tbl.querySelectorAll('th').forEach(th=>{
+    if(th.querySelector('.col-resizer')) return;
+    th.style.position='relative';
+    const h=document.createElement('div'); h.className='col-resizer';
+    th.appendChild(h);
+    let x0=0,w0=0;
+    const start=e=>{ e.preventDefault(); e.stopPropagation();
+      x0=(e.touches?e.touches[0]:e).clientX; w0=th.offsetWidth;
+      h.classList.add('rsz-active');
+      const mv=e=>{ const dx=(e.touches?e.touches[0]:e).clientX-x0;
+        const nw=Math.max(40,w0+dx); th.style.minWidth=nw+'px'; th.style.width=nw+'px'; };
+      const up=()=>{ h.classList.remove('rsz-active');
+        document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up);
+        document.removeEventListener('touchmove',mv); document.removeEventListener('touchend',up); };
+      document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+      document.addEventListener('touchmove',mv,{passive:false}); document.addEventListener('touchend',up);
+    };
+    h.addEventListener('mousedown',start);
+    h.addEventListener('touchstart',start,{passive:false});
+  });
+}
+
 function render(){
   const q=(g('qry')?.value||'').toLowerCase();
   const fs=g('fSem')?.value||'';
@@ -1958,7 +2058,7 @@ function render(){
       <td>${(()=>{
         const esHistorico = r._semNuevo && r._prevMonta;
         if(r.monta){
-          const nombre = MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta;
+          const nombre = getMontaNombre(r.monta)||r.monta;
           return esHistorico
             ? `<span class="tag-hist">${es(nombre)}</span>`
             : `<span style="background:rgba(6,182,212,.15);color:#67E8F9;border:1px solid rgba(6,182,212,.3);font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;display:inline-flex;align-items:center;gap:5px">${es(nombre)}<button onclick="upd(${idx},'monta','');render()" style="background:none;border:none;cursor:pointer;opacity:.5;color:inherit;font-size:10px;padding:0">✕</button></span>`;
@@ -1971,7 +2071,6 @@ function render(){
         </div>`;
       })()}</td>
       <td style="text-align:center">${transBadge}</td>
-      <td style="font-size:10px;color:var(--text2)">${es(r.tra)||'—'}</td>
       <td>${(()=>{
         if(r.verif){
           const vn=getVerifNombre(r.verif);
@@ -1991,6 +2090,11 @@ function render(){
           ? `<span style="font-size:9px;color:var(--purple);display:block;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${es(r.customBy)}">${es(r.customBy)}<button onclick="upd(${idx},'customBy','');render()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:9px;padding:0;margin-left:2px">✕</button></span>`
           : `<div style="position:relative"><input class="edt-sel" type="text" placeholder="¿Quién?" style="width:80px;font-size:9.5px;height:22px;padding:2px 5px" oninput="acFilter(this,ALL_PERSONAL,${idx},'customBy')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-c-${idx}');if(d)d.remove()},200)"></div>`
         }
+      </td>
+      <td style="text-align:center">
+        <button onclick="abrirEvidencias(${idx})" style="background:${(r.evidencias&&r.evidencias.length)?'rgba(16,185,129,.2)':'var(--navy2)'};border:1px solid ${(r.evidencias&&r.evidencias.length)?'var(--green)':'var(--border2)'};color:${(r.evidencias&&r.evidencias.length)?'var(--green)':'var(--text3)'};border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;white-space:nowrap">
+          📷 ${r.evidencias&&r.evidencias.length?r.evidencias.length+' foto'+(r.evidencias.length>1?'s':''):'+'}
+        </button>
       </td>
       <td><select class="edt-sel" onchange="upd(${idx},'estop',this.value)">${
         ['','POR VERIFICAR','POR CARGAR','PENDIENTE','CARGADO'].map(v=>`<option value="${v}"${(r.estop||'PENDIENTE')===v?' selected':''}>${v||'— estatus —'}</option>`).join('')
@@ -2628,7 +2732,7 @@ function renderClientes(){
   const totTarComp=rows.filter(r=>(parseFloat(r.pal)||0)>0&&r.pt===100).length;
 
   let html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:18px">'+
-    '<div class="kpi" style="border-top:2px solid var(--blue)"><div class="kpi-v" style="color:var(--blue)">'+totFletes+'</div><div class="kpi-l">Total fletes</div></div>'+
+    '<div class="kpi" style="border-top:2px solid var(--brand)"><div class="kpi-v" style="color:var(--blue)">'+totFletes+'</div><div class="kpi-l">Total fletes</div></div>'+
     '<div class="kpi" style="border-top:2px solid var(--green)"><div class="kpi-v" style="color:var(--green)">'+totCargados+'</div><div class="kpi-l">Cargados</div></div>'+
     '<div class="kpi" style="border-top:2px solid var(--amber)"><div class="kpi-v" style="color:var(--amber)">'+totPicking.toLocaleString('es-MX')+'</div><div class="kpi-l">Picking pend.</div></div>'+
 
@@ -2690,13 +2794,695 @@ function renderClientes(){
 }
 
 // ─── VISTA SWITCH ─────────────────────────────────────────────────────────────
+// ─── EVIDENCIAS POR EMBARQUE ─────────────────────────────────────────────────
+function abrirEvidencias(idx){
+  const r = S.rows[idx];
+  if(!r) return;
+  if(!r.evidencias) r.evidencias = [];
+  const modal = document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto';
+  modal.innerHTML=`<div style="background:var(--card);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:520px">
+    <div style="background:var(--navy2);border-bottom:1px solid var(--border2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-weight:700;font-size:13px">📷 Evidencias — ${es(r.emb)}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">${es(r.nom)}</div>
+      </div>
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px">✕</button>
+    </div>
+    <div style="padding:14px 16px">
+      <div id="ev-grid-${idx}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:12px">
+        ${(r.evidencias||[]).map((ev,ei)=>`
+          <div style="background:var(--navy2);border-radius:8px;overflow:hidden;position:relative">
+            <img src="${ev.b64}" style="width:100%;height:120px;object-fit:cover;cursor:pointer" onclick="evVerFoto('${ev.b64}')">
+            <div style="padding:5px 8px">
+              <div style="font-size:9px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ev.desc||'Sin descripción'}</div>
+              <div style="font-size:8px;color:var(--text3)">${ev.ts}</div>
+            </div>
+            <button onclick="evEliminar(${idx},${ei})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);border:none;cursor:pointer;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;display:flex;align-items:center;justify-content:center">✕</button>
+          </div>`).join('')}
+        ${!r.evidencias.length?'<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text3);font-size:12px">Sin evidencias. Agrega la primera foto.</div>':''}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="document.getElementById('ev-inp-${idx}').click()" class="btn ok" style="flex:1;justify-content:center;min-width:120px">
+          📷 Agregar foto(s)
+        </button>
+        <button onclick="document.getElementById('ev-cam-${idx}').click()" class="btn" style="border-color:var(--cyan);color:var(--cyan)">
+          📸 Tomar foto
+        </button>
+        <input id="ev-inp-${idx}" type="file" accept="image/*" multiple style="display:none" onchange="evSubir(${idx},this)">
+        <input id="ev-cam-${idx}" type="file" accept="image/*" capture="environment" style="display:none" onchange="evSubir(${idx},this)">
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function evAgregar(idx){
+  const inp = document.getElementById('ev-inp-'+idx);
+  if(inp) inp.click();
+}
+
+function evSubir(idx, inp){
+  const files=[...inp.files]; if(!files.length) return;
+  inp.value='';
+  let pending=files.length;
+  files.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const canvas=document.createElement('canvas');
+        const maxW=600; const scale=Math.min(1,maxW/img.width);
+        canvas.width=Math.round(img.width*scale); canvas.height=Math.round(img.height*scale);
+        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+        const b64=canvas.toDataURL('image/jpeg',0.82);
+        if(!S.rows[idx].evidencias) S.rows[idx].evidencias=[];
+        S.rows[idx].evidencias.push({
+          b64,
+          desc: '',
+          ts: new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'})
+        });
+        pending--;
+        if(pending===0){
+          const emb=S.rows[idx].emb;
+          if(!S.userEdits[emb]) S.userEdits[emb]={};
+          S.userEdits[emb].evidencias=S.rows[idx].evidencias;
+          syncEvidenciasToHist(emb, S.rows[idx].evidencias);
+          fbSave();
+          document.querySelector('div[style*="z-index: 9999"], div[style*="z-index:9999"]')?.remove();
+          abrirEvidencias(idx);
+        }
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function evEliminar(idx, ei){
+  if(!confirm('¿Eliminar esta foto?')) return;
+  S.rows[idx].evidencias.splice(ei,1);
+  const emb=S.rows[idx].emb;
+  if(!S.userEdits[emb]) S.userEdits[emb]={};
+  S.userEdits[emb].evidencias=S.rows[idx].evidencias;
+  fbSave();
+  document.querySelector('div[style*="fixed"]')?.remove();
+  abrirEvidencias(idx);
+}
+
+function evVerFoto(b64){
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;cursor:pointer';
+  modal.onclick=()=>modal.remove();
+  modal.innerHTML=`<img src="${b64}" style="max-width:95vw;max-height:95vh;object-fit:contain;border-radius:8px">`;
+  document.body.appendChild(modal);
+}
+
+
+// ─── HISTÓRICO DE SEMÁFOROS ──────────────────────────────────────────────────
+// Stored in S.turnoHistorial as array of {ts, fecha, semaforo, fletes[]}
+// Each flete: {emb, nom, sem, estop, pal, pt, pr, evidencias:[{b64,desc,ts}]}
+
+function guardarHistoricoSemaforo(){
+  if(!S.rows||!S.rows.length) return;
+  // Flatten all existing fletes into one lookup by emb
+  const existingEmbs = new Set();
+  S.turnoHistorial.forEach(h=>h.fletes?.forEach(f=>existingEmbs.add(f.emb)));
+
+  // Separate: update existing + add truly new ones
+  const newFletes = S.rows.filter(r=>!existingEmbs.has(r.emb));
+  const updateFletes = S.rows.filter(r=>existingEmbs.has(r.emb));
+
+  // Update status of existing fletes across all historico entries
+  updateFletes.forEach(r=>{
+    S.turnoHistorial.forEach(h=>{
+      const f=h.fletes?.find(x=>x.emb===r.emb);
+      if(f){
+        f.estop=r.estop; f.pt=r.pt; f.pr=r.pr;
+        f.evidencias=r.evidencias||f.evidencias||[];
+      }
+    });
+  });
+
+  // Only create a new historico entry for truly new fletes
+  if(newFletes.length){
+    // Check if there's already an entry for today
+    const todayStr=new Date().toLocaleDateString('es-MX');
+    const todayEntry=S.turnoHistorial.find(h=>h.fecha&&h.fecha.startsWith(todayStr));
+    if(todayEntry){
+      // Append new fletes to today's entry
+      todayEntry.fletes.push(...newFletes.map(r=>({
+        emb:r.emb, nom:r.nom, sem:r.sem, estop:r.estop,
+        pal:r.pal, pt:r.pt, pr:r.pr, evidencias:r.evidencias||[]
+      })));
+      todayEntry.actualizado=new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
+    } else {
+      S.turnoHistorial.push({
+        id: Date.now(),
+        fecha: new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
+        ts: Date.now(),
+        semaforo: S.sessionTurno||'',
+        fletes: newFletes.map(r=>({
+          emb:r.emb, nom:r.nom, sem:r.sem, estop:r.estop,
+          pal:r.pal, pt:r.pt, pr:r.pr, evidencias:r.evidencias||[]
+        }))
+      });
+    }
+  }
+  hSave();
+}
+
+// Called from evSubir when photos are added — sync to historico
+function syncEvidenciasToHist(emb, evidencias){
+  S.turnoHistorial.forEach(h=>{
+    const f=h.fletes?.find(x=>x.emb===emb);
+    if(f){ f.evidencias=evidencias; }
+  });
+  hSave();
+}
+
+function histSubTab(t){
+  ['emb','desc'].forEach(x=>{
+    document.getElementById('hpan-'+x).style.display = x===t?'':'none';
+    const btn = document.getElementById('htab-'+x);
+    if(btn){ btn.style.background=x===t?'var(--blue)':'none'; btn.style.color=x===t?'#fff':'var(--text3)'; }
+  });
+  if(t==='desc') renderHistDesc();
+  else renderHist();
+}
+
+function renderHist(){
+  const el=g('histContent'); if(!el) return;
+  const q=(g('histSearch')?.value||'').toLowerCase();
+
+  // Build flat map: one entry per emb (latest wins), ONLY fletes with photos
+  const fleteMap={};
+  [...S.turnoHistorial].sort((a,b)=>a.ts-b.ts).forEach(h=>{
+    (h.fletes||[]).forEach(f=>{
+      if(!f?.emb) return;
+      fleteMap[f.emb] = {...f, histId:h.id, fechaHist:h.fecha||''};
+    });
+  });
+  // Merge with live S.rows evidencias
+  S.rows.forEach(r=>{
+    if(!r.emb) return;
+    if(fleteMap[r.emb]){
+      if(r.evidencias?.length) fleteMap[r.emb].evidencias = r.evidencias;
+      fleteMap[r.emb].estop = r.estop||fleteMap[r.emb].estop;
+      fleteMap[r.emb].pal = r.pal||fleteMap[r.emb].pal;
+    } else if(r.evidencias?.length) {
+      fleteMap[r.emb]={emb:r.emb,nom:r.nom,sem:r.sem,estop:r.estop,pal:r.pal,evidencias:r.evidencias,histId:null,fechaHist:'Activo'};
+    }
+  });
+
+  // SOLO fletes con fotos
+  let allFletes = Object.values(fleteMap).filter(f=>f.evidencias?.length>0);
+  if(q) allFletes = allFletes.filter(f=>(f.emb||'').includes(q)||(f.nom||'').toLowerCase().includes(q));
+  allFletes.sort((a,b)=>(b.evidencias?.length||0)-(a.evidencias?.length||0));
+
+  const kpiEl=g('histKpis');
+  if(kpiEl) kpiEl.innerHTML=[
+    ['Fletes con fotos','var(--blue)',allFletes.length],
+    ['Total fotos','var(--green)',allFletes.reduce((a,f)=>a+(f.evidencias?.length||0),0)],
+  ].map(([l,c,v])=>`<div class="kpi" style="border-top:2px solid ${c}"><div class="kpi-v" style="color:${c}">${v}</div><div class="kpi-l">${l}</div></div>`).join('');
+
+  if(!allFletes.length){
+    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">Sin fletes con evidencias fotográficas.</div>';
+    return;
+  }
+
+  el.innerHTML=`<div style="background:var(--card);border:1px solid var(--border2);border-radius:10px;overflow:hidden">
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:11px">
+        <thead><tr style="background:var(--navy2)">
+          <th style="padding:6px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap">Embarque</th>
+          <th style="padding:6px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Cliente</th>
+          <th style="padding:6px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Estatus</th>
+          <th style="padding:6px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Pallets</th>
+          <th style="padding:6px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Fecha</th>
+          <th style="padding:6px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Fotos</th>
+        </tr></thead>
+        <tbody>${allFletes.map(f=>{
+          const evCount=f.evidencias?.length||0;
+          const estClr=f.estop==='CARGADO'?'var(--green)':f.estop==='POR CARGAR'?'var(--cyan)':f.estop==='PENDIENTE'?'var(--amber)':'var(--text3)';
+          return `<tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:5px 10px;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:10.5px">${es(f.emb)}</td>
+            <td style="padding:5px 10px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${es(f.nom||'—')}</td>
+            <td style="padding:5px 10px;font-size:10px;font-weight:600;color:${estClr}">${es(f.estop||'—')}</td>
+            <td style="padding:5px 10px;font-family:'IBM Plex Mono',monospace;font-size:10.5px">${f.pal||'—'}</td>
+            <td style="padding:5px 10px;font-size:9px;color:var(--text3);white-space:nowrap">${f.fechaHist||'—'}</td>
+            <td style="padding:5px 10px">
+              <span class="b bg" style="font-size:9px;cursor:pointer" onclick="histVerEvidencias('${f.histId||''}','${f.emb}')">${evCount} 📷</span>
+            </td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+
+
+}
+
+
+function getAllDescargas(){
+  // ONLY return registros that have at least one incidencia
+  const all = [];
+  const inHist = new Set(); // tracks UIDs already in historial
+
+  DV.historial.forEach(b => {
+    (b.registros||[]).forEach(r => {
+      if((r.incidencias||[]).length > 0){
+        all.push({...r, fechaTurno:b.fecha||'', turnoLabel:b.turno||''});
+      }
+      // Track by UID (preferred) or _dvIdx (legacy)
+      if(r._uid) inHist.add(r._uid);
+      else if(r._dvIdx !== undefined) inHist.add('idx:'+r._dvIdx);
+    });
+  });
+
+  // Live registros WITH incidencias not yet saved to historial
+  DV.registros.forEach((r,i) => {
+    if((r.incidencias||[]).length > 0){
+      const key = r._uid || ('idx:'+i);
+      if(!inHist.has(key)){
+        all.push({...r, fechaTurno:'Turno activo', turnoLabel:DV.turno||'', _liveIdx:i});
+      }
+    }
+  });
+
+  return all;
+}
+
+
+function histDescEliminarCard(btn){
+  if(!confirm('¿Eliminar este registro del histórico?')) return;
+  const key = btn.dataset.ck;
+  const d = window._hdCache?.[key];
+  if(!d){ renderHistDesc(); return; }
+  dvEliminarRegistro(d);
+  if(key) delete window._hdCache[key];
+  dvSaveHistorial(); dvSaveRegistros();
+  renderHistDesc();
+}
+
+function histDescEliminar(btn){
+  if(!confirm('¿Eliminar este registro del histórico?')) return;
+  const key = btn.dataset.rkey;
+  const d = window._hdCache?.[key];
+  if(!d){ renderHistDesc(); return; }
+  dvEliminarRegistro(d);
+  if(key) delete window._hdCache[key];
+  dvSaveHistorial(); dvSaveRegistros();
+  renderHistDesc();
+}
+
+function dvEliminarRegistro(d){
+  // 1. Remove from DV.registros (live turn) by liveIdx or fingerprint
+  if(d.liveIdx !== undefined && DV.registros[d.liveIdx]){
+    DV.registros.splice(d.liveIdx, 1);
+  } else if(d.fp){
+    const li = DV.registros.findIndex(r=>
+      ((r.monta||'')+'|'+(r.cortina||'')+'|'+(r.hora||'')+'|'+(r.origen||'')) === d.fp
+    );
+    if(li >= 0) DV.registros.splice(li, 1);
+  }
+  // 2. Remove from DV.historial by _dvIdx or fingerprint or folio
+  DV.historial.forEach(b=>{
+    b.registros = b.registros.filter(r=>{
+      if(d.dvIdx !== undefined && r._dvIdx === d.dvIdx) return false;
+      if(d.fp && ((r.monta||'')+'|'+(r.cortina||'')+'|'+(r.hora||'')+'|'+(r.origen||'')) === d.fp) return false;
+      if(d.folio && (r.incidencias||[]).some(inc=>inc.folio===d.folio)) return false;
+      return true;
+    });
+  });
+  DV.historial = DV.historial.filter(b=>b.registros.length>0);
+}
+
+function hdToggle(btn){
+  const key = btn.dataset.dk;
+  const panel = document.getElementById('desc-detail-'+key);
+  if(!panel) return;
+  const visible = panel.style.display === 'block';
+  panel.style.display = visible ? 'none' : 'block';
+  btn.textContent = visible ? '▶ Ver detalle' : '▼ Ocultar';
+}
+
+function histDescPDF(key){
+  const d = (window._hdCache||{})[key]; if(!d){ alert('Datos no encontrados.'); return; }
+  const skus = d.skus||[];
+  const fotos = d.fotos||[];
+  const pdfHTML = dvIncBuildHTML(
+    d.folio||'—', d.emb||'—',
+    d.linea||d.trans||'—',
+    d.placa||'—',
+    d.elab||d.mnNom||'—',
+    skus.map(s=>({...s,desc:d.desc||''})),
+    fotos,
+    d.fecha||new Date().toLocaleDateString('es-MX')
+  );
+  const blob = new Blob([pdfHTML],{type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'Reporte_'+(d.folio||'INC')+'_'+new Date().toISOString().slice(0,10)+'.html';
+  a.click();
+  setTimeout(()=>{ window.open(url,'_blank'); }, 400);
+}
+
+function histDescEmail(key){
+  const d = (window._hdCache||{})[key]; if(!d){ alert('Datos no encontrados.'); return; }
+  const skus = d.skus||[];
+  const resumen = skus.map((s,i)=>`${i+1}. ${s.tipo}: ${s.cant} ${s.unidad} — SKU: ${s.sku||'—'}`).join('\n');
+  const tipoRes = skus.map(s=>s.tipo).filter(Boolean).join(', ')||'—';
+  const now = new Date();
+  const fechaHora = now.toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' a las '+now.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+  const subject = encodeURIComponent('ALERTA '+(d.folio||'')+'  — Incidencia '+tipoRes+' detectada');
+  const body = encodeURIComponent(
+'Buenos días a todos,\n\nPara reportar la siguiente incidencia detectada el día de hoy '+fechaHora+', favor de apoyarme con la revisión:\n\n'+
+'═══════════════════════════════════════════\n'+
+'  REPORTE DE DAÑOS / INCIDENCIAS\n'+
+'  Folio: '+(d.folio||'—')+'\n'+
+'═══════════════════════════════════════════\n\n'+
+'DATOS DEL TRASPASO\n'+
+'• Línea / Transportista : '+(d.linea||'—')+'\n'+'• No. de Placa / Caja   : '+(d.placa||'—')+'\n'+
+'• No. STO / Embarque    : '+(d.emb||'—')+'\n'+
+'• Montacarguista        : '+(d.mnNom||'—')+'\n'+
+'• Elaborado por         : '+(d.elab||'—')+'\n\n'+
+'SKUS CON INCIDENCIA ('+skus.length+'):\n'+resumen+'\n\n'+
+'(Ver PDF adjunto para mayor detalle)\n\n'+
+'═══════════════════════════════════════════\n'+
+'MACRO TOLUCA KCMX // TRAXION\n'+
+'═══════════════════════════════════════════'
+  );
+  window.location.href='mailto:?subject='+subject+'&body='+body;
+}
+
+
+window._hdCache = {};
+
+function _histDescBuildRows(rows){
+  let html = '';
+  rows.forEach(r => {
+    const mnNom = MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta||'—';
+    const incs = r.incidencias||[];
+    if(incs.length){
+      incs.forEach((inc,ii)=>{
+        const key = 'hd_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+        window._hdCache[key] = {
+          folio: inc.folio||'', emb: inc.emb||'', linea: inc.linea||'',
+          placa: inc.placa||'', elab: inc.elab||'', mnNom: mnNom,
+          fecha: r.fechaTurno||'', fotos: inc.fotos||[],
+          skus: (r.incidencias||[]).map(x=>({sku:x.sku,cant:x.cant,unidad:x.unidad,tipo:x.tipo}))
+        };
+        html += '<tr style="border-bottom:1px solid var(--border);background:'+(ii%2===0?'rgba(239,68,68,.03)':'rgba(239,68,68,.06)')+'">'
+          +'<td style="padding:4px 10px;font-size:9px;color:var(--text3);white-space:nowrap">'+es(inc.fecha||r.fechaTurno||r.hora||'—')+'</td>'
+          +'<td style="padding:4px 10px;font-size:10.5px">'+es(mnNom)+'</td>'
+          +'<td style="padding:4px 10px;font-family:monospace;font-weight:700">'+(r.cortina?'C'+r.cortina:'—')+'</td>'
+          +'<td style="padding:4px 10px;font-size:10.5px">'+es(r.origen||'—')+'</td>'
+          +'<td style="padding:4px 10px;font-size:10.5px">'+es(inc.linea||r.trans||'—')+'</td>'
+          +'<td style="padding:4px 10px;font-family:monospace;font-size:10px">'+es(inc.sku||'—')+'</td>'
+          +'<td style="padding:4px 10px;font-weight:700;text-align:center">'+es(inc.cant||'—')+'</td>'
+          +'<td style="padding:4px 10px;font-size:10px">'+es(inc.unidad||'CAJAS')+'</td>'
+          +'<td style="padding:4px 10px"><span style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:1px 7px;font-size:9px;font-weight:700;white-space:nowrap">'+es(inc.tipo||'—')+'</span></td>'
+          +'<td style="padding:4px 8px;text-align:center;white-space:nowrap">'
+          +'<button data-hk="'+key+'" onclick="histDescPDF(this.dataset.hk)" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818CF8;border-radius:5px;padding:2px 7px;font-size:9px;cursor:pointer;margin-right:3px">📄 PDF</button>'
+          +'<button data-hk="'+key+'" onclick="histDescEmail(this.dataset.hk)" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green);border-radius:5px;padding:2px 7px;font-size:9px;cursor:pointer">✉</button>'
+          +'</td></tr>';
+      });
+    } else {
+      html += '<tr style="border-bottom:1px solid var(--border);opacity:.7">'
+        +'<td style="padding:4px 10px;font-size:9px;color:var(--text3)">'+es(r.fechaTurno||r.hora||'—')+'</td>'
+        +'<td style="padding:4px 10px;font-size:10.5px">'+es(mnNom)+'</td>'
+        +'<td style="padding:4px 10px;font-family:monospace">'+(r.cortina?'C'+r.cortina:'—')+'</td>'
+        +'<td style="padding:4px 10px;font-size:10.5px">'+es(r.origen||'—')+'</td>'
+        +'<td style="padding:4px 10px;font-size:10.5px">'+es(r.trans||'—')+'</td>'
+        +'<td colspan="4" style="padding:4px 10px;font-size:10px;color:var(--text3);font-style:italic">Sin incidencias</td>'
+        +'<td></td></tr>';
+    }
+  });
+  return html;
+}
+
+function renderHistDesc(){
+  const q = (g('histDescSearch')?.value||'').toLowerCase();
+  const allDesc = getAllDescargas();
+  const filtered = q ? allDesc.filter(r =>
+    (MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta||'').toLowerCase().includes(q) ||
+    (r.origen||'').toLowerCase().includes(q) ||
+    (r.trans||'').toLowerCase().includes(q) ||
+    (r.incidencias||[]).some(x=>(x.emb||'').includes(q)) ||
+    (r.cortina+'').includes(q)
+  ) : allDesc;
+
+  // All descargas, highlight those with incidencias
+  const conInc = filtered;
+
+  const kpiEl = g('histDescKpis');
+  const allIncs = conInc.flatMap(r => r.incidencias||[]);
+  const totalDescargas = filtered.length;
+  const descConInc = filtered.filter(r=>r.incidencias?.length>0).length;
+  if(kpiEl) kpiEl.innerHTML=[
+    ['Total descargas','var(--blue)',totalDescargas],
+    ['Con incidencias','var(--red)',descConInc],
+    ['Total incidencias','var(--amber)',allIncs.length],
+    ['Cajas afectadas','var(--purple)',allIncs.reduce((a,x)=>a+(parseFloat(x.cant)||0),0)],
+  ].map(([l,c,v])=>`<div class="kpi" style="border-top:2px solid ${c}"><div class="kpi-v" style="color:${c}">${v}</div><div class="kpi-l">${l}</div></div>`).join('');
+
+  // Sort newest first
+  // Sort by most recent incidencia ts, fallback to _ts of the row itself
+  conInc.sort((a,b)=>{
+    const aIncs=a.incidencias||[], bIncs=b.incidencias||[];
+    const ta = aIncs.length ? Math.max(...aIncs.map(x=>x.ts||0)) : (a._ts||a.ts||0);
+    const tb = bIncs.length ? Math.max(...bIncs.map(x=>x.ts||0)) : (b._ts||b.ts||0);
+    if(ta&&tb) return tb-ta;
+    return (b.fechaTurno||'').localeCompare(a.fechaTurno||'');
+  });
+
+  const el = g('histDescContent'); if(!el) return;
+  if(!conInc.length){
+    el.innerHTML='<div style="text-align:center;padding:32px;color:var(--text3)">Sin descargas registradas en el histórico.</div>';
+    return;
+  }
+
+  // Group by descarga — one card per descarga
+  const cards = conInc.map((r,idx) => {
+    const mnNom = MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta||'—';
+    const incs = r.incidencias||[];
+    const num = idx+1;
+    // Store data in cache for PDF/Email
+    const cacheKey = 'hd_desc_'+num+'_'+(r.fechaTurno||'').replace(/[^a-z0-9]/gi,'');
+    window._hdCache = window._hdCache||{};
+    // Fingerprint to identify row in both DV.registros and DV.historial
+    const _fp = (r.monta||'')+'|'+(r.cortina||'')+'|'+(r.hora||'')+'|'+(r.origen||'');
+    window._hdCache[cacheKey] = {
+      dvIdx: r._dvIdx,      // index in historial registros (if saved there)
+      liveIdx: r._liveIdx,  // index in DV.registros (if still live)
+      fp: _fp,              // fingerprint for matching
+      mnNom, cortina:r.cortina||'', origen:r.origen||'',
+      linea:incs[0]?.linea||r.trans||'',
+      placa:incs[0]?.placa||'',
+      fecha:incs[0]?.fecha||r.fechaTurno||r.hora||'',
+      elab:incs[0]?.elab||'', emb:incs[0]?.emb||'',
+      folio:incs[0]?.folio||'',
+      fotos:incs[0]?.fotos||[],
+      desc:incs[0]?.desc||'',
+      skus:incs.map(x=>({sku:x.sku,cant:x.cant,unidad:x.unidad,tipo:x.tipo}))
+    };
+    const hasInc = incs.length > 0;
+    const incBadge = hasInc
+      ? '<span style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700">⚠ '+incs.length+' inc.</span>'
+      : '<span style="font-size:10px;color:var(--text3)">Sin incidencias</span>';
+    const acciones = hasInc
+      ? '<button data-hk="'+cacheKey+'" onclick="histDescPDF(this.dataset.hk)" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818CF8;border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer;margin-right:4px">📄 PDF</button>'
+        +'<button data-hk="'+cacheKey+'" onclick="histDescEmail(this.dataset.hk)" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green);border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer;margin-right:4px">✉ Correo</button>'
+        +'<button data-ridx="'+num+'" data-rkey="'+cacheKey+'" onclick="histDescEliminar(this)" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer">🗑</button>'
+      : '';
+    const skuRows = incs.map(inc =>
+      '<tr style="border-bottom:1px solid var(--border)">'
+      +'<td style="padding:3px 10px;font-family:monospace;font-size:10px">'+es(inc.sku||'—')+'</td>'
+      +'<td style="padding:3px 10px;font-weight:700;text-align:center">'+es(inc.cant||'—')+'</td>'
+      +'<td style="padding:3px 10px;font-size:10px">'+es(inc.unidad||'CAJAS')+'</td>'
+      +'<td style="padding:3px 10px"><span style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:3px;padding:1px 6px;font-size:9px;font-weight:700">'+es(inc.tipo||'—')+'</span></td>'
+      +'</tr>'
+    ).join('');
+    return '<div style="background:var(--card);border:1px solid var(--border2);border-radius:10px;margin-bottom:10px;overflow:hidden">'
+      // Header: number + descarga info + badge + actions
+      +'<div style="background:var(--navy2);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-left:4px solid var(--brand,#D0DF00)">'
+        +'<span style="background:#D0DF00;color:#1a1a00;font-weight:700;font-size:11px;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+num+'</span>'
+        +'<div style="flex:1;display:flex;gap:10px;flex-wrap:wrap;align-items:center">'
+          +'<span style="font-size:11px;font-weight:600">'+es(mnNom)+'</span>'
+          +(r.cortina?'<span style="font-size:10px;color:var(--text3)">Cortina '+r.cortina+'</span>':'')
+          +(r.origen?'<span style="font-size:10px;color:var(--text3)">'+es(r.origen)+'</span>':'')
+          +(incs[0]?.emb?'<span style="font-family:monospace;font-size:10px;color:var(--cyan);background:rgba(6,182,212,.1);padding:1px 7px;border-radius:4px;border:1px solid rgba(6,182,212,.2)">STO: '+es(incs[0].emb)+'</span>':'')
+          +(incs[0]?.linea?'<span style="font-size:10px;color:var(--text3)">'+es(incs[0].linea)+'</span>':'')
+          +(incs[0]?.placa?'<span style="font-size:9px;color:var(--text3);font-family:monospace">🚛 '+es(incs[0].placa)+'</span>':'')
+          +(incs[0]?.fecha||r.fechaTurno?'<span style="font-size:9px;color:var(--text3)">'+(incs[0]?.fecha||r.fechaTurno)+'</span>':'')
+          +incBadge
+        +'</div>'
+        +'<div style="display:flex;gap:6px;align-items:center">'
+          +(hasInc?'<button data-dk="'+cacheKey+'" onclick="hdToggle(this)" style="background:var(--navy2);border:1px solid var(--border2);color:var(--text3);border-radius:5px;padding:3px 9px;font-size:9px;cursor:pointer">▶ Ver detalle</button>':'')
+          +acciones
+          +'<button data-ck="'+cacheKey+'" onclick="histDescEliminarCard(this)" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);border-radius:5px;padding:3px 8px;font-size:9px;cursor:pointer" title="Eliminar">🗑</button>'
+        +'</div>'
+      +'</div>'
+      // SKU table (collapsible, only if has incidencias)
+      +(hasInc?'<div id="desc-detail-'+cacheKey+'" style="display:none;padding:0">'
+        +'<table style="width:100%;border-collapse:collapse;font-size:11px">'
+          +'<thead><tr style="background:rgba(239,68,68,.05)">'
+            +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">SKU</th>'
+            +'<th style="padding:4px 10px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Cant.</th>'
+            +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Unidad</th>'
+            +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Tipo</th>'
+          +'</tr></thead><tbody>'+skuRows+'</tbody></table>'
+        +'</div>':'')
+      +'</div>';
+  }).join('');
+  el.style.maxHeight='65vh'; el.style.overflowY='auto';
+  el.innerHTML = cards || '<div style="text-align:center;padding:32px;color:var(--text3)">Sin descargas registradas.</div>';
+}
+
+function exportHistDescXLSX(){
+  const allDesc = getAllDescargas();
+  const rows = [['Fecha/Turno','Montacarguista','Cortina','Origen','Transportista','Placa','No. STO/Embarque','SKU','Cantidad','Unidad','Tipo Incidencia','Descripción']];
+  allDesc.forEach(r => {
+    const mnNom = MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta||'';
+    const incs = r.incidencias||[];
+    if(incs.length){
+      incs.forEach(inc => rows.push([
+        r.fechaTurno||r.hora||'',   // Fecha/Turno
+        mnNom,                       // Montacarguista
+        r.cortina||'',               // Cortina
+        r.origen||'',               // Origen
+        inc.linea||r.trans||'',     // Transportista
+        inc.placa||'',              // Placa
+        inc.emb||'',                // No. STO/Embarque
+        inc.sku||'',                // SKU
+        inc.cant||'',               // Cantidad
+        inc.unidad||'CAJAS',        // Unidad
+        inc.tipo||'',               // Tipo Incidencia
+        inc.desc||''                // Descripción
+      ]));
+    }
+  });
+  const csv = '﻿' + rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download = 'Descargas_Incidencias_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+function histBorrar(id){
+  if(!confirm('¿Eliminar este semáforo del histórico?')) return;
+  const idx=S.turnoHistorial.findIndex(h=>h.id===id);
+  if(idx>-1){ S.turnoHistorial.splice(idx,1); hSave(); renderHist(); }
+}
+
+function histAgregarEvidencia(histId, emb){
+  const inp=document.createElement('input');
+  inp.type='file'; inp.accept='image/*'; inp.capture='environment';
+  inp.onchange=()=>{
+    const file=inp.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const h=S.turnoHistorial.find(x=>x.id==histId); if(!h) return;
+      const f=h.fletes.find(x=>x.emb===emb); if(!f) return;
+      if(!f.evidencias) f.evidencias=[];
+      const desc=prompt('Descripción de la foto (opcional):')||'';
+      f.evidencias.push({b64:e.target.result,desc,ts:new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'})});
+      hSave(); fbSave(); renderHist();
+      alert('✓ Evidencia agregada');
+    };
+    reader.readAsDataURL(file);
+  };
+  inp.click();
+}
+
+function histVerEvidencias(histId, emb){
+  // Get evidencias: prefer live S.rows (most current), fallback to historico
+  let evidencias = [];
+  const liveRow = S.rows.find(x=>x.emb===emb);
+  if(liveRow?.evidencias?.length){
+    evidencias = liveRow.evidencias;
+  } else {
+    const h = S.turnoHistorial.find(x=>x.id==histId||x.id==+histId);
+    const f = h?.fletes?.find(x=>x.emb===emb);
+    evidencias = f?.evidencias||[];
+  }
+  if(!evidencias.length){ alert('Sin evidencias fotográficas para este embarque.'); return; }
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto';
+  modal.innerHTML=`<div style="background:var(--card);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:520px;padding:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-weight:600">📷 Evidencias — ${es(emb)} (${evidencias.length})</div>
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px">✕</button>
+    </div>
+    ${evidencias.map((ev,i)=>{
+      const src = ev.b64||ev.src||ev||'';
+      return `<div style="margin-bottom:10px;background:var(--navy2);border-radius:8px;overflow:hidden">
+        <img src="${src}" style="width:100%;height:220px;object-fit:cover;cursor:pointer;display:block" onclick="evVerFoto('${src}')">
+        <div style="padding:5px 10px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:10px;color:var(--text2)">${ev.desc||''}</span>
+          <span style="font-size:9px;color:var(--text3)">${ev.ts||''}</span>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function histVerIncidencias(emb){
+  const incs=INC.registros.filter(x=>x.emb===emb);
+  if(!incs.length){ alert('Sin incidencias para este embarque.'); return; }
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:20px';
+  const colores={'SOBRANTE':'var(--amber)','FALTANTE':'var(--red)','DAÑOS':'var(--red)','COLAPSO':'var(--red)','CALIDAD':'var(--cyan)','DAÑO TRANSPORTE':'var(--purple)','SOBRANTE':'var(--amber)','MAL CERTIFICADO':'var(--purple)'};
+  modal.innerHTML=`<div style="background:var(--card);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;padding:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-weight:600;color:var(--red)">⚠ Incidencias — ${es(emb)}</div>
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px">✕</button>
+    </div>
+    ${incs.map(inc=>`<div style="background:var(--navy2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid ${colores[inc.tipo]||'var(--text3)'}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span class="b" style="background:rgba(239,68,68,.15);color:#FCA5A5;border:1px solid rgba(239,68,68,.3);font-size:9px">${es(inc.tipo)}</span>
+        <span style="font-size:10px;color:var(--text3)">${inc.hora}</span>
+      </div>
+      ${inc.cantidad?`<div style="font-size:11px;font-weight:600">${inc.cantidad} ${inc.unidad||''}</div>`:''}
+      ${inc.desc?`<div style="font-size:11px;color:var(--text2)">${es(inc.desc)}</div>`:''}
+      ${inc.colab?`<div style="font-size:10px;color:var(--text3)">Por: ${es(inc.colab)}</div>`:''}
+      ${(inc.fotos||[]).length?`<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">${(inc.fotos||[inc.foto]).filter(Boolean).map(f=>`<img src="${f}" style="height:60px;width:60px;object-fit:cover;border-radius:5px;cursor:pointer" onclick="evVerFoto('${f}')">`).join('')}</div>`:''}
+    </div>`).join('')}
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+function exportHistCSV(){
+  const rows=[['Fecha semáforo','Embarque','Cliente','Semáforo','Estatus','Pallets','% Tareas','Evidencias']];
+  S.turnoHistorial.forEach(h=>{
+    h.fletes.forEach(f=>{
+      rows.push([h.fecha,f.emb,f.nom,f.sem,f.estop||'—',f.pal||'—',f.pt!==null?f.pt+'%':'—',f.evidencias?.length||0]);
+    });
+  });
+  const csv=rows.map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='historico_semaforo_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+
 function switchView(v){
-  ['emb','desc','inc'].forEach(x=>{
+  ['emb','desc','inc','hist'].forEach(x=>{
     g('view-'+x).classList.toggle('hidden', x!==v);
     g('vsw-'+x).classList.toggle('active', x===v);
   });
   if(v==='desc') dvRender();
-  if(v==='inc')  incRender();
+  if(v==='inc'){
+    if(!document.getElementById('incSkuList')?.children.length){ incAddSku(); }
+    // Re-attach autocomplete in case it was lost
+    const _ic=g('incColab'); if(_ic&&!_ic._acAttached){ makeAC(_ic,ALL_PERSONAL,(id,n)=>{g('incColabId').value=id;}); _ic._acAttached=true; }
+    const _ii=g('incColabInc'); if(_ii&&!_ii._acAttached){ makeAC(_ii,ALL_PERSONAL,(id,n)=>{g('incColabIncId').value=id;}); _ii._acAttached=true; }
+    incRender();
+  }
+  if(v==='hist') renderHist();
 }
 
 // ─── COLUMN VISIBILITY (nth-child CSS injection) ─────────────────────────────
@@ -2801,55 +3587,112 @@ function incBuscarEmb(){
   else { g('incEmbInfo').textContent=emb?'No encontrado en semáforo actual':''; }
 }
 
-let incFotoData='';
+let incFotoData=''; let incFotos=[]; // multiple photos support
 function incFotoChange(inp){
-  const file=inp.files[0]; if(!file) return;
+  const files=[...inp.files]; if(!files.length) return;
+  files.forEach(file=>{
   const reader=new FileReader();
   reader.onload=e=>{
-    incFotoData=e.target.result;
-    g('incFotoImg').src=incFotoData;
-    g('incFotoPreview').style.display='flex';
-    g('incFotoLbl').textContent=file.name;
+    const img_=new Image(); img_.onload=()=>{ const c=document.createElement('canvas'); const sc=Math.min(1,600/img_.width); c.width=Math.round(img_.width*sc); c.height=Math.round(img_.height*sc); c.getContext('2d').drawImage(img_,0,0,c.width,c.height); const b64=c.toDataURL('image/jpeg',0.82); incFotos.push(b64); incFotoData=b64; incRefreshFotos(); }; img_.src=e.target.result;
   };
   reader.readAsDataURL(file);
+  }); // end files.forEach
+  inp.value='';
+}
+
+function incRefreshFotos(){
+  const prev=g('incFotoPreview'); if(!prev) return;
+  prev.style.display=incFotos.length?'flex':'none';
+  g('incFotoLbl').textContent=incFotos.length?incFotos.length+' foto'+(incFotos.length>1?'s':''):'';
+  prev.innerHTML=incFotos.map((b,i)=>`<div style="position:relative;flex-shrink:0"><img src="${b}" style="height:80px;width:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border2)"><button onclick="incFotos.splice(${i},1);incFotoData=incFotos[0]||'';incRefreshFotos()" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);border:none;cursor:pointer;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px">✕</button></div>`).join('')+'<button onclick="document.getElementById(\"incFoto\").click()" style="height:80px;width:80px;background:var(--navy2);border:1px dashed var(--border2);border-radius:6px;cursor:pointer;color:var(--text3);font-size:20px">+</button>';
 }
 function incFotoLimpiar(){
-  incFotoData='';
+  incFotoData=''; incFotos=[];
   g('incFotoPreview').style.display='none';
   g('incFotoLbl').textContent='Seleccionar foto';
   g('incFoto').value='';
 }
 
+
+let _incSkuCount = 0;
+function incAddSku(){
+  const list = document.getElementById('incSkuList');
+  if(!list) return;
+  const id = ++_incSkuCount;
+  const TIPOS_INC = ['SOBRANTE','FALTANTE','PALLET DE MÁS','DAÑOS','COLAPSO','CALIDAD','DAÑO TRANSPORTE','MAL CERTIFICADO','CÓDIGOS CAMBIADOS'];
+  const row = document.createElement('div');
+  row.id = 'inc-sku-'+id;
+  row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr 2fr auto;gap:4px;align-items:center;background:var(--navy2);border-radius:6px;padding:5px 7px';
+  row.innerHTML = `
+    <input class="edt-sel" type="text" placeholder="SKU / Código" style="font-size:11px;height:28px;font-family:'IBM Plex Mono',monospace">
+    <input class="edt-sel" type="number" min="0" placeholder="Cant." style="font-size:11px;height:28px">
+    <select class="edt-sel" style="font-size:11px;height:28px">
+      <option value="CAJAS">Cajas</option><option value="PALLETS">Pallets</option><option value="PZ">Pz</option>
+    </select>
+    <select class="edt-sel" style="font-size:11px;height:28px">
+      <option value="">— Tipo —</option>
+      ${TIPOS_INC.map(t=>`<option value="${t}">${t}</option>`).join('')}
+    </select>
+    <button onclick="document.getElementById('inc-sku-${id}').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:15px;padding:0;width:18px">✕</button>
+  `;
+  list.appendChild(row);
+}
+
+function incGetSkus(){
+  const list = document.getElementById('incSkuList');
+  if(!list) return [];
+  return [...list.children].map(row => {
+    const inputs = row.querySelectorAll('input, select');
+    return { sku: inputs[0]?.value.trim()||'', cant: inputs[1]?.value||'0', unidad: inputs[2]?.value||'CAJAS', tipo: inputs[3]?.value||'' };
+  }).filter(s => s.tipo);
+}
+
 function incGuardar(){
-  const emb=g('incEmb').value.trim();
-  let tipo=g('incTipo').value;
-  if(tipo==='OTROS') tipo=g('incTipoOtro').value.trim()||'OTROS';
+  const emb = g('incEmb').value.trim();
+  let tipo = g('incTipo').value;
+  if(tipo==='OTROS') tipo = g('incTipoOtro').value.trim()||'OTROS';
   if(!emb){ alert('Ingresa el número de embarque.'); return; }
-  if(!tipo){ alert('Selecciona el tipo de incidencia.'); return; }
-  const r=S.rows.find(x=>x.emb===nk(emb));
-  const hora=new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
-  INC.registros.push({
-    id:Date.now(),
-    emb:emb.trim(), nom:r?.nom||'',
-    tipo, desc:g('incDesc').value.trim(),
-    colab: g('incColab')?.value||'',
-    colabInc: g('incColabInc')?.value||'',
-    sku:g('incSku').value.trim(),
-    cantidad:g('incCantidad').value.trim(),
-    unidad:g('incUnidad').value,
-    foto:incFotoData,
-    hora, ts:Date.now(),
-    turno:S.sessionTurno, sup:S.sessionSup
-  });
+  // Accept either main tipo OR skus with tipos
+  const skus = incGetSkus();
+  if(!tipo && !skus.length){ alert('Selecciona el tipo de incidencia o agrega al menos un SKU.'); return; }
+  const r = S.rows.find(x=>x.emb===nk(emb));
+  const hora = new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
+  const ts = Date.now();
+  if(skus.length){
+    // Save one record per SKU row
+    skus.forEach((s,si) => {
+      INC.registros.push({
+        id: ts+si,
+        emb: emb.trim(), nom: r?.nom||'',
+        tipo: s.tipo||tipo, desc: '',
+        colab: g('incColab')?.value||'',
+        colabInc: g('incColabInc')?.value||'',
+        sku: s.sku, cantidad: s.cant, unidad: s.unidad,
+        foto: si===0?incFotoData:'', fotos: si===0?(incFotos.length?[...incFotos]:[incFotoData].filter(Boolean)):[],
+        hora, ts: ts+si, turno: S.sessionTurno, sup: S.sessionSup
+      });
+    });
+  } else {
+    INC.registros.push({
+      id: ts, emb: emb.trim(), nom: r?.nom||'',
+      tipo, desc: '',
+      colab: g('incColab')?.value||'', colabInc: g('incColabInc')?.value||'',
+      sku: '', cantidad: '', unidad: 'CAJAS',
+      foto: incFotoData, fotos: incFotos.length?[...incFotos]:[incFotoData].filter(Boolean),
+      hora, ts, turno: S.sessionTurno, sup: S.sessionSup
+    });
+  }
   incSave();
-  // Reset form
-  g('incEmb').value=''; g('incTipo').value=''; g('incDesc').value='';
-  g('incSku').value=''; g('incCantidad').value='';
+  // Reset ALL fields
+  g('incEmb').value=''; g('incTipo').value='';
   if(g('incColab')) g('incColab').value='';
   if(g('incColabInc')) g('incColabInc').value='';
   g('incTipoOtro').value=''; g('incTipoOtro').classList.add('hidden');
   g('incEmbInfo').textContent=''; incFotoLimpiar();
-  incRender();
+  // Reset SKU list with fresh row
+  const skuList = document.getElementById('incSkuList');
+  if(skuList){ skuList.innerHTML=''; _incSkuCount=0; incAddSku(); }
+  incRender(); // show immediately
 }
 
 function incRender(){
@@ -2857,7 +3700,7 @@ function incRender(){
   const periodo=g('incFiltPeriodo')?.value||'turno';
   const now=new Date();
 
-  let regs=[...INC.registros].reverse();
+  let regs=[...INC.registros].sort((a,b)=>b.ts-a.ts);
   if(tipo) regs=regs.filter(r=>r.tipo===tipo);
   if(periodo==='turno') regs=regs.filter(r=>r.turno===S.sessionTurno&&r.sup===S.sessionSup);
   else if(periodo==='dia') regs=regs.filter(r=>new Date(r.ts).toDateString()===now.toDateString());
@@ -2885,6 +3728,48 @@ function incRender(){
     return;
   }
 
+  // Draw charts
+  incDrawCharts();
+
+  // ── Ranking por colaborador
+  const byColab={};
+  INC.registros.forEach(r=>{
+    const k=r.colabInc||r.colab||'Sin asignar';
+    if(!byColab[k]) byColab[k]={count:0,tipos:{}};
+    byColab[k].count++;
+    byColab[k].tipos[r.tipo]=(byColab[k].tipos[r.tipo]||0)+1;
+  });
+  // Build detailed byColab with SKU+tipo+cantidad+cajas totales
+  const byCo={};
+  INC.registros.forEach(r=>{
+    const k=r.colabInc||r.colab||'Sin asignar';
+    if(!byCo[k]) byCo[k]={count:0,totalCajas:0,detalles:[]};
+    byCo[k].count++;
+    byCo[k].totalCajas += parseFloat(r.cantidad)||0;
+    byCo[k].detalles.push({tipo:r.tipo,sku:r.sku||'—',cantidad:r.cantidad||'—',unidad:r.unidad||'',emb:r.emb,hora:r.hora});
+  });
+  const colabRanking=Object.entries(byCo).sort((a,b)=>b[1].count-a[1].count).slice(0,10);
+  const rankEl=document.getElementById('incColabRank');
+  if(rankEl){
+    rankEl.innerHTML=colabRanking.length?colabRanking.map(([nom,d],i)=>`
+      <div style="background:var(--navy2);border-radius:8px;margin-bottom:8px;overflow:hidden;border:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1px solid var(--border)">
+          <span style="font-size:12px;font-weight:700;color:${i===0?'var(--red)':i<3?'var(--amber)':'var(--text3)'};min-width:18px">${i+1}</span>
+          <span style="flex:1;font-size:12px;font-weight:600">${es(nom)}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:${i===0?'var(--red)':i<3?'var(--amber)':'var(--text)'}">${d.count} inc.</span>
+          <span style="font-size:10px;color:var(--text3);background:var(--card);padding:2px 7px;border-radius:4px;white-space:nowrap">${d.totalCajas} cajas</span>
+        </div>
+        <div style="padding:5px 10px">
+          ${d.detalles.map(x=>`<div style="display:grid;grid-template-columns:auto 1fr 1fr auto;gap:5px;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);font-size:10.5px">
+            <span style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700;white-space:nowrap">${es(x.tipo)}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);overflow:hidden;text-overflow:ellipsis">SKU:${es(x.sku)}</span>
+            <span style="font-weight:600;text-align:right">${es(x.cantidad)} ${es(x.unidad)}</span>
+            <span style="font-size:9px;color:var(--text3);white-space:nowrap">${es(x.hora)}</span>
+          </div>`).join('')}
+        </div>
+      </div>`).join(''):'<div style="font-size:11px;color:var(--text3);padding:8px 0">Sin datos</div>';
+  }
+
   const colores={'SOBRANTE':'var(--amber)','FALTANTE':'var(--red)','PALLET DE MÁS':'var(--purple)','DAÑOS':'var(--red)','CÓDIGOS CAMBIADOS':'var(--cyan)'};
   lst.innerHTML=regs.map(r=>`
     <div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:8px;border-left:3px solid ${colores[r.tipo]||'var(--text3)'}">
@@ -2901,10 +3786,89 @@ function incRender(){
           ${r.colab?`<div style="font-size:10px;color:var(--text3)">Reportado por: <strong>${es(r.colab)}</strong></div>`:''}
           ${r.desc?`<div style="font-size:11px;color:var(--text3)">${es(r.desc)}</div>`:''}
         </div>
-        ${r.foto?`<img src="${r.foto}" style="max-height:70px;max-width:90px;border-radius:6px;border:1px solid var(--border2);object-fit:cover;cursor:pointer" onclick="incVerFoto('${r.id}')" title="Ver foto">`:''}
+        ${(r.fotos||[r.foto]).filter(Boolean).length?`<div style="display:flex;gap:3px;flex-wrap:wrap">${(r.fotos||[r.foto]).filter(Boolean).slice(0,4).map(f=>`<img src="${f}" style="height:55px;width:55px;object-fit:cover;border-radius:5px;border:1px solid var(--border2);cursor:pointer" onclick="evVerFoto('${f}')">`).join('')}${(r.fotos||[]).length>4?`<div style="height:55px;width:55px;background:var(--navy2);border-radius:5px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3)">+${(r.fotos||[]).length-4}</div>`:''}</div>`:''}
         <button onclick="incEliminar(${r.id})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;opacity:.5;padding:2px" title="Eliminar">✕</button>
       </div>
     </div>`).join('');
+}
+
+function incExportarGerencial(){
+  // One row per incidencia detail
+  const rows=[['Colaborador','Embarque','Tipo Incidencia','SKU','Cantidad','Unidad','Hora','Reportado por']];
+  INC.registros.forEach(r=>{
+    rows.push([r.colabInc||r.colab||'Sin asignar', r.emb||'', r.tipo||'', r.sku||'', r.cantidad||'', r.unidad||'', r.hora||'', r.colab||'']);
+  });
+  const csv='﻿'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='Ranking_Colaboradores_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+}
+function _incExportarGerencialOLD(){
+  const byColab={};
+  INC.registros.forEach(r=>{
+    const k=r.colabInc||r.colab||'Sin asignar';
+    if(!byColab[k]) byColab[k]={count:0,tipos:{}};
+    byColab[k].count++;
+    byColab[k].tipos[r.tipo]=(byColab[k].tipos[r.tipo]||0)+1;
+  });
+  const rows=[['Posición','Colaborador','Total incidencias','Tipos principales']];
+  Object.entries(byColab).sort((a,b)=>b[1].count-a[1].count).forEach(([nom,d],i)=>{
+    const tiposStr=Object.entries(d.tipos).sort((a,b)=>b[1]-a[1]).map(([t,n])=>t+':'+n).join(' | ');
+    rows.push([i+1,nom,d.count,tiposStr]);
+  });
+  const csv=rows.map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download='Reporte_Gerencial_Incidencias_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+}
+// (end _incExportarGerencialOLD)
+
+function incDrawCharts(){
+  // ── Chart 1: by tipo ──
+  const c1=document.getElementById('chartTipo'); if(!c1) return;
+  const ctx1=c1.getContext('2d');
+  const tipos={}; INC.registros.forEach(r=>{ tipos[r.tipo]=(tipos[r.tipo]||0)+1; });
+  const labels1=Object.keys(tipos); const data1=Object.values(tipos);
+  const clrs=['#EF4444','#F59E0B','#8B5CF6','#06B6D4','#10B981','#3B82F6','#F97316'];
+  ctx1.clearRect(0,0,c1.width,c1.height);
+  c1.width=c1.offsetWidth||300; c1.height=160;
+  if(!labels1.length){ ctx1.fillStyle='#64748B'; ctx1.font='12px Arial'; ctx1.fillText('Sin datos',10,80); return; }
+  const maxV=Math.max(...data1);
+  const barW=Math.floor((c1.width-40)/labels1.length)-4;
+  labels1.forEach((label,i)=>{
+    const x=20+i*(barW+4);
+    const h=Math.floor((data1[i]/maxV)*(c1.height-40));
+    const y=c1.height-20-h;
+    ctx1.fillStyle=clrs[i%clrs.length];
+    ctx1.fillRect(x,y,barW,h);
+    ctx1.fillStyle='#94A3B8'; ctx1.font='9px Arial'; ctx1.textAlign='center';
+    ctx1.fillText(data1[i],x+barW/2,y-3);
+    ctx1.fillStyle='#64748B'; ctx1.font='8px Arial';
+    const shortLabel=label.length>8?label.slice(0,7)+'…':label;
+    ctx1.fillText(shortLabel,x+barW/2,c1.height-5);
+  });
+
+  // ── Chart 2: by day last 7 ──
+  const c2=document.getElementById('chartDia'); if(!c2) return;
+  const ctx2=c2.getContext('2d');
+  c2.width=c2.offsetWidth||300; c2.height=160;
+  ctx2.clearRect(0,0,c2.width,c2.height);
+  const days={}; const now=new Date();
+  for(let i=6;i>=0;i--){ const d=new Date(now); d.setDate(d.getDate()-i); const key=d.toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit'}); days[key]=0; }
+  INC.registros.forEach(r=>{ const d=new Date(r.ts); const key=d.toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit'}); if(key in days) days[key]++; });
+  const dLabels=Object.keys(days); const dData=Object.values(days);
+  const maxD=Math.max(...dData,1);
+  const bW2=Math.floor((c2.width-40)/dLabels.length)-4;
+  dLabels.forEach((label,i)=>{
+    const x=20+i*(bW2+4);
+    const h=Math.floor((dData[i]/maxD)*(c2.height-40));
+    const y=c2.height-20-h;
+    ctx2.fillStyle=dData[i]>0?'#3B82F6':'#1E293B';
+    ctx2.fillRect(x,y,bW2,Math.max(h,2));
+    if(dData[i]>0){ ctx2.fillStyle='#94A3B8'; ctx2.font='9px Arial'; ctx2.textAlign='center'; ctx2.fillText(dData[i],x+bW2/2,y-3); }
+    ctx2.fillStyle='#64748B'; ctx2.font='8px Arial'; ctx2.textAlign='center';
+    ctx2.fillText(label,x+bW2/2,c2.height-5);
+  });
 }
 
 function incVerFoto(id){
@@ -2937,16 +3901,34 @@ const DV = {
   historial:[]    // closed turns (persisted)
 };
 
-// Load DV historial from localStorage
+// Load DV state from localStorage
 (function(){
   try{
-    const d=localStorage.getItem('trx_dv_historial');
-    if(d) DV.historial=JSON.parse(d);
+    const h=localStorage.getItem('trx_dv_historial');
+    if(h) DV.historial=JSON.parse(h);
+  }catch(e){}
+  try{
+    const r=localStorage.getItem('trx_dv_registros');
+    if(r){
+      const d=JSON.parse(r);
+      if(d.registros?.length){ DV.registros=d.registros; DV.turno=d.turno||''; DV.sup=d.sup||''; }
+    }
   }catch(e){}
 })();
 
 function dvSaveHistorial(){
   try{ localStorage.setItem('trx_dv_historial',JSON.stringify(DV.historial)); }catch(e){}
+  dvSaveRegistros();
+}
+
+function dvSaveRegistros(){
+  try{
+    localStorage.setItem('trx_dv_registros',JSON.stringify({
+      registros: DV.registros,
+      turno: DV.turno,
+      sup: DV.sup
+    }));
+  }catch(e){}
 }
 
 const CORTINAS_LIST = Array.from({length:54},(_,i)=>i+1);
@@ -3010,13 +3992,14 @@ function dvCortinOpts(sel){
 }
 
 function dvAgregar(){
-  DV.registros.push({ monta:'', cortina:'', origen:'', hora:new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}) });
+  DV.registros.push({ _uid:'dv-'+Date.now()+'-'+Math.random().toString(36).slice(2,7), monta:'', cortina:'', origen:'', hora:new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}) });
   dvRender();
   setTimeout(()=>{ const el=g('dvList'); if(el) el.lastElementChild?.scrollIntoView({behavior:'smooth'}); },50);
 }
 
 function dvEliminar(i){
   DV.registros.splice(i,1);
+  dvSaveRegistros();
   dvRender();
 }
 
@@ -3025,24 +4008,28 @@ function dvSet(i,field,val){
   if(field==='cortina'&&!DV.registros[i].origen){
     DV.registros[i].origen = ORIGENES_PRESET[parseInt(val)]||'';
   }
+  dvSaveRegistros();
   dvRender();
 }
 
 function dvCerrarTurno(){
   if(!DV.turno){ alert('Selecciona el turno antes de cerrar.'); return; }
   if(!DV.registros.length){ alert('No hay descargas registradas en este turno.'); return; }
-  if(!confirm('¿Cerrar turno y guardar '+DV.registros.length+' descarga(s) en el historial?')) return;
-  DV.historial.push({
-    turno: DV.turno,
-    sup: DV.sup,
-    supNombre: SUPS[DV.sup]||DV.sup||'Sin asignar',
-    fecha: new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
-    registros: [...DV.registros]
-  });
+  const conInc = DV.registros.filter(r=>(r.incidencias||[]).length>0).length;
+  if(!confirm('¿Cerrar turno '+DV.turno+'? '+DV.registros.length+' descarga(s), '+conInc+' con incidencias. Se limpiarán del turno. Las incidencias siguen en Histórico.')) return;
+  // Incidencias already saved individually via dvGuardarEnHistorial
+  // Just clear current turn registros
+  DV.registros = [];
+  DV.turno = '';
+  DV.sup = '';
   dvSaveHistorial();
-  DV.registros=[];
+  dvSaveRegistros();
   dvRender();
-  alert('Turno guardado en historial.');
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#10B981;color:#fff;padding:18px 36px;border-radius:12px;font-size:16px;font-weight:700;z-index:2147483647;box-shadow:0 8px 32px rgba(0,0,0,.5);text-align:center';
+  t.textContent = '✓ Turno cerrado — Descargas limpiadas';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2500);
 }
 
 function dvBorrarHistorial(){
@@ -3051,6 +4038,612 @@ function dvBorrarHistorial(){
   dvSaveHistorial();
   dvRender();
 }
+
+// ── INCIDENCIA DESDE DESCARGAS ──────────────────────────────────────────────
+const TIPOS_INC_DV=['DAÑOS','COLAPSO','CALIDAD','DAÑO TRANSPORTE','SOBRANTE','FALTANTE','MAL CERTIFICADO','MOJADO','OTROS'];
+let _incDvActive = null; // {regIdx, fotos:[]}
+
+function dvIncidencia(i){
+  const r = DV.registros[i];
+  const mnNom = MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta||'—';
+  const existing = r.incidencias||[];
+  const hasData  = existing.length>0;
+  const first    = hasData ? existing[0] : null;
+
+  // Re-use existing folio or generate new one
+  const folio = first?.folio || ('INC-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4));
+
+  _incDvActive = {regIdx:i, fotos: first?.fotos ? [...first.fotos] : []};
+
+  document.getElementById('incDvModal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'incDvModal';
+  modal.className='_dv-modal-overlay';
+  modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.8);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto';
+
+  // Build existing SKU rows HTML
+  const existingSkuHTML = hasData ? existing.map((inc,ii)=>`
+    <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:6px;padding:6px 10px;font-size:10.5px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <span style="font-family:monospace;color:var(--cyan)">${inc.sku||'—'}</span>
+      <span style="font-weight:700">${inc.cant||'—'} ${inc.unidad||'CAJAS'}</span>
+      <span style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:3px;padding:1px 6px;font-size:9px;font-weight:700">${inc.tipo||'—'}</span>
+      <span style="color:var(--text3);font-size:9px">${inc.fecha||''}</span>
+    </div>`).join('') : '';
+
+  modal.innerHTML=`<div style="background:var(--card);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:540px;overflow:hidden">
+    <div style="background:rgba(208,223,0,.12);border-bottom:2px solid #D0DF00;padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-weight:700;color:#8a9400;font-size:14px">⚠ Incidencia — Descarga ${i+1}</div>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:2px">${mnNom} · Cortina ${r.cortina||'—'} · ${r.origen||'—'}</div>
+      </div>
+      <button onclick="document.getElementById('incDvModal').remove()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:22px;line-height:1">✕</button>
+    </div>
+    <div style="padding:16px 18px;display:grid;gap:11px">
+      ${hasData?`<div style="background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:8px;padding:10px 12px">
+        <div style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;font-weight:600">✓ Incidencias ya registradas (${existing.length})</div>
+        <div class="existing-incs-wrap" style="display:grid;gap:5px">${existingSkuHTML}</div>
+      </div>`:''}
+      <!-- Folio + Fecha -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Folio</div>
+          <input id="idf-folio" class="edt-sel" readonly value="${folio}" style="width:100%;height:30px;font-size:11px;font-family:'IBM Plex Mono',monospace">
+        </div>
+        <div>
+          <div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Fecha</div>
+          <input id="idf-fecha" class="edt-sel" readonly value="${new Date().toLocaleDateString('es-MX')}" style="width:100%;height:30px;font-size:11px">
+        </div>
+      </div>
+      <!-- STO/Embarque -->
+      <div>
+        <div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">No. STO / Embarque</div>
+        <input id="idf-emb" class="edt-sel" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="ej. 1569426" value="${first?.emb||''}" style="width:100%;height:30px;font-size:11px" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      </div>
+      <!-- Línea + Placa -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Línea / Transportista</div>
+          <input id="idf-linea" class="edt-sel" type="text" value="${first?.linea||r.trans||''}" placeholder="Línea / transportista..." style="width:100%;height:30px;font-size:11px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div>
+          <div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">No. de Placa / Caja</div>
+          <input id="idf-placa" class="edt-sel" type="text" value="${first?.placa||''}" placeholder="Placa o No. caja" style="width:100%;height:30px;font-size:11px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+        </div>
+      </div>
+      <!-- Nuevos SKUs -->
+      <div>
+        <div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">${hasData?'Agregar más SKUs':'SKU · Cantidad · Tipo'}</div>
+        <div id="idf-sku-list" style="display:grid;gap:5px;margin-bottom:6px"></div>
+        <button onclick="dvAddSkuRow()" style="background:var(--navy2);border:1px dashed var(--border2);color:var(--text3);border-radius:6px;padding:4px;font-size:11px;cursor:pointer;width:100%;text-align:center">+ Agregar SKU</button>
+      </div>
+      <!-- Descripción -->
+      <div>
+        <div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Descripción / Causa raíz</div>
+        <textarea id="idf-desc" class="edt-sel" placeholder="Describe la incidencia..." style="width:100%;height:55px;font-size:11px;resize:vertical;padding:6px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">${first?.desc||''}</textarea>
+      </div>
+      <!-- Elaborado por -->
+      <div>
+        <div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Elaborado por</div>
+        <input id="idf-elab" class="edt-sel" type="text" value="${first?.elab||es(SUPS[DV.sup]||DV.sup||mnNom)}" style="width:100%;height:30px;font-size:11px">
+      </div>
+      <!-- Fotos -->
+      <div>
+        <div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:6px">Evidencias fotográficas</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          <button onclick="document.getElementById('idf-foto-inp').click()" style="background:var(--navy2);border:1px solid var(--border2);color:var(--text2);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer">📷 Agregar</button>
+          <button onclick="document.getElementById('idf-foto-cam').click()" style="background:var(--navy2);border:1px solid var(--border2);color:var(--text2);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer">📸 Cámara</button>
+          <span id="idf-foto-label" style="font-size:10px;color:var(--text3);align-self:center"></span>
+        </div>
+        <input id="idf-foto-inp" type="file" accept="image/*" multiple style="display:none" onchange="dvIncFotos(this)">
+        <input id="idf-foto-cam" type="file" accept="image/*" capture="environment" style="display:none" onchange="dvIncFotos(this)">
+        <div id="idf-foto-preview" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:5px;margin-top:4px"></div>
+      </div>
+      <!-- Botones -->
+      <div style="display:flex;gap:8px;margin-top:2px;border-top:1px solid var(--border);padding-top:10px">
+        <button onclick="dvIncGuardar()" class="btn ok save-btn" style="flex:1;justify-content:center;font-size:12px">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Guardar incidencia
+        </button>
+        <button onclick="dvIncEditar()" class="btn edit-btn" style="display:none;border-color:var(--brand);color:var(--brand-dark);font-weight:600">
+          ✏ Editar
+        </button>
+        <button onclick="document.getElementById('incDvModal').remove()" class="btn" style="border-color:var(--border2);color:var(--text3)">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  window._dvModal = modal;
+  _incDvActive._modalEl = modal;
+  _dvSkuCount=0;
+  dvAddSkuRow();
+  if(_incDvActive.fotos.length) dvIncRefreshFotos();
+  // If already has saved incidencias: lock immediately
+  if(hasData && _incDvActive){
+    _incDvActive._saved = true;
+    const _sb=document.querySelector('#incDvModal .save-btn');
+    if(_sb){ _sb.setAttribute('disabled',''); _sb.style.opacity='.45'; _sb.style.cursor='not-allowed'; _sb.style.pointerEvents='none'; }
+    const _eb=document.querySelector('#incDvModal .edit-btn');
+    if(_eb) _eb.style.display='';
+  }
+}
+
+
+let _dvSkuCount = 0;
+const TIPOS_DV_SKU = ['DAÑOS','COLAPSO','CALIDAD','DAÑO TRANSPORTE','SOBRANTE','FALTANTE','MAL CERTIFICADO','MOJADO','OTROS'];
+
+function dvAddSkuRow(){
+  const list = document.getElementById('idf-sku-list');
+  if(!list) return;
+  const id = ++_dvSkuCount;
+  const row = document.createElement('div');
+  row.id = 'dv-sku-row-'+id;
+  row.style.cssText = 'display:grid;grid-template-columns:1.5fr 1fr 1fr 1.8fr auto;gap:5px;align-items:center;background:var(--navy2);border-radius:6px;padding:5px 7px';
+  row.innerHTML = `
+    <input class="edt-sel" type="text" placeholder="SKU" style="font-size:11px;height:26px;font-family:'IBM Plex Mono',monospace">
+    <input class="edt-sel" type="number" min="0" placeholder="Cant." style="font-size:11px;height:26px">
+    <select class="edt-sel" style="font-size:11px;height:26px">
+      <option>CAJAS</option><option>PALLETS</option><option>PIEZAS</option>
+    </select>
+    <select class="edt-sel" style="font-size:11px;height:26px">
+      <option value="">— Tipo —</option>
+      ${TIPOS_DV_SKU.map(t=>`<option value="${t}">${t}</option>`).join('')}
+    </select>
+    <button onclick="document.getElementById('dv-sku-row-${id}').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:14px;padding:0;width:18px">✕</button>
+  `;
+  list.appendChild(row);
+}
+
+
+function dvTipoChange(sel, id){
+  const otros = document.getElementById('dv-otros-'+id);
+  if(!otros) return;
+  otros.style.display = sel.value==='OTROS' ? '' : 'none';
+}
+function dvGetSkus(){
+  const list = document.getElementById('idf-sku-list');
+  if(!list) return [];
+  return [...list.children].map(row => {
+    const inputs = row.querySelectorAll('input, select');
+    return {
+      sku: inputs[0]?.value.trim()||'',
+      cant: inputs[1]?.value||'0',
+      unidad: inputs[2]?.value||'CAJAS',
+      tipo: inputs[3]?.value||''
+    };
+  }).filter(s => s.tipo);
+}
+
+function dvIncFotos(inp){
+  const files=[...inp.files]; if(!files.length) return;
+  files.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      // Compress
+      const img=new Image();
+      img.onload=()=>{
+        const canvas=document.createElement('canvas');
+        // 600px wide max, 82% quality — ideal for email/PDF (~72dpi)
+        const maxW=600;
+        const scale=Math.min(1,maxW/img.width);
+        canvas.width=Math.round(img.width*scale);
+        canvas.height=Math.round(img.height*scale);
+        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+        const b64=canvas.toDataURL('image/jpeg',0.82);
+        _incDvActive.fotos.push(b64);
+        dvIncRefreshFotos();
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  inp.value='';
+}
+
+function dvIncRefreshFotos(){
+  const grid=document.getElementById('idf-foto-preview'); if(!grid) return;
+  const fotos=_incDvActive?.fotos||[];
+  document.getElementById('idf-foto-label').textContent=fotos.length?fotos.length+' foto'+(fotos.length>1?'s':''):'';
+  grid.innerHTML=fotos.map((b64,i)=>`
+    <div style="position:relative">
+      <img src="${b64}" style="width:100%;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border2)">
+      <button onclick="_incDvActive.fotos.splice(${i},1);dvIncRefreshFotos()" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);border:none;cursor:pointer;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
+    </div>`).join('');
+}
+
+
+// ── POWER AUTOMATE INTEGRATION ──────────────────────────────────────────────
+let PA_WEBHOOK_URL = localStorage.getItem('pa_webhook_url')||'';
+
+function paConfig(){
+  const url = prompt('Ingresa la URL del webhook de Power Automate (HTTP Trigger):', PA_WEBHOOK_URL||'https://prod-XX.XX.logic.azure.com/...');
+  if(url===null) return;
+  PA_WEBHOOK_URL = url.trim();
+  localStorage.setItem('pa_webhook_url', PA_WEBHOOK_URL);
+  alert(PA_WEBHOOK_URL ? '✓ Webhook configurado' : 'Webhook borrado');
+}
+
+async function paSendIncidencia(data){
+  if(!PA_WEBHOOK_URL){ console.log('PA: no webhook configured'); return; }
+  try{
+    const resp = await fetch(PA_WEBHOOK_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        folio:      data.folio||'',
+        embarque:   data.emb||'',
+        transportista: data.linea||'',
+        placa:      data.placa||'',
+        elaborado:  data.elab||'',
+        descripcion:data.desc||'',
+        skus:       data.skus||[],
+        fecha:      data.fecha||new Date().toLocaleString('es-MX'),
+        montacarguista: data.mnNom||'',
+        cortina:    data.cortina||'',
+        origen:     data.origen||'',
+        sistema:    'MACRO TOLUCA KCMX // TRAXION'
+      })
+    });
+    if(resp.ok) console.log('PA: enviado OK');
+    else console.warn('PA: error', resp.status);
+  }catch(e){ console.warn('PA webhook error:', e.message); }
+}
+
+function dvIncGuardar(){
+  // ── GATE: block if already saved ──────────────────────
+  if(!_incDvActive || _incDvActive._saved) return;
+
+  // ── VALIDATE ──────────────────────────────────────────
+  const _skuList = document.getElementById('idf-sku-list');
+  const _allRows = _skuList ? [..._skuList.children].map(row=>{
+    const inp = row.querySelectorAll('input,select');
+    return {
+      sku:   inp[0]?.value.trim()||'',
+      cant:  inp[1]?.value||'0',
+      unidad:inp[2]?.value||'CAJAS',
+      tipo:  inp[3]?.value||''
+    };
+  }).filter(s => s.sku || s.cant !== '0') : [];
+
+  const skus = _allRows.filter(s => s.tipo);
+  if(!_allRows.length){ alert('Agrega al menos un SKU con cantidad.'); return; }
+  if(!skus.length){ alert('Selecciona el tipo de incidencia para al menos un SKU.'); return; }
+
+  // ── LOCK IMMEDIATELY — before any async work ──────────
+  _incDvActive._saved = true;
+  const _sb = document.querySelector('#incDvModal .save-btn');
+  if(_sb){ _sb.setAttribute('disabled',''); _sb.style.opacity='0.4'; _sb.style.pointerEvents='none'; }
+
+  // ── COLLECT DATA ──────────────────────────────────────
+  const folio  = (g('idf-folio')?.value||'INC-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4)).trim();
+  const emb    = (g('idf-emb')?.value||'').trim();
+  const linea  = (g('idf-linea')?.value||'').trim();
+  const placa  = (g('idf-placa')?.value||'').trim();
+  const elab   = (g('idf-elab')?.value||'').trim();
+  const desc   = (g('idf-desc')?.value||'').trim();
+  const fotos  = [...(_incDvActive.fotos||[])];
+  const regIdx = _incDvActive.regIdx ?? -1;
+  const isNew  = !DV.registros[regIdx]?.incidencias?.length;
+  const ts     = Date.now();
+  const fecha  = new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
+
+  // ── BUILD RECORDS ─────────────────────────────────────
+  const incRecords = skus.map((s,si) => ({
+    folio, emb, linea, placa, elab, desc,
+    sku: s.sku,
+    cant: String(parseFloat(s.cant)||0),
+    unidad: s.unidad,
+    tipo: s.tipo,
+    fotos: si===0 ? fotos : [],
+    fecha, ts: ts+si, dvRegIdx: regIdx
+  }));
+
+  // ── PERSIST ───────────────────────────────────────────
+  if(regIdx >= 0){
+    if(!DV.registros[regIdx].incidencias) DV.registros[regIdx].incidencias = [];
+    incRecords.forEach(inc => DV.registros[regIdx].incidencias.push(inc));
+    dvGuardarEnHistorial(DV.registros[regIdx], regIdx);
+  }
+  incRecords.forEach(inc => INC_DESC.push(inc));
+  try{ localStorage.setItem('trx_inc_desc', JSON.stringify(INC_DESC)); }catch(e){}
+  fbSave();
+  // Trigger Power Automate if configured
+  if(PA_WEBHOOK_URL && regIdx>=0){
+    const _paD = window._hdCache?.[Object.keys(window._hdCache||{}).pop()]||{};
+    paSendIncidencia({folio,emb,linea,placa,elab,desc,fecha,
+      skus:skus.map(s=>({sku:s.sku,cant:s.cant,unidad:s.unidad,tipo:s.tipo})),
+      mnNom:MONTACARGUISTAS.find(m=>m.id===DV.registros[regIdx]?.monta)?.nombre||'',
+      cortina:DV.registros[regIdx]?.cortina||'',
+      origen:DV.registros[regIdx]?.origen||''});
+  }
+
+  // ── UPDATE MODAL UI ───────────────────────────────────
+  if(_skuList){ _skuList.innerHTML=''; }
+  _dvSkuCount=0;
+  dvAddSkuRow();
+
+  const updatedIncs = DV.registros[regIdx]?.incidencias||[];
+  const existingWrap = document.querySelector('#incDvModal .existing-incs-wrap');
+  if(existingWrap){
+    existingWrap.innerHTML = updatedIncs.map(inc=>
+      `<div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:6px;padding:6px 10px;font-size:10.5px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <span style="font-family:monospace;color:var(--cyan)">${inc.sku||'—'}</span>
+        <span style="font-weight:700">${inc.cant||'—'} ${inc.unidad||'CAJAS'}</span>
+        <span style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:3px;padding:1px 6px;font-size:9px;font-weight:700">${inc.tipo||'—'}</span>
+        <span style="color:var(--text3);font-size:9px">${inc.fecha||''}</span>
+      </div>`
+    ).join('');
+    const lbl = existingWrap.previousElementSibling;
+    if(lbl) lbl.textContent = '✓ Incidencias registradas (' + updatedIncs.length + ')';
+  }
+
+  // Show Editar button
+  const _eb = document.querySelector('#incDvModal .edit-btn');
+  if(_eb) _eb.style.display = '';
+
+  // Update row badge
+  dvRender();
+
+  // ── SHOW SUCCESS TOAST ────────────────────────────────
+  const msg = isNew ? '✓ GUARDADO EXITOSAMENTE' : '✓ DATOS ACTUALIZADOS';
+  const clr = isNew ? '#10B981' : '#3B82F6';
+  const toast = document.createElement('div');
+  toast.style.cssText = [
+    'position:fixed', 'top:50%', 'left:50%',
+    'transform:translate(-50%,-50%)',
+    'background:'+clr, 'color:#fff',
+    'padding:22px 44px', 'border-radius:14px',
+    'font-size:18px', 'font-weight:700',
+    'z-index:2147483647',          // max possible z-index
+    'box-shadow:0 8px 40px rgba(0,0,0,.7)',
+    'text-align:center', 'pointer-events:none',
+    'min-width:280px', 'border:3px solid rgba(255,255,255,.4)',
+    'letter-spacing:.03em'
+  ].join(';');
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(()=>{
+    toast.style.transition='opacity .4s';
+    toast.style.opacity='0';
+    setTimeout(()=>toast.remove(), 400);
+  }, 2000);
+}
+
+
+function dvIncEditar(){
+  if(!confirm('¿Deseas editar esta incidencia? Los nuevos SKUs que agregues se añadirán al registro.')) return;
+  if(_incDvActive) _incDvActive._saved = false;
+  const _sb = document.querySelector('#incDvModal .save-btn');
+  if(_sb){
+    _sb.removeAttribute('disabled');
+    _sb.style.opacity='1';
+    _sb.style.cursor='';
+    _sb.style.pointerEvents='';
+    _sb.title='';
+  }
+  const _eb = document.querySelector('#incDvModal .edit-btn');
+  if(_eb) _eb.style.display='none';
+  // Show an editable alert bar
+  const modalInner=document.querySelector('#incDvModal>div');
+  if(modalInner){
+    const bar=document.createElement('div');
+    bar.style.cssText='background:#F59E0B;color:#1a0f00;padding:6px 14px;font-size:11px;font-weight:600;text-align:center';
+    bar.textContent='⚠ MODO EDICIÓN — Los nuevos SKUs se agregarán al registro existente';
+    modalInner.insertBefore(bar, modalInner.children[1]);
+    setTimeout(()=>bar.remove(),3000);
+  }
+}
+function dvGuardarEnHistorial(reg, regIdx){
+  const todayKey = new Date().toLocaleDateString('es-MX');
+  let entry = DV.historial.find(b => b._dayKey===todayKey && b.turno===(DV.turno||''));
+  if(!entry){
+    entry = {
+      _dayKey   : todayKey,
+      turno     : DV.turno||'',
+      sup       : DV.sup||'',
+      supNombre : SUPS[DV.sup]||DV.sup||'—',
+      fecha     : new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
+      registros : []
+    };
+    DV.historial.push(entry);
+  }
+  const d = new Date();
+  const snap = {...reg, _dvIdx:regIdx, _ts:d.getTime(), _isoDate:d.toISOString().slice(0,10)};
+  // Match by _uid (unique per descarga) — never collides between sessions
+  const uid = reg._uid;
+  const ei = uid
+    ? entry.registros.findIndex(r => r._uid === uid)        // match by stable UID
+    : entry.registros.findIndex(r => r._dvIdx === regIdx);  // fallback for old records
+  if(ei >= 0) entry.registros[ei] = snap;  // update existing
+  else entry.registros.push(snap);          // new record
+  dvSaveHistorial();
+}
+
+// Guardar + abrir PDF en una acción
+function dvIncGuardarYExportar(){
+  const skus = dvGetSkus();
+  if(!skus.length){ alert('Agrega al menos un SKU con tipo de incidencia.'); return; }
+  // Collect all data BEFORE closing modal
+  const folio = g('idf-folio')?.value||'INC-'+Date.now().toString().slice(-6);
+  const emb   = g('idf-emb')?.value.trim()||'';
+  const linea = g('idf-linea')?.value.trim()||'';
+  const placa = g('idf-placa')?.value.trim()||'';
+  const elab  = g('idf-elab')?.value.trim()||'';
+  const fotos = [...(_incDvActive?.fotos||[])];
+  const fecha = new Date().toLocaleDateString('es-MX');
+  // Save data
+  dvIncGuardar();
+  // Open PDF (modal already closed, data collected above)
+  const win = window.open('','_blank');
+  if(win){
+    win.document.write(dvIncBuildHTML(folio,emb,linea,placa,elab,skus,fotos,fecha));
+    win.document.close();
+  }
+}
+
+// Guardar PDF sin abrir ventana (descarga)
+function dvIncDescargarPDF(){
+  const skus = dvGetSkus();
+  if(!skus.length){ alert('Agrega al menos un SKU con tipo de incidencia.'); return; }
+  const folio = g('idf-folio')?.value||'INC-'+Date.now().toString().slice(-6);
+  const emb   = g('idf-emb')?.value.trim()||'';
+  const linea = g('idf-linea')?.value.trim()||'';
+  const placa = g('idf-placa')?.value.trim()||'';
+  const elab  = g('idf-elab')?.value.trim()||'';
+  const fotos = [...(_incDvActive?.fotos||[])];
+  const fecha = new Date().toLocaleDateString('es-MX');
+  const html_ = dvIncBuildHTML(folio,emb,linea,placa,elab,skus,fotos,fecha);
+  const blob = new Blob([html_],{type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Reporte_'+folio+'_'+fecha.replace(/\//g,'-')+'.html';
+  a.click();
+}
+
+// dvIncGuardarHTML replaced by dvIncDescargarPDF
+
+
+// dvIncBuildHTML(folio, emb, linea, placa, elab, skus, fotos, fecha)
+// skus = [{sku, cant, unidad, tipo}]
+function dvIncBuildHTML(folio, emb, linea, placa, elab, skus, fotos, fecha){
+  const tipColors = {
+    'DAÑOS':'#dc2626','COLAPSO':'#dc2626','CALIDAD':'#0891b2',
+    'FALTANTE':'#d97706','SOBRANTE':'#059669',
+    'DAÑO TRANSPORTE':'#7c3aed','MAL CERTIFICADO':'#7c3aed'
+  };
+  const skuArr = Array.isArray(skus) ? skus : [];
+  const skuRows = skuArr.map((s,i)=>`<tr style="background:${i%2===0?'#fff':'#f8fafc'}">
+    <td style="border:1px solid #e2e8f0;padding:6px 10px;font-family:monospace;font-size:11px">${s.sku||'—'}</td>
+    <td style="border:1px solid #e2e8f0;padding:6px 10px;text-align:center;font-weight:700">${s.cant||'0'}</td>
+    <td style="border:1px solid #e2e8f0;padding:6px 10px;text-align:center">${s.unidad||'CAJAS'}</td>
+    <td style="border:1px solid #e2e8f0;padding:6px 10px;text-align:center">
+      <span style="background:${tipColors[s.tipo]||'#475569'};color:#fff;padding:2px 10px;border-radius:4px;font-size:10px;font-weight:700">${s.tipo||'—'}</span>
+    </td>
+
+  </tr>`).join('');
+
+  const fotosHTML = (fotos||[]).length ? `
+    <div class="foto-wrap">
+      ${(fotos||[]).map(f=>`<img src="${f}" style="width:100%;height:180px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;display:block">`).join('')}
+    </div>` : '';
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Reporte Incidencia ${folio}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;padding:20px;color:#1a1a1a;font-size:12px}
+    .hdr{background:#1e293b;color:#fff;padding:18px 24px;border-radius:8px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-start;border-left:6px solid #D0DF00}
+    .hdr-title{font-size:18px;font-weight:700;letter-spacing:-.01em}
+    .hdr-sub{font-size:10px;opacity:.65;margin-top:4px}
+    .folio{font-size:15px;font-weight:700;text-align:right}
+    .fecha{font-size:10px;opacity:.65;text-align:right;margin-top:4px}
+    .sec{border:1px solid #e2e8f0;border-radius:6px;margin-bottom:14px;overflow:hidden}
+    .sec-ttl{background:#f1f5f9;padding:8px 14px;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid #e2e8f0;color:#334155;border-left:3px solid #D0DF00}
+    .grid2{display:grid;grid-template-columns:1fr 1fr}
+    .fld{padding:8px 14px;border-bottom:1px solid #f8fafc}
+    .fld:nth-child(odd){border-right:1px solid #f1f5f9}
+    .lbl{font-size:8.5px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+    .val{font-size:12px;font-weight:500}
+    .full{grid-column:1/-1}
+    table{width:100%;border-collapse:collapse;font-size:11px}
+    th{background:#f1f5f9;border:1px solid #e2e8f0;padding:6px 10px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#475569}
+    .firma-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;padding:20px 18px}
+    .firma-box{text-align:center}
+    .firma-line{border-top:1px solid #1a1a1a;margin-top:50px;padding-top:5px;font-size:9px;color:#64748b}
+    @media print{body{padding:10px}button{display:none}}
+  </style>
+  </head><body>
+  <div class="hdr">
+    <div>
+      <div class="hdr-title">REPORTE DE DAÑOS / INCIDENCIAS</div>
+      <div class="hdr-sub">MACRO TOLUCA KCMX // TRAXION</div>
+    </div>
+    <div>
+      <div class="folio">${folio}</div>
+      <div class="fecha">Fecha: ${fecha}</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-ttl">1. Datos del traspaso</div>
+    <div class="grid2">
+      <div class="fld"><div class="lbl">Línea / Transportista</div><div class="val">${linea||'—'}</div></div>
+      <div class="fld"><div class="lbl">No. de Placa / Caja</div><div class="val">${placa||'—'}</div></div>
+      <div class="fld"><div class="lbl">No. STO / Embarque</div><div class="val">${emb||'— Sin capturar —'}</div></div>
+      <div class="fld"><div class="lbl">Fecha de incidencia</div><div class="val">${fecha}</div></div>
+      <div class="fld full"><div class="lbl">Elaborado por</div><div class="val">${elab||'—'}</div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-ttl">2. SKUs con incidencia (${skuArr.length})</div>
+    <table>
+      <thead><tr>
+        <th>SKU / Código</th>
+        <th>Cantidad</th>
+        <th>Unidad</th>
+        <th>Tipo de incidencia</th>
+      </tr></thead>
+      <tbody>${skuRows||`<tr><td colspan="4" style="padding:10px;text-align:center;color:#94a3b8">Sin SKUs registrados</td></tr>`}</tbody>
+    </table>
+  </div>
+
+  ${skuArr[0]?.desc ? `<div class="sec"><div class="sec-ttl">3. Descripción / Causa raíz</div><div style="padding:10px 14px;font-size:12px;color:#374151">${skuArr[0].desc}</div></div>` : ''}
+  ${fotosHTML ? `<div class="sec"><div class="sec-ttl">${skuArr[0]?.desc?'4':'3'}. Evidencias fotográficas (${(fotos||[]).length})</div>${fotosHTML}</div>` : ''}
+
+  <div class="sec">
+    <div class="sec-ttl">${fotosHTML ? '4' : '3'}. Firmas y autorización</div>
+    <div class="firma-grid">
+      <div class="firma-box"><div class="firma-line">Elaboró<br>${elab||'_______________'}</div></div>
+      <div class="firma-box"><div class="firma-line">Revisó / Logística<br>_______________</div></div>
+      <div class="firma-box"><div class="firma-line">Autorizó / Dirección<br>_______________</div></div>
+    </div>
+  </div>
+
+  <div style="text-align:center;font-size:8.5px;color:#94a3b8;padding-top:8px">
+    Reporte generado automáticamente — MACRO TOLUCA KCMX // TRAXION
+  </div>
+  <scr'+'ipt>window.addEventListener("load",()=>{setTimeout(()=>window.print(),600);});</scr'+'ipt>
+  </body></html>`;
+}
+
+function dvIncEmail(){
+  // Works from modal (if open) OR last saved incidencia
+  const folio = g('idf-folio')?.value||'';
+  const emb   = g('idf-emb')?.value||'';
+  const linea = g('idf-linea')?.value||'';
+  const placa = g('idf-placa')?.value||'';
+  const elab  = g('idf-elab')?.value||'';
+  const skus  = dvGetSkus();
+  const fotos = _incDvActive?.fotos||[];
+  if(!skus.length && !folio){ alert('Primero captura la incidencia.'); return; }
+  const resumen = skus.map((s,i)=>`${i+1}. ${s.tipo}: ${s.cant} ${s.unidad} — SKU: ${s.sku||'—'}`).join('\n');
+  const tipoResumen = skus.map(s=>s.tipo).filter(Boolean).join(', ')||'Sin tipo';
+  const now = new Date();
+  const fechaHora = now.toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' a las '+now.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+  const subject = encodeURIComponent('ALERTA '+folio+' — Incidencia '+tipoResumen+' detectada');
+  const body = encodeURIComponent(
+'Buenos días a todos,\n\nPara reportar la siguiente incidencia detectada el día de hoy '+fechaHora+', favor de apoyarme con la revisión:\n\n'+
+'═══════════════════════════════════════════\n'+
+'  REPORTE DE DAÑOS / INCIDENCIAS\n'+
+'  Folio: '+folio+'   Fecha: '+now.toLocaleDateString('es-MX')+'\n'+
+'═══════════════════════════════════════════\n\n'+
+'DATOS DEL TRASPASO\n'+
+'• Línea / Transportista : '+(linea||'—')+'\n'+
+'• No. Placa / Caja      : '+(placa||'—')+'\n'+
+'• No. STO / Embarque    : '+(emb||'—')+'\n'+
+'• Elaborado por         : '+(elab||'—')+'\n\n'+
+'SKUS CON INCIDENCIA ('+skus.length+'):\n'+resumen+'\n\n'+
+'Evidencias fotográficas: '+fotos.length+' foto(s)\n'+
+'(Ver reporte PDF adjunto para mayor detalle)\n\n'+
+'═══════════════════════════════════════════\n'+
+'MACRO TOLUCA KCMX // TRAXION\n'+
+'═══════════════════════════════════════════'
+  );
+  window.location.href='mailto:?subject='+subject+'&body='+body;
+}
+
 
 function dvRender(){
   const regs=DV.registros;
@@ -3087,7 +4680,7 @@ function dvRender(){
         <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Supervisor</div>
         <select class="edt-sel" onchange="DV.sup=this.value;dvRender()" style="height:32px;min-width:220px">${supOpts}</select>
       </div>
-      <button class="btn ok" onclick="dvCerrarTurno()" style="margin-bottom:0">
+      <button class="btn ok" onclick="dvCerrarTurno()" title="Mueve las descargas al Histórico y reinicia el turno" style="margin-bottom:0">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         Cerrar turno y guardar
       </button>
@@ -3136,51 +4729,19 @@ function dvRender(){
           </div>
         </div>
         <div style="font-size:10px;color:var(--text3);white-space:nowrap;margin-left:6px;align-self:center">${r.hora}</div>
+        ${(()=>{
+          const _dvIncs = DV.registros[i]?.incidencias||[];
+          const _totalCajas = _dvIncs.reduce((a,x)=>a+(parseFloat(x.cant)||0),0);
+          const _label = _dvIncs.length
+            ? '⚠ '+_dvIncs.length+' inc · '+_totalCajas+' cjas'
+            : '⚠ Incidencia';
+          const _bg = _dvIncs.length ? 'rgba(239,68,68,.2)' : 'rgba(239,68,68,.1)';
+          const _bdr = _dvIncs.length ? 'rgba(239,68,68,.5)' : 'rgba(239,68,68,.3)';
+          return '<button onclick="dvIncidencia('+i+')" style="background:'+_bg+';border:1px solid '+_bdr+';color:var(--red);border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;white-space:nowrap;font-weight:'+('+_dvIncs.length+'?'700':'400')+'">'+_label+'</button>';
+        })()}
         <button class="dc-del" onclick="dvEliminar(${i})" title="Eliminar">✕</button>
       </div>`;
     }).join('');
-  }
-
-  // ── Historial de turnos cerrados ──
-  if(DV.historial.length){
-    html+=`<div style="margin-top:20px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <div class="card-ttl" style="flex:1;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:8px;margin-bottom:0">
-          Historial de turnos guardados (${DV.historial.length})
-          <span style="flex:1;height:1px;background:var(--border);display:block"></span>
-        </div>
-        <button class="btn" onclick="dvBorrarHistorial()" style="font-size:10px;color:var(--red);border-color:rgba(239,68,68,.3)">Borrar historial</button>
-      </div>`;
-    DV.historial.slice().reverse().forEach((bloque,bi)=>{
-      const realIdx=DV.historial.length-1-bi;
-      html+=`<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;margin-bottom:10px;overflow:hidden">
-        <div style="background:var(--navy2);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <span style="font-size:11px;font-weight:600;color:var(--text)">Turno ${bloque.turno} — ${bloque.supNombre}</span>
-          <span style="font-size:10px;color:var(--text3)">${bloque.fecha}</span>
-          <span class="b bb" style="font-size:9px">${bloque.registros.length} descargas</span>
-        </div>
-        <table style="width:100%;border-collapse:collapse;font-size:11px">
-          <thead><tr>
-            <th style="background:var(--navy2);padding:5px 10px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border2)">#</th>
-            <th style="background:var(--navy2);padding:5px 10px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border2)">Montacarguista</th>
-            <th style="background:var(--navy2);padding:5px 10px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border2)">Cortina</th>
-            <th style="background:var(--navy2);padding:5px 10px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border2)">Origen</th>
-            <th style="background:var(--navy2);padding:5px 10px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border2)">Hora</th>
-          </tr></thead>
-          <tbody>${bloque.registros.map((r,i)=>{
-            const mn=MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta||'—';
-            return `<tr style="border-bottom:1px solid var(--border)">
-              <td style="padding:5px 10px;color:var(--text3);font-size:10px">${i+1}</td>
-              <td style="padding:5px 10px;font-size:10.5px">${es(mn)}</td>
-              <td style="padding:5px 10px;font-family:'IBM Plex Mono',monospace;font-size:10.5px">${r.cortina?'CORTINA '+r.cortina:'—'}</td>
-              <td style="padding:5px 10px;font-size:10.5px">${es(r.origen)||'—'}</td>
-              <td style="padding:5px 10px;color:var(--text3);font-size:10px">${r.hora}</td>
-            </tr>`;
-          }).join('')}</tbody>
-        </table>
-      </div>`;
-    });
-    html+='</div>';
   }
 
   lst.innerHTML=html;
@@ -3854,7 +5415,7 @@ function imprimirReporte(){
     <h1>Reporte de Turno — PRONUMEX / TRAXION</h1>
     <div class="sub">${sub}</div>
     ${content}
-    <script>window.print();<\/script>
+    <scr'+'ipt>window.print();</scr'+'ipt>
   </body></html>`);
   w.document.close();
 }
@@ -3924,9 +5485,9 @@ function applyGuestUI(){
     const oc = el.getAttribute('onclick') || '';
     el.classList.toggle('hidden', !["'rs'", "'cl'"].some(t => oc.includes(t)));
   });
-  // Ocultar Incidencias del view-switch
-  const incBtn = g('vsw-inc');
-  if(incBtn) incBtn.style.display = 'none';
+  // Ocultar Incidencias y Histórico del view-switch para invitados
+  const incBtn = g('vsw-inc'); if(incBtn) incBtn.style.display='none';
+  const histBtn = g('vsw-hist'); if(histBtn) histBtn.style.display='none';
   // Bloquear navegación a Incidencias
   const _origSW = window.switchView;
   window.switchView = function(v){
@@ -4126,6 +5687,8 @@ window.build = function(){ _origBuild(); fbSave(); };
 
 const _origApplyNew = applyNew;
 window.applyNew = function(){ _origApplyNew(); fbSave(); };
+
+
 
 </script>
 </body>
