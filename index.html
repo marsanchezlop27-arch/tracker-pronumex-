@@ -3962,7 +3962,7 @@ const INC = { registros:[] };
 // Initialize autocompletes after page loads
 
 // ══ MÓDULO VACACIONES ══════════════════════════════════════════════════════
-let VAC_DATA=[];
+window.VAC_DATA = window.VAC_DATA || [];  // global so fbSave can read it
 let _vacYear=new Date().getFullYear();
 let _vacMonth=new Date().getMonth();
 (function(){try{const d=localStorage.getItem('trx_vacaciones');if(d)VAC_DATA=JSON.parse(d);}catch(e){}})();
@@ -6417,7 +6417,7 @@ function fbSave(){
         // INC data
         incRegistros: INC.registros,
         // Vacaciones
-        vacData: (window.VAC_DATA||[]),
+        vacData: (window.VAC_DATA||VAC_DATA||[]),
         ts, device: DEVICE_ID
       };
       autoSaveVerifHistorial(); // persist verif assignments
@@ -6437,7 +6437,27 @@ function fbSave(){
 
 function applyRemoteData(data){
   // Only overwrite rows if remote has data (never blank out existing rows)
-  if(data.rows && data.rows.length)   S.rows           = data.rows;
+  if(data.rows && data.rows.length){
+    // Detect assignment changes from other devices and notify
+    if(S.rows && S.rows.length && data.device && data.device!==DEVICE_ID){
+      data.rows.forEach(nr=>{
+        const or = S.rows.find(r=>r.emb===nr.emb);
+        if(!or) return;
+        if(nr.monta && nr.monta!==or.monta){
+          const nom=MONTACARGUISTAS.find(m=>m.id===nr.monta)?.nombre||nr.monta;
+          _notifyAssignment('Montacarguista',nom,nr.nom||nr.emb||'');
+        }
+        if(nr.verif && nr.verif!==or.verif){
+          const nom=VERIFICADORES.find(v=>v.id===nr.verif)?.nombre||nr.verif;
+          _notifyAssignment('Verificador',nom,nr.nom||nr.emb||'');
+        }
+        if(nr.precarga && nr.precarga!==or.precarga){
+          _notifyAssignment('Precarga',nr.precarga,nr.nom||nr.emb||'');
+        }
+      });
+    }
+    S.rows = data.rows;
+  }
   if(data.userEdits)                  S.userEdits       = data.userEdits;
   if(data.turnoHistorial)             S.turnoHistorial  = data.turnoHistorial;
   if(data.posAlerts)                  S.posAlerts       = data.posAlerts;
@@ -6554,9 +6574,58 @@ window.addEventListener('online',()=>{
   if(window.FB){ console.log('Network restored, resyncing...'); startSync(); }
 });
 
+
+// Show local notification for assignment changes
+function _notifyAssignment(tipo, quien, flete){
+  // Push Notification API (if permission granted)
+  if(window.Notification && Notification.permission==='granted'){
+    new Notification('MACRO TOLUCA · '+tipo+' asignado', {
+      body: quien+' → '+flete,
+      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="%231e293b"/><text y="24" font-size="20" x="6">📦</text></svg>'
+    });
+    return;
+  }
+  // Request permission if not yet asked
+  if(window.Notification && Notification.permission==='default'){
+    Notification.requestPermission().then(p=>{
+      if(p==='granted') _notifyAssignment(tipo, quien, flete);
+    });
+    return;
+  }
+  // Fallback: in-app toast
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:var(--card,#1e293b);color:var(--text,#fff);border:1px solid var(--brand,#D0DF00);border-radius:10px;padding:10px 16px;font-size:12px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.4);max-width:280px';
+  t.innerHTML = '<div style="font-size:10px;color:var(--brand,#D0DF00);font-weight:700;margin-bottom:3px">'+tipo.toUpperCase()+' ASIGNADO</div><div style="font-weight:600">'+quien+'</div><div style="font-size:10px;color:var(--text3,#94a3b8);margin-top:2px">'+flete+'</div>';
+  document.body.appendChild(t);
+  setTimeout(()=>{ t.style.transition='opacity .4s'; t.style.opacity='0'; setTimeout(()=>t.remove(),400); }, 4000);
+}
+
+// Request notification permission on startup
+(function(){
+  if(window.Notification && Notification.permission==='default'){
+    // Don't auto-request — wait for first assignment
+  }
+})();
+
 // ── Patch upd/listo/togglePrio/updCustom/updVerif to also save ──
 const _origUpd = upd;
-window.upd = function(idx,field,val){ _origUpd(idx,field,val); _saveStateToLocalStorage(); fbSave(); };
+window.upd = function(idx,field,val){
+  _origUpd(idx,field,val);
+  _saveStateToLocalStorage();
+  fbSave();
+  // Notify other users of assignment changes
+  if(['monta','precarga','verif'].includes(field) && val){
+    const r = S.rows[idx];
+    if(!r) return;
+    const labels = {monta:'Montacarguista',precarga:'Precarga',verif:'Verificador'};
+    const who = field==='monta'
+      ? (MONTACARGUISTAS.find(m=>m.id===val)?.nombre||val)
+      : field==='verif'
+      ? (VERIFICADORES.find(v=>v.id===val)?.nombre||val)
+      : val;
+    _notifyAssignment(labels[field], who, r.nom||r.emb||'');
+  }
+};
 
 const _origListo = listo;
 window.listo = function(i){ _origListo(i); fbSave(); };
