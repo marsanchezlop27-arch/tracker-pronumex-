@@ -989,13 +989,13 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
-const S = { rows:[], buf:{}, sc:'ci', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[] };
+const S = { rows:[], buf:{}, sc:'ci', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[], assignMap:{} };
 
 // ─── HISTORIAL PERSISTENTE (localStorage) ────────────────────────────────────
 
 // Save current verif assignments to historial automatically (called on fbSave)
 function autoSaveVerifHistorial(){
-  const verifRows = S.rows.filter(r=>r.verif);
+  const verifRows = S.rows.filter(r=>r.verif||r.monta||r.precarga);
   if(!verifRows.length) return;
   const now = new Date();
   const todayKey = now.toLocaleDateString('es-MX');
@@ -1019,8 +1019,10 @@ function autoSaveVerifHistorial(){
     const existing = entry.fletes.findIndex(f=>f.emb===r.emb);
     const snap = {
       emb:r.emb, nom:r.nom, sem:r.sem,
-      verif:r.verif||'', monta:r.monta||'',
-      estop:r.estop||'', pt:r.pt||'',
+      verif:r.verif||'', monta:r.monta||'', precarga:r.precarga||'',
+      estop:r.estop||'', pt:r.pt||'', com:r.com||'',
+      prio:r.prio||false, prioNum:r.prioNum||0,
+      evidencias:r.evidencias||[],
       fecha:hora, ts:now.getTime()
     };
     if(existing>=0) entry.fletes[existing]=snap;
@@ -1040,6 +1042,14 @@ function hLoad(){
   }catch(e){}
 }
 hLoad(); // cargar historial
+
+// Load persistent assignments map (survives all builds)
+(function _loadAssignMap(){
+  try{
+    const raw = localStorage.getItem('trx_assign_map');
+    if(raw){ const m=JSON.parse(raw); if(m && typeof m==='object') S.assignMap=m; }
+  }catch(e){}
+})();
 
 // ── Auto-restore from localStorage on startup ──────────────────
 // _autoRestore moved to window.load
@@ -1504,19 +1514,11 @@ function build(){
   S._lastBuildTs = Date.now();
   const isFirstLoad = S.rows.length === 0;
   if(isFirstLoad){
-    // Primera carga: los 3 archivos son obligatorios
-    const missing = [];
-    if(!S.buf.sem) missing.push('Semáforo');
-    if(!S.buf.det) missing.push('Detalle de avance');
-    if(!S.buf.ptr) missing.push('PTR');
-    if(missing.length){
-      document.getElementById('st').textContent =
-        'Faltan archivos obligatorios: '+missing.join(', ')+'.';
-      // Highlight missing slots
-      ['sem','det','ptr'].forEach(k=>{
-        const slot=document.getElementById('sl-'+k);
-        if(slot) slot.style.borderColor = S.buf[k] ? '' : 'var(--red)';
-      });
+    // First load: only semáforo required (det/ptr optional)
+    if(!S.buf.sem){
+      document.getElementById('st').textContent='Carga el Semáforo para comenzar.';
+      const slot=document.getElementById('sl-sem');
+      if(slot) slot.style.borderColor='var(--red)';
       return;
     }
   } else {
@@ -1572,28 +1574,23 @@ function build(){
   const ptrSample=Object.keys(ptrMap).slice(0,6);
 
 
-  // ── Snapshot: capture current rows (from memory OR storage) before rebuild ──
-  // This ensures we never lose data even after a refresh
+  // ── Snapshot: preserve previous rows so they survive the rebuild ──────────
   let _prevRows = [];
   if(S.rows && S.rows.length){
     _prevRows = [...S.rows];
   } else {
-    // Try to recover from localStorage if S.rows was empty
     try{
-      const _lsRaw = sessionStorage.getItem('trx_state_ss') || localStorage.getItem('trx_state');
-      if(_lsRaw){
-        const _lsParsed = JSON.parse(_lsRaw);
-        if(_lsParsed && Array.isArray(_lsParsed.rows)) _prevRows = _lsParsed.rows;
-      }
+      const _lsRaw=sessionStorage.getItem('trx_state_ss')||localStorage.getItem('trx_state');
+      if(_lsRaw){ const _p=JSON.parse(_lsRaw); if(_p&&_p.rows) _prevRows=_p.rows; }
     }catch(e){}
   }
-  // Persist ALL current assignments to userEdits so they survive the rebuild
+  // Migrate userEdits from current rows BEFORE wiping them
+  _migrateUserEdits();
   _prevRows.forEach(r=>{
-    if(!r.emb) return;
+    if(!r||!r.emb) return;
     if(!S.userEdits[r.emb]) S.userEdits[r.emb]={};
-    ['monta','verif','precarga','estop','com','prio','prioNum','con','evidencias'].forEach(f=>{
-      if(r[f]!==undefined&&r[f]!==''&&r[f]!==false&&r[f]!==0)
-        S.userEdits[r.emb][f]=r[f];
+    ['monta','verif','precarga','estop','com','prio','prioNum','evidencias','con'].forEach(f=>{
+      if(r[f]!==undefined&&r[f]!==''&&r[f]!==false&&r[f]!==0) S.userEdits[r.emb][f]=r[f];
     });
   });
   S.rows=[];
@@ -1609,11 +1606,12 @@ function build(){
     const ptrKey = _wmsMatch ? _wmsEmb : k;
     const P = ptrMap[ptrKey] || ptrMap[k] || {};
 
-    // Hide if flete not found in Detalle at all (no longer active)
-    if(!Object.keys(D).length) return;
-
-    const pcVal = pct(fc(D,['% Carga','%Carga','carga']));
-    if(pcVal===100) return; // 100% executed → hide
+    // Semáforo is MASTER: show all rows
+    // Only hide if DETALLE explicitly says 100% done
+    const pcVal = Object.keys(D).length
+      ? pct(fc(D,['% Carga','%Carga','carga']))
+      : null;
+    if(pcVal === 100) return; // 100% done → hide
 
     S.rows.push({
       emb: k,
@@ -1662,10 +1660,12 @@ function build(){
       ar:  fc(D,['A. Restos','A.Restos','a restos'])    || '',
       tf:  fc(D,['T. Faltantes','T.Faltantes','faltantes']) || '',
       con: (()=>{
-        const _cs=fc(r,['CORTINA','Cortina','cortina']);
-        if(_cs&&String(_cs).trim()!==''&&String(_cs).trim()!=='0'&&String(_cs).trim()!=='None') return String(_cs).trim();
-        const _cd=fc(D,['Cortina','cortina']);
-        if(_cd&&String(_cd).trim()!==''&&String(_cd).trim()!=='None') return String(_cd).trim();
+        // Semáforo has CORTINA col with plain numbers (14, 39...)
+        const _cs=String(fc(r,['CORTINA','Cortina','cortina'])||'').trim();
+        if(_cs && _cs!=='0' && _cs!=='None') return _cs;
+        // Fallback to DETALLE
+        const _cd=String(fc(D,['Cortina','cortina'])||'').trim();
+        if(_cd && _cd!=='None') return _cd;
         return '';
       })(),
       contenedor: fc(D,['# Contenedor','contenedor','Contenedor']) || '', // Container ID for grouping
@@ -1686,9 +1686,27 @@ function build(){
       tipo_sem: fc(r,['TIPO','tipo']) || '',  // WM / NAC / HFS from semaforo
       _wmsMatch, _wmsEmb
     });
-    // Restore saved edits; default estop to PENDIENTE if not saved
-    const saved=S.userEdits[k];
-    if(saved){ Object.assign(S.rows[S.rows.length-1], saved); }
+    // Restore from assignMap FIRST (most reliable — never wiped)
+    const asgn = S.assignMap[k];
+    if(asgn && Object.keys(asgn).length) Object.assign(S.rows[S.rows.length-1], asgn);
+
+    // Also restore from userEdits (fast path)
+    const saved = S.userEdits[k] || {};
+    if(Object.keys(saved).length) Object.assign(S.rows[S.rows.length-1], saved);
+
+    // Also restore from turnoHistorial (covers cases where userEdits is empty)
+    const hist = getHist(k);
+    if(hist){
+      const row = S.rows[S.rows.length-1];
+      // Only fill fields that are still empty
+      ['monta','verif','precarga','estop','com','prio','prioNum','evidencias','con'].forEach(f=>{
+        if((row[f]===undefined||row[f]===''||row[f]===false||row[f]===0) && 
+           hist[f]!==undefined && hist[f]!=='' && hist[f]!==false && hist[f]!==0){
+          row[f] = hist[f];
+        }
+      });
+    }
+
     if(!S.rows[S.rows.length-1].estop) S.rows[S.rows.length-1].estop='PENDIENTE';
   });
 
@@ -1710,25 +1728,29 @@ function build(){
   S.comMap = comMap;
   S.ptrMap = ptrMap;
 
-  // ── Carry forward previous fletes NOT in new semáforo ──────────────────────
+  // ── 1. Carry forward previous fletes FIRST (before render) ───────────────
   if(_prevRows && _prevRows.length){
     const newEmbs = new Set(S.rows.map(r=>r.emb));
-    const carried = _prevRows.filter(r=>r.emb && !newEmbs.has(r.emb));
-    carried.forEach(r=>{
-      S.rows.push({...r, _semAnterior:true});
-    });
+    _prevRows
+      .filter(r=>r && r.emb && !newEmbs.has(r.emb))
+      .forEach(r=>{
+        // Spread all fields including monta/verif/precarga/estop
+        S.rows.push({...r, _semAnterior:true});
+      });
   }
 
-  // ── Render everything ───────────────────────────────────────────────────────
+  // ── 2. Save historico ──────────────────────────────────────────────────────
+  guardarHistoricoSemaforo();
+
+  // ── 3. Render with ALL rows (new + previous) ──────────────────────────────
   kpi(); render(); alerts(); badge();
   if(typeof kpiVerif==='function') kpiVerif();
   if(typeof evDetectarSilencioso==='function') evDetectarSilencioso();
-  guardarHistoricoSemaforo();
 
-  // ── Persist immediately to localStorage AND Firebase ───────────────────────
+  // ── 4. Save to storage immediately ────────────────────────────────────────
   _saveStateToLocalStorage();
 
-  // ── Show UI ─────────────────────────────────────────────────────────────────
+  // ── 5. Show UI ────────────────────────────────────────────────────────────
   document.getElementById('kRow').classList.remove('hidden');
   document.getElementById('tabs').classList.remove('hidden');
   document.getElementById('btnExp').classList.remove('hidden');
@@ -1736,13 +1758,12 @@ function build(){
   document.getElementById('btnRecalc').classList.remove('hidden');
   g('stp1').classList.remove('active'); g('stp1').classList.add('done');
   g('stp2').classList.add('active');
-
-  const _nNew = S.rows.filter(r=>!r._semAnterior).length;
-  const _nPrev = S.rows.filter(r=>r._semAnterior).length;
-  const _msg = _nPrev > 0
-    ? `${_nNew} fletes nuevos · ${_nPrev} del turno anterior · guardado`
-    : `${S.rows.length} fletes activos · guardado`;
-  document.getElementById('st').textContent = _msg;
+  const _nNuevo = S.rows.filter(r=>!r._semAnterior).length;
+  const _nPrev  = S.rows.filter(r=> r._semAnterior).length;
+  document.getElementById('st').textContent =
+    _nPrev
+      ? `${_nNuevo} fletes nuevos · ${_nPrev} del turno anterior · guardado`
+      : `${S.rows.length} fletes activos · guardado`;
 }
 
 // ─── APPLY NEW SEMAFORO — el nuevo semáforo se convierte en la base ───────────
@@ -2229,7 +2250,9 @@ function render(){
           return `<span ${tagStyle}>${es(r.precarga)}<button onclick="editPrecarga(${idx})" style="background:none;border:none;cursor:pointer;opacity:.5;color:inherit;padding:0;font-size:10px" title="Editar">✎</button></span>`;
         }
         const inputStyle = esNuevoSinAsignar ? 'border:1.5px solid var(--cyan);background:rgba(6,182,212,.08);border-radius:6px;animation:pulse-nuevo 1.4s ease-in-out infinite' : '';
-        return `<input class="edt" type="text" value="" placeholder="— precarga —" style="${inputStyle}" onchange="upd(${idx},'precarga',this.value);render()">`;
+        return `<input class="edt" type="text" value="${es(r.precarga||'')}"`
+            + ` placeholder="— precarga —" style="${inputStyle}"`
+            + ` onchange="upd(${idx},'precarga',this.value);render()">`;
       })()}</td>
       <td>${(()=>{
         const esHistorico = r._semNuevo && r._prevMonta;
@@ -2299,10 +2322,38 @@ function upd(idx,field,val){
   const emb=S.rows[idx].emb;
   if(!S.userEdits[emb]) S.userEdits[emb]={};
   S.userEdits[emb][field]=val;
+  // Also write to persistent assignMap (never wiped by build)
+  if(emb){
+    if(!S.assignMap[emb]) S.assignMap[emb]={};
+    if(val!==''&&val!==null&&val!==undefined) S.assignMap[emb][field]=val;
+    else delete S.assignMap[emb][field];
+    // Save immediately to localStorage
+    try{ localStorage.setItem('trx_assign_map', JSON.stringify(S.assignMap)); }catch(e){}
+  }
 }
 // ─── CARGAR DESDE GUARDADO ────────────────────────────────────────────────────
 // Renders the tracker using whatever is already in S.rows (loaded from Firebase
 // or localStorage on page load) without requiring any new file uploads.
+
+
+// ── Migrate: rebuild S.userEdits from S.rows (recovers data from old saves) ──
+function _migrateUserEdits(){
+  if(!S.rows || !S.rows.length) return;
+  const FIELDS = ['monta','verif','precarga','estop','com','prio','prioNum','con','evidencias'];
+  S.rows.forEach(r=>{
+    if(!r || !r.emb) return;
+    let hasData = false;
+    FIELDS.forEach(f=>{ if(r[f]!==undefined&&r[f]!==''&&r[f]!==false&&r[f]!==0) hasData=true; });
+    if(!hasData) return;
+    if(!S.userEdits[r.emb]) S.userEdits[r.emb]={};
+    FIELDS.forEach(f=>{
+      if(r[f]!==undefined&&r[f]!==''&&r[f]!==false&&r[f]!==0){
+        // Only set if not already in userEdits (don't overwrite newer data)
+        if(!S.userEdits[r.emb][f]) S.userEdits[r.emb][f]=r[f];
+      }
+    });
+  });
+}
 
 function _saveStateToLocalStorage(){
   if(!S.rows || !S.rows.length){
@@ -2314,7 +2365,7 @@ function _saveStateToLocalStorage(){
     userEdits     : S.userEdits,
     sessionTurno  : S.sessionTurno,
     sessionSup    : S.sessionSup,
-    turnoHistorial: S.turnoHistorial.slice(-50),
+    turnoHistorial: S.turnoHistorial.slice(-200),
     posAlerts     : S.posAlerts,
     savedTs       : Date.now()
   };
@@ -3162,6 +3213,12 @@ function guardarHistoricoSemaforo(){
       if(f){
         f.estop=r.estop; f.pt=r.pt; f.pr=r.pr;
         f.evidencias=r.evidencias||f.evidencias||[];
+        if(r.precarga) f.precarga=r.precarga;
+        if(r.monta)    f.monta=r.monta;
+        if(r.verif)    f.verif=r.verif;
+        if(r.com)      f.com=r.com;
+        if(r.prio)     f.prio=r.prio;
+        if(r.prioNum)  f.prioNum=r.prioNum;
       }
     });
   });
@@ -3175,7 +3232,9 @@ function guardarHistoricoSemaforo(){
       // Append new fletes to today's entry
       todayEntry.fletes.push(...newFletes.map(r=>({
         emb:r.emb, nom:r.nom, sem:r.sem, estop:r.estop,
-        pal:r.pal, pt:r.pt, pr:r.pr, evidencias:r.evidencias||[]
+        pal:r.pal, pt:r.pt, pr:r.pr, evidencias:r.evidencias||[],
+        precarga:r.precarga||'', monta:r.monta||'', verif:r.verif||'',
+        com:r.com||'', prio:r.prio||false, prioNum:r.prioNum||0, con:r.con||''
       })));
       todayEntry.actualizado=new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
     } else {
@@ -3186,7 +3245,9 @@ function guardarHistoricoSemaforo(){
         semaforo: S.sessionTurno||'',
         fletes: newFletes.map(r=>({
           emb:r.emb, nom:r.nom, sem:r.sem, estop:r.estop,
-          pal:r.pal, pt:r.pt, pr:r.pr, evidencias:r.evidencias||[]
+          pal:r.pal, pt:r.pt, pr:r.pr, evidencias:r.evidencias||[],
+          precarga:r.precarga||'', monta:r.monta||'', verif:r.verif||'',
+          com:r.com||'', prio:r.prio||false, prioNum:r.prioNum||0, con:r.con||''
         }))
       });
     }
@@ -4269,7 +4330,14 @@ function _restoreFromStorage(){
   S.posAlerts    = p.posAlerts    || [];
   if(p.turnoHistorial && p.turnoHistorial.length)
     S.turnoHistorial = p.turnoHistorial;
-  console.log('[restore] Loaded', S.rows.length, 'rows from storage, ts:', new Date(p.savedTs||0).toLocaleTimeString());
+  // Migrate: rebuild userEdits from rows (recovers precarga/monta from old saves)
+  _migrateUserEdits();
+  // Re-apply userEdits to rows
+  S.rows.forEach(r=>{
+    const ue = S.userEdits[r.emb];
+    if(ue) Object.assign(r, ue);
+  });
+  console.log('[restore] Loaded', S.rows.length, 'rows, userEdits keys:', Object.keys(S.userEdits).length);
   return true;
 }
 
@@ -5902,7 +5970,7 @@ function renderResumen(){
         }
         const inputStyle=esNuevoSinAsignar
           ?'border:1.5px solid var(--cyan);background:rgba(6,182,212,.08);border-radius:6px;animation:pulse-nuevo 1.4s ease-in-out infinite':'';
-        return `<input class="edt" type="text" value="" placeholder="— asignar —"
+        return `<input class="edt" type="text" value="${es(r.precarga||'')}" placeholder="— asignar —"
           style="${inputStyle}"
           onchange="upd(${idx},'precarga',this.value);renderResumen()" title="Precarga">`;
       })()}</td>
@@ -6535,6 +6603,8 @@ function fbSave(){
         incRegistros: INC.registros,
         // Vacaciones
         vacData: (window.VAC_DATA||VAC_DATA||[]),
+        // Persistent assignments (never wiped by build)
+        assignMap: S.assignMap,
         ts, device: DEVICE_ID
       };
       autoSaveVerifHistorial(); // persist verif assignments
@@ -6573,6 +6643,12 @@ function applyRemoteData(data){
       // Merge: keep _semAnterior rows from local that aren't in remote
       const _localPrev = (S.rows||[]).filter(r=>r._semAnterior);
       S.rows = data.rows;
+      // Migrate + re-apply: recover precarga/monta from row data AND userEdits
+      _migrateUserEdits();
+      S.rows.forEach(r=>{
+        const ue = S.userEdits[r.emb];
+        if(ue) Object.assign(r, ue);
+      });
       // Add back local semAnterior rows not already in remote
       if(_localPrev.length){
         const remoteEmbs = new Set(S.rows.map(r=>r.emb));
@@ -6580,7 +6656,18 @@ function applyRemoteData(data){
       }
     }
   }
-  if(data.userEdits)      S.userEdits      = data.userEdits;
+  // MERGE userEdits: remote adds to local, never wipes local data
+  if(data.userEdits){
+    Object.entries(data.userEdits).forEach(([emb, edits])=>{
+      if(!S.userEdits[emb]) S.userEdits[emb]={};
+      // For each field: take whichever has a non-empty value (local wins if both set)
+      Object.entries(edits).forEach(([f,v])=>{
+        if(v!==undefined&&v!==''&&v!==false&&v!==0){
+          if(!S.userEdits[emb][f]) S.userEdits[emb][f]=v;
+        }
+      });
+    });
+  }
   if(data.turnoHistorial) S.turnoHistorial = data.turnoHistorial;
   if(data.posAlerts)      S.posAlerts      = data.posAlerts;
   if(data.sessionTurno)   S.sessionTurno   = data.sessionTurno;
@@ -6602,6 +6689,17 @@ function applyRemoteData(data){
   if(data.incRegistros !== undefined){
     INC.registros = data.incRegistros;
     try{ localStorage.setItem('trx_incidencias',JSON.stringify(INC.registros)); }catch(e){}
+  }
+
+  // Persistent assignMap: merge (never replace)
+  if(data.assignMap && typeof data.assignMap==='object'){
+    Object.entries(data.assignMap).forEach(([emb,fields])=>{
+      if(!S.assignMap[emb]) S.assignMap[emb]={};
+      Object.entries(fields).forEach(([f,v])=>{
+        if(v!==''&&v!==null&&v!==undefined) S.assignMap[emb][f]=v;
+      });
+    });
+    try{ localStorage.setItem('trx_assign_map', JSON.stringify(S.assignMap)); }catch(e){}
   }
 
   // Vacaciones sync
@@ -6931,6 +7029,13 @@ window.updCustom = function(idx,checked){ _origUpdCustom(idx,checked); fbSave();
 const _origUpdVerif = updVerif;
 window.updVerif = function(idx,val){
   _origUpdVerif(idx,val);
+  // Write to assignMap
+  const _emb = S.rows[idx]?.emb;
+  if(_emb){
+    if(!S.assignMap[_emb]) S.assignMap[_emb]={};
+    if(val) S.assignMap[_emb].verif=val; else delete S.assignMap[_emb].verif;
+    try{ localStorage.setItem('trx_assign_map', JSON.stringify(S.assignMap)); }catch(e){}
+  }
   fbSave();
   if(val){
     const r = S.rows[idx];
