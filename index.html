@@ -1695,25 +1695,26 @@ function build(){
   S.detMap = detMap;
   S.comMap = comMap;
   S.ptrMap = ptrMap;
+
+  // ── Carry forward previous fletes NOT in new semáforo ──────────────────────
+  if(_prevRows && _prevRows.length){
+    const newEmbs = new Set(S.rows.map(r=>r.emb));
+    const carried = _prevRows.filter(r=>r.emb && !newEmbs.has(r.emb));
+    carried.forEach(r=>{
+      S.rows.push({...r, _semAnterior:true});
+    });
+  }
+
+  // ── Render everything ───────────────────────────────────────────────────────
   kpi(); render(); alerts(); badge();
   if(typeof kpiVerif==='function') kpiVerif();
-  // Auto-detect shared containers in Eventos after build
   if(typeof evDetectarSilencioso==='function') evDetectarSilencioso();
-  // Save to semaforo historico
-  // ── Add back previous fletes NOT in new semáforo (marked as semAnterior) ──
-  if(_prevRows.length){
-    const newEmbs = new Set(S.rows.map(r=>r.emb));
-    const carried = _prevRows.filter(r=>!newEmbs.has(r.emb));
-    carried.forEach(r=>{
-      // Mark as from previous semáforo so render can style differently
-      S.rows.push({...r, _semAnterior:true, est:'ANTERIOR'});
-    });
-    if(carried.length){
-      const d=document.getElementById('st');
-      if(d) d.textContent=S.rows.length+' fletes activos ('+carried.length+' del turno anterior)';
-    }
-  }
   guardarHistoricoSemaforo();
+
+  // ── Persist immediately to localStorage AND Firebase ───────────────────────
+  _saveStateToLocalStorage();
+
+  // ── Show UI ─────────────────────────────────────────────────────────────────
   document.getElementById('kRow').classList.remove('hidden');
   document.getElementById('tabs').classList.remove('hidden');
   document.getElementById('btnExp').classList.remove('hidden');
@@ -1721,7 +1722,13 @@ function build(){
   document.getElementById('btnRecalc').classList.remove('hidden');
   g('stp1').classList.remove('active'); g('stp1').classList.add('done');
   g('stp2').classList.add('active');
-  document.getElementById('st').textContent=S.rows.length+' fletes del semáforo activos.';
+
+  const _nNew = S.rows.filter(r=>!r._semAnterior).length;
+  const _nPrev = S.rows.filter(r=>r._semAnterior).length;
+  const _msg = _nPrev > 0
+    ? `${_nNew} fletes nuevos · ${_nPrev} del turno anterior · guardado`
+    : `${S.rows.length} fletes activos · guardado`;
+  document.getElementById('st').textContent = _msg;
 }
 
 // ─── APPLY NEW SEMAFORO — el nuevo semáforo se convierte en la base ───────────
@@ -2284,7 +2291,10 @@ function upd(idx,field,val){
 // or localStorage on page load) without requiring any new file uploads.
 
 function _saveStateToLocalStorage(){
-  if(!S.rows || !S.rows.length) return;
+  if(!S.rows || !S.rows.length){
+    console.log('[storage] Skipping save — S.rows empty');
+    return false;
+  }
   const payload = {
     rows          : S.rows,
     userEdits     : S.userEdits,
@@ -6546,7 +6556,14 @@ function applyRemoteData(data){
             _notifyAssignment('precarga',nr.precarga,nr.emb||'',nr.nom||'');
         });
       }
+      // Merge: keep _semAnterior rows from local that aren't in remote
+      const _localPrev = (S.rows||[]).filter(r=>r._semAnterior);
       S.rows = data.rows;
+      // Add back local semAnterior rows not already in remote
+      if(_localPrev.length){
+        const remoteEmbs = new Set(S.rows.map(r=>r.emb));
+        _localPrev.filter(r=>!remoteEmbs.has(r.emb)).forEach(r=>S.rows.push(r));
+      }
     }
   }
   if(data.userEdits)      S.userEdits      = data.userEdits;
