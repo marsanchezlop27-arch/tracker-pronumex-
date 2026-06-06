@@ -4337,6 +4337,15 @@ function incGuardar(){
   incRender(); // show immediately
 }
 
+
+function incBorrarColab(btn){
+  const nom = btn.dataset.nom;
+  if(!confirm('¿Borrar todas las incidencias de "'+nom+'"?')) return;
+  INC.registros = INC.registros.filter(r=>(r.colabInc||r.colab||'Sin asignar')!==nom);
+  incSave();
+  incRender();
+}
+
 function incRender(){
   const tipo=g('incFiltTipo')?.value||'';
   const periodo=g('incFiltPeriodo')?.value||'turno';
@@ -4400,6 +4409,8 @@ function incRender(){
           <span style="flex:1;font-size:12px;font-weight:600">${es(nom)}</span>
           <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:${i===0?'var(--red)':i<3?'var(--amber)':'var(--text)'}">${d.count} inc.</span>
           <span style="font-size:10px;color:var(--text3);background:var(--card);padding:2px 7px;border-radius:4px;white-space:nowrap">${d.totalCajas} cajas</span>
+          <button data-nom="${es(nom)}" onclick="incBorrarColab(this)"
+            style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);border-radius:5px;padding:2px 7px;font-size:11px;cursor:pointer" title="Borrar registros de este colaborador">🗑</button>
         </div>
         <div style="padding:5px 10px">
           ${d.detalles.map(x=>`<div style="display:grid;grid-template-columns:auto 1fr 1fr auto;gap:5px;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);font-size:10.5px">
@@ -4561,6 +4572,7 @@ const DV = {
 function dvSaveHistorial(){
   try{ localStorage.setItem('trx_dv_historial',JSON.stringify(DV.historial)); }catch(e){}
   dvSaveRegistros();
+  if(typeof fbSave==='function') clearTimeout(window._dvFbTimer), window._dvFbTimer=setTimeout(fbSave,300);
 }
 
 function dvSaveRegistros(){
@@ -4571,6 +4583,7 @@ function dvSaveRegistros(){
       sup: DV.sup
     }));
   }catch(e){}
+  if(typeof fbSave==='function') clearTimeout(window._dvFbTimer), window._dvFbTimer=setTimeout(fbSave,300);
 }
 
 const CORTINAS_LIST = Array.from({length:54},(_,i)=>i+1);
@@ -6431,11 +6444,20 @@ function applyRemoteData(data){
   if(data.sessionTurno)               S.sessionTurno    = data.sessionTurno;
   if(data.sessionSup)                 S.sessionSup      = data.sessionSup;
   // Sync DV and INC from other devices
-  if(data.dvRegistros)  DV.registros  = data.dvRegistros;
-  if(data.dvHistorial)  DV.historial  = data.dvHistorial;
+  if(data.dvRegistros !== undefined){
+    DV.registros = data.dvRegistros;
+    try{ localStorage.setItem('trx_dv_registros',JSON.stringify({registros:DV.registros,turno:DV.turno||'',sup:DV.sup||''})); }catch(e){}
+  }
+  if(data.dvHistorial !== undefined){
+    DV.historial = data.dvHistorial;
+    try{ localStorage.setItem('trx_dv_historial',JSON.stringify(DV.historial)); }catch(e){}
+  }
   if(data.dvTurno)      DV.turno      = data.dvTurno;
   if(data.dvSup)        DV.sup        = data.dvSup;
-  if(data.incRegistros) INC.registros = data.incRegistros;
+  if(data.incRegistros !== undefined){
+    INC.registros = data.incRegistros;
+    try{ localStorage.setItem('trx_incidencias',JSON.stringify(INC.registros)); }catch(e){}
+  }
   // Vacaciones sync
   if(data.vacData && Array.isArray(data.vacData)){
     window.VAC_DATA = data.vacData;
