@@ -3148,38 +3148,40 @@ function renderHistVf(){
   const kpiEl = g('histVfKpis');
   const q = (g('histVfSearch')?.value||'').toLowerCase();
 
-  // Build flat list of all verified fletes from turnoHistorial
-  const all = [];
-  [...S.turnoHistorial].sort((a,b)=>(b.ts||0)-(a.ts||0)).forEach(h=>{
+  // Build flat list — each emb+verif combination appears only ONCE (most recent date wins)
+  const _vfSeen = new Map(); // key: emb+'|'+verif → record
+  [...S.turnoHistorial].sort((a,b)=>(a.ts||0)-(b.ts||0)).forEach(h=>{
     (h.fletes||[]).forEach(f=>{
-      if(!f.verif) return; // only verified
-      all.push({
+      if(!f.verif || !f.emb) return;
+      const key = (f.emb||'')+'|'+(f.verif||'');
+      // Always overwrite — last (most recent) wins
+      _vfSeen.set(key, {
         emb    : f.emb||'',
         nom    : f.nom||'',
         verif  : f.verif||'',
         nombre : VERIFICADORES.find(v=>v.id===f.verif)?.nombre || f.verif,
         turno  : h.turno||'',
-        fecha  : h.hora||h.fecha||'',
+        fecha  : f.fecha||h.hora||h.fecha||'',
         sup    : SUPS[h.sup]||h.sup||'—',
         sem    : f.sem||''
       });
     });
   });
-  // Current turn — only today, no duplicates already in historial
+  const all = [..._vfSeen.values()];
+  // Current turn — add only if not already in historial (global dedup)
+  const _seen = new Set(all.map(r=>r.emb+'|'+r.verif));
   const todayVfKey = new Date().toLocaleDateString('es-MX');
-  const inHistToday = new Set(
-    all.filter(r=> r.fecha && r.fecha.includes(todayVfKey)).map(r=>r.verif+'|'+r.emb)
-  );
   S.rows.filter(r=>r.verif).forEach(r=>{
-    const key = (r.verif||'')+'|'+(r.emb||'');
-    if(inHistToday.has(key)) return; // already in historial for today
+    const key = (r.emb||'')+'|'+(r.verif||'');
+    if(_seen.has(key)) return; // already counted globally
+    _seen.add(key);
     all.unshift({
       emb    : r.emb||'',
       nom    : r.nom||'',
       verif  : r.verif||'',
       nombre : VERIFICADORES.find(v=>v.id===r.verif)?.nombre || r.verif,
       turno  : S.sessionTurno||'',
-      fecha  : todayVfKey+' · Turno activo',
+      fecha  : todayVfKey,
       sup    : SUPS[S.sessionSup]||'—',
       sem    : r.sem||''
     });
@@ -3215,25 +3217,20 @@ function renderHistVf(){
   }
 
   // Group by fecha → then by verificador
-  // Group by fecha, deduplicating by emb within each day
+  // Group by date (dd/mm/yyyy) — one record per verif+emb globally
   const byFecha = {};
   filtered.forEach(r=>{
-    const dayKey = r.fecha ? r.fecha.split(',')[0].trim() : r.fecha;
+    // Extract date part only for grouping key
+    const dayKey = r.fecha ? r.fecha.split(',')[0].trim().split(' ')[0].trim() : '—';
     if(!byFecha[dayKey]) byFecha[dayKey]=[];
-    // Only add if this emb not already counted for this verif+day
-    const exists = byFecha[dayKey].some(x=>x.emb===r.emb && x.verif===r.verif);
-    if(!exists) byFecha[dayKey].push(r);
+    byFecha[dayKey].push(r);
   });
 
   const cards = Object.keys(byFecha).map(fecha=>{
     const rows = byFecha[fecha];
     // Sub-group by verificador
     const byV = {};
-    rows.forEach(r=>{
-      if(!byV[r.nombre]) byV[r.nombre]=[];
-      // No duplicate emb per verif per day
-      if(!byV[r.nombre].some(x=>x.emb===r.emb)) byV[r.nombre].push(r);
-    });
+    rows.forEach(r=>{ if(!byV[r.nombre]) byV[r.nombre]=[]; byV[r.nombre].push(r); });
 
     // Build unique key per section for toggle
     let _vfSecIdx = 0;
@@ -3422,6 +3419,7 @@ function renderHist(){
           <th style="padding:6px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Pallets</th>
           <th style="padding:6px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Fecha</th>
           <th style="padding:6px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Fotos</th>
+          <th style="padding:6px 10px;width:40px"></th>
         </tr></thead>
         <tbody>${allFletes.map(f=>{
           const evCount=f.evidencias?.length||0;
@@ -3434,6 +3432,10 @@ function renderHist(){
             <td style="padding:5px 10px;font-size:9px;color:var(--text3);white-space:nowrap">${f.fechaHist||'—'}</td>
             <td style="padding:5px 10px">
               <span class="b bg" style="font-size:9px;cursor:pointer" onclick="histVerEvidencias('${f.histId||''}','${f.emb}')">${evCount} 📷</span>
+            </td>
+            <td style="padding:5px 8px;text-align:center">
+              <button onclick="histBorrarFlete('${f.emb}')" title="Eliminar del historial"
+                style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);border-radius:5px;padding:2px 7px;font-size:11px;cursor:pointer;line-height:1">🗑</button>
             </td>
           </tr>`;
         }).join('')}</tbody>
@@ -3762,6 +3764,22 @@ function exportHistDescXLSX(){
   makeStyledXLSX(rows[0], rows.slice(1), 'Incidencias', 'Descargas_Incidencias_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
+
+function histBorrarFlete(emb){
+  if(!confirm('¿Eliminar el flete '+emb+' del historial?')) return;
+  // Remove from turnoHistorial fletes
+  S.turnoHistorial.forEach(h=>{
+    h.fletes = (h.fletes||[]).filter(f=>f.emb!==emb);
+  });
+  S.turnoHistorial = S.turnoHistorial.filter(h=>(h.fletes||[]).length>0);
+  // Remove evidencias from live S.rows
+  const liveRow = S.rows.find(r=>r.emb===emb);
+  if(liveRow) liveRow.evidencias = [];
+  hSave();
+  fbSave();
+  renderHist();
+}
+
 function histBorrar(id){
   if(!confirm('¿Eliminar este semáforo del histórico?')) return;
   const idx=S.turnoHistorial.findIndex(h=>h.id===id);
@@ -3948,7 +3966,10 @@ let VAC_DATA=[];
 let _vacYear=new Date().getFullYear();
 let _vacMonth=new Date().getMonth();
 (function(){try{const d=localStorage.getItem('trx_vacaciones');if(d)VAC_DATA=JSON.parse(d);}catch(e){}})();
-function vacSave(){try{localStorage.setItem('trx_vacaciones',JSON.stringify(VAC_DATA));}catch(e){}}
+function vacSave(){
+  try{localStorage.setItem('trx_vacaciones',JSON.stringify(VAC_DATA));}catch(e){}
+  if(typeof fbSave==='function') setTimeout(fbSave, 0);
+}
 function vacHoy(){_vacYear=new Date().getFullYear();_vacMonth=new Date().getMonth();vacRender();}
 function vacCambiarMes(d){_vacMonth+=d;if(_vacMonth<0){_vacMonth=11;_vacYear--;}if(_vacMonth>11){_vacMonth=0;_vacYear++;}vacRender();}
 function vacRender(){
@@ -4193,6 +4214,7 @@ window.addEventListener('load', ()=>{
 
 function incSave(){
   try{ localStorage.setItem('trx_incidencias',JSON.stringify(INC.registros)); }catch(e){}
+  if(typeof fbSave==='function') setTimeout(fbSave, 0);
 }
 
 function incTipoChange(){
