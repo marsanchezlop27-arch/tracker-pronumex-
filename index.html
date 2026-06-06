@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Tracker de Embarques — MACRO TOLUCA</title>
 <script type="module">
 // ─── FIREBASE SDK ─────────────────────────────────────────────────────────────
@@ -307,6 +307,49 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 .hidden{display:none!important}
 </style>
+
+<style id="mobile-fix">
+/* ── Mobile responsive overrides ── */
+@media (max-width: 640px){
+  /* Modal overlays — scrollable on mobile */
+  div[style*="position:fixed"][style*="z-index:9999"],
+  div[style*="position:fixed"][style*="z-index: 9999"],
+  ._dv-modal-overlay {
+    padding: 8px !important;
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Inner modal cards */
+  div[style*="max-width:520px"],
+  div[style*="max-width:540px"],
+  div[style*="max-width:560px"] {
+    max-width: 100% !important;
+    border-radius: 8px !important;
+  }
+  /* INC form grids → single column */
+  #incDvModal .grid-2,
+  #incDvModal [style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* SKU row grids → wrap */
+  #idf-sku-list > div,
+  #incSkuList > div {
+    grid-template-columns: 1fr 1fr !important;
+    row-gap: 6px !important;
+  }
+  /* Charts — constrain width */
+  canvas { max-width: 100% !important; height: auto !important; }
+  /* Tracker table — horizontal scroll */
+  #p-tk { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* Tabs — horizontal scroll */
+  .tabs { overflow-x: auto; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; }
+  .tab { white-space: nowrap; flex-shrink: 0; }
+  /* KPIs — wrap on mobile */
+  .kpis { flex-wrap: wrap; }
+  .kpi { min-width: 80px; }
+}
+</style>
 </head>
 <body>
 
@@ -416,8 +459,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     <div class="step active" id="stp1"><div class="step-n">1</div><div class="step-t">Cargar archivos</div></div>
     <div class="arr">›</div>
     <div class="step" id="stp2"><div class="step-n">2</div><div class="step-t">Revisar tracker</div></div>
-    <div class="arr">›</div>
-    <div class="step" id="stp3"><div class="step-n">3</div><div class="step-t">Actualizar turno</div></div>
+
   </div>
 
   <!-- CARGA -->
@@ -434,7 +476,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
       Paso 1 — carga los archivos del turno inicial
     </div>
-    <div class="bi">Carga los <strong>3 archivos del turno con el que vas a trabajar</strong>: el semáforo, el Detalle de avance y el PTR. Cuando te llegue el siguiente semáforo lo actualizas desde la pestaña "Actualizar turno".</div>
+    <div class="bi">Carga los archivos del turno: Semáforo, Detalle de avance y PTR. Para actualizar el semáforo, carga el nuevo archivo aquí y presiona <strong>Construir tracker</strong> — el historial de precargas y asignaciones se conserva automáticamente.</div>
     <div class="slots">
       <div class="slot" id="sl-sem" onclick="pick('sem')">
         <div class="slot-ico" style="color:#F59E0B"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
@@ -456,14 +498,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       </div>
     </div>
     <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
-      <div>
-        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;text-transform:uppercase">Turno</div>
-        <select id="tSelBuild" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 9px;font-size:12px;height:30px">
-          <option value="2">2do turno — 14:00 a 21:30</option>
-          <option value="1">1er turno — 06:00 a 14:00</option>
-          <option value="3">3er turno — 21:30 a 06:00</option>
-        </select>
-      </div>
       <button class="btn primary" onclick="build()">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Construir tracker
@@ -496,10 +530,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 9v12M15 9v12"/></svg>
       Tracker maestro
     </div>
-    <div class="tab" onclick="swTab(this,'up')">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
-      Actualizar turno
-    </div>
+
     <div class="tab" onclick="swTab(this,'al')">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
       Alertas <span id="aBdg" style="margin-left:2px"></span>
@@ -520,8 +551,10 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
       Clientes
     </div>
-
-
+    <div class="tab" onclick="swTab(this,'vac')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Vacaciones
+    </div>
   </div>
 
   <!-- TRACKER -->
@@ -588,57 +621,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   </div>
 
   <!-- ACTUALIZAR -->
-  <div id="p-up" class="hidden">
-    <div class="card">
-      <div class="card-ttl">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
-        Cargar semáforo del siguiente turno
-      </div>
-      <div class="bw">⚠ Carga el nuevo semáforo aquí. Las asignaciones de precarga y montacarguista del semáforo anterior se guardan automáticamente en el historial antes de limpiar.</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Nuevo semáforo <span style="color:var(--red)">*</span></div>
-          <div class="slot" style="max-width:260px" id="sl-new" onclick="pick('new')">
-            <div class="slot-ico" style="color:var(--cyan)"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <div style="flex:1;min-width:0"><div class="slot-lbl">Semáforo (requerido)</div><div class="slot-nm" id="nm-new">Sin cargar</div></div>
-            <span class="slot-chk hidden" id="ck-new">✓</span>
-            <input type="file" accept=".xlsx,.xls" class="hidden" id="fi-new" onchange="load('new',this)">
-          </div>
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Detalle actualizado <span style="color:var(--text3)">(opcional)</span></div>
-          <div class="slot" style="max-width:240px" id="sl-det2" onclick="pick('det2')">
-            <div class="slot-ico" style="color:#378ADD"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
-            <div style="flex:1;min-width:0"><div class="slot-lbl">Detalle (% avance) <span style="font-size:9px;color:var(--text3)">múltiples</span></div><div class="slot-nm" id="nm-det2">Sin cargar</div></div>
-            <span class="slot-chk hidden" id="ck-det2">✓</span>
-            <input type="file" accept=".xlsx,.xls" class="hidden" id="fi-det2" onchange="load('det2',this)">
-          </div>
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">PTR actualizado <span style="color:var(--text3)">(opcional)</span></div>
-          <div class="slot" style="max-width:240px" id="sl-ptr2" onclick="pick('ptr2')">
-            <div class="slot-ico" style="color:#10B981"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-            <div style="flex:1;min-width:0"><div class="slot-lbl">PTR (pallets/restos)</div><div class="slot-nm" id="nm-ptr2">Sin cargar</div></div>
-            <span class="slot-chk hidden" id="ck-ptr2">✓</span>
-            <input type="file" accept=".xlsx,.xls" class="hidden" id="fi-ptr2" onchange="load('ptr2',this)">
-          </div>
-        </div>
-        <div>
-          <div style="font-size:10px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Turno</div>
-          <select id="tSel" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 9px;font-size:12px;font-family:'IBM Plex Sans',sans-serif;height:30px">
-            <option>SEGUNDO</option><option>TERCERO</option><option>PRIMERO</option>
-          </select>
-        </div>
-        <button class="btn ok" onclick="applyNew()">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          Aplicar actualización
-        </button>
-      </div>
-      <div id="upRes" class="hidden"></div>
-    </div>
-  </div>
-
-  <!-- ALERTAS -->
   <div id="p-al" class="hidden">
     <div id="alList">
       <div class="empty" style="color:var(--text3)">
@@ -787,6 +769,27 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <!-- CLIENTES -->
   <div id="p-cl" class="hidden">
     <div id="clContent"></div>
+  </div>
+  <!-- VACACIONES -->
+  <div id="p-vac" class="hidden">
+    <div style="padding:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:14px;font-weight:700;color:var(--brand,#D0DF00)">🏖 Calendario de Vacaciones</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" onclick="vacExportarExcel()" style="border-color:var(--green);color:var(--green);font-size:11px">📊 Exportar CSV</button>
+          <button class="btn" onclick="vacExportarPDF()" style="border-color:var(--purple);color:var(--purple);font-size:11px">📄 Exportar PDF</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+        <button onclick="vacCambiarMes(-1)" class="btn" style="padding:4px 10px;font-size:14px">‹</button>
+        <span id="vacMesLbl" style="font-weight:700;font-size:14px;min-width:160px;text-align:center"></span>
+        <button onclick="vacCambiarMes(1)" class="btn" style="padding:4px 10px;font-size:14px">›</button>
+        <button onclick="vacHoy()" class="btn" style="font-size:11px">Hoy</button>
+      </div>
+      <div id="vacCalGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:16px"></div>
+      <div style="margin-bottom:8px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Registros del mes</div>
+      <div id="vacLista" style="max-height:300px;overflow-y:auto"></div>
+    </div>
   </div>
 </div><!-- /view-emb -->
 
@@ -938,6 +941,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <div style="display:flex;gap:2px;background:var(--navy2);border-radius:8px;padding:3px;margin-bottom:14px;width:fit-content">
     <button id="htab-emb" onclick="histSubTab('emb')" style="background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 16px;font-size:11px;font-weight:600;cursor:pointer">📦 Embarques</button>
     <button id="htab-desc" onclick="histSubTab('desc')" style="background:none;color:var(--text3);border:none;border-radius:6px;padding:5px 16px;font-size:11px;font-weight:600;cursor:pointer">🚛 Descargas</button>
+    <button id="htab-vf" onclick="histSubTab('vf')" style="background:none;color:var(--text3);border:none;border-radius:6px;padding:5px 16px;font-size:11px;font-weight:600;cursor:pointer">✅ Verificadores</button>
   </div>
   <!-- Embarques panel -->
   <div id="hpan-emb">
@@ -959,6 +963,15 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     <div id="histDescKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px"></div>
     <div id="histDescContent"></div>
   </div>
+  <!-- Verificadores panel -->
+  <div id="hpan-vf" style="display:none">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <input id="histVfSearch" class="edt-sel" type="text" placeholder="Buscar verificador, flete o cliente..." style="height:30px;font-size:11px;min-width:220px" oninput="renderHistVf()">
+      <button class="btn" onclick="exportHistVfCSV()" style="font-size:11px;border-color:var(--green);color:var(--green)">⬇ Exportar CSV</button>
+    </div>
+    <div id="histVfKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px"></div>
+    <div id="histVfContent" style="max-height:65vh;overflow-y:auto"></div>
+  </div>
 </div><!-- /view-hist -->
 
 
@@ -969,6 +982,44 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 const S = { rows:[], buf:{}, sc:'ci', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[] };
 
 // ─── HISTORIAL PERSISTENTE (localStorage) ────────────────────────────────────
+
+// Save current verif assignments to historial automatically (called on fbSave)
+function autoSaveVerifHistorial(){
+  const verifRows = S.rows.filter(r=>r.verif);
+  if(!verifRows.length) return;
+  const now = new Date();
+  const todayKey = now.toLocaleDateString('es-MX');
+  const hora = now.toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
+  // Find or create today's entry for current turno
+  let entry = S.turnoHistorial.find(h=>
+    h._autoKey && h._autoKey===todayKey+'_'+S.sessionTurno
+  );
+  if(!entry){
+    entry = {
+      _autoKey: todayKey+'_'+S.sessionTurno,
+      turno: S.sessionTurno,
+      sup: S.sessionSup,
+      hora, ts: now.getTime(),
+      fletes: []
+    };
+    S.turnoHistorial.push(entry);
+  }
+  // Upsert each verified flete by emb
+  verifRows.forEach(r=>{
+    const existing = entry.fletes.findIndex(f=>f.emb===r.emb);
+    const snap = {
+      emb:r.emb, nom:r.nom, sem:r.sem,
+      verif:r.verif||'', monta:r.monta||'',
+      estop:r.estop||'', pt:r.pt||'',
+      fecha:hora, ts:now.getTime()
+    };
+    if(existing>=0) entry.fletes[existing]=snap;
+    else entry.fletes.push(snap);
+  });
+  entry.hora = hora; // update timestamp
+  hSave();
+}
+
 function hSave(){
   try{ localStorage.setItem('trx_historial', JSON.stringify(S.turnoHistorial)); }catch(e){}
 }
@@ -1104,7 +1155,8 @@ function getVerifNombre(id){
   if(!id) return '';
   const v=VERIFICADORES.find(v=>v.id===id);
   const n=v?v.nombre:id;
-  return n.split(' ')[0]; // first name only
+  // Return initials: JUAN CARLOS FUENTES → JCF
+  return n.trim().split(/\s+/).map(w=>w[0]||'').join('').toUpperCase();
 }
 
 function getMontaNombre(id){
@@ -1346,11 +1398,34 @@ function parseSlot(buf){
   bufs.forEach((b, i) => {
     try {
       const rows = parseFile(b);
-      // First file: keep header row; subsequent: skip first row (header duplicate)
-      all.push(...(i === 0 ? rows : rows.slice(1)));
+      // Remove duplicate columns: keep only the FIRST occurrence of each header name
+      const cleaned = removeDupCols(rows);
+      all.push(...(i === 0 ? cleaned : cleaned.slice(1)));
     } catch(e){ console.warn('parseSlot error', e); }
   });
   return all;
+}
+
+function removeDupCols(aoa){
+  if(!aoa||!aoa.length) return aoa;
+  // Find header row index
+  const hi = findHdrRow(aoa);
+  const hdr = aoa[hi].map(c=>String(c||'').trim());
+  // Build list of column indices to KEEP (first occurrence of each name)
+  const seen = new Set();
+  const keepCols = [];
+  hdr.forEach((h,ci)=>{
+    // Keep column if header is unique OR if it's an empty/positional header
+    if(!h || !seen.has(h)){
+      keepCols.push(ci);
+      if(h) seen.add(h);
+    }
+    // Skip: duplicate non-empty header
+  });
+  // If nothing to remove, return as-is
+  if(keepCols.length === hdr.length) return aoa;
+  // Filter each row to only the kept columns
+  return aoa.map(row => keepCols.map(ci => row[ci]!==undefined ? row[ci] : ''));
 }
 
 
@@ -1437,9 +1512,7 @@ function build(){
     }
   }
 
-  // Read turno from selector (user choice overrides auto-detection)
-  const _tSelBuild = document.getElementById('tSelBuild');
-  if(_tSelBuild && isFirstLoad) S.sessionTurno = _tSelBuild.value;
+  // Turno auto-detected from system clock (detectTurno)
   document.getElementById('dbg').classList.add('hidden');
 
   const semRows = toObjects(parseFile(S.buf.sem));
@@ -1476,6 +1549,7 @@ function build(){
   const semSample=semRows.slice(0,6).map(r=>nk(fc(r,['embarque','No. De Embarque','Embarque'])));
   const detSample=Object.keys(detMap).slice(0,6);
   const ptrSample=Object.keys(ptrMap).slice(0,6);
+
 
   S.rows=[];
 
@@ -1602,6 +1676,27 @@ function build(){
 
 // ─── APPLY NEW SEMAFORO — el nuevo semáforo se convierte en la base ───────────
 function applyNew(){
+  // If no new sem but rows exist → just apply det2/ptr2
+  if(!S.buf.new && S.rows.length){
+    if(S.buf.det2||S.buf.ptr2){
+      if(S.buf.det2){ const detRows2=parseSlot(S.buf.det2);
+        detRows2.forEach(r=>{ const emb=nk(fc(r,['No. Embarque','No.Embarque','Embarque','Folio']));
+          if(!emb) return; const row=S.rows.find(x=>x.emb===emb); if(!row) return;
+          const pt=parseFloat(fc(r,['% Tareas','%Tareas']))||null;
+          const pr=parseFloat(fc(r,['% Restos','%Restos']))||null;
+          if(pt!=null) row.pt=pt; if(pr!=null) row.pr=pr; }); }
+      if(S.buf.ptr2){ const ptrRows2=parseSlot(S.buf.ptr2);
+        ptrRows2.forEach(r=>{ const emb=nk(fc(r,['No. Embarque','No.Embarque','Embarque']));
+          if(!emb) return; const row=S.rows.find(x=>x.emb===emb); if(!row) return;
+          const pal=parseFloat(fc(r,['Total Pallets','Pallets','PAL']))||null;
+          if(pal!=null) row.pal=pal; }); }
+      render(); badge(); fbSave();
+      showRes('ok','Detalle/PTR actualizados sin cambio de semáforo.');
+      return;
+    }
+    showRes('err','Carga el Detalle y/o PTR para actualizar sin nuevo semáforo.');
+    return;
+  }
   if(!S.buf.new){ showRes('err','Primero carga el archivo del nuevo semáforo.'); return; }
   const turno=document.getElementById('tSel').value;
   S.sessionTurno = turno; // update session turno
@@ -1609,19 +1704,24 @@ function applyNew(){
 
   // 0. Snapshot CURRENT assignments into historial BEFORE wiping them
   //    Capture every row that has any operational data assigned
+  const _snapNow = new Date();
+  const _snapFecha = _snapNow.toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
   const snapshot = S.rows
-    .filter(r=>r.monta||r.precarga||r.estop)
+    .filter(r=>r.monta||r.precarga||r.estop||r.verif)  // include verif-only rows
     .map(r=>({
       emb:r.emb, nom:r.nom, sem:r.sem,
       monta:r.monta, precarga:r.precarga, estop:r.estop,
+      verif:r.verif||'',   // ← always include verif
       pt:r.pt, pr:r.pr, pal:r.pal, tr:r.tr, ar:r.ar, ci:r.ci, prio:r.prio,
       turno:S.sessionTurno, sup:S.sessionSup,
-      ts:new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})
+      fecha:_snapFecha,    // ← full date+time
+      ts:_snapNow.getTime()
     }));
   if(snapshot.length){
     S.turnoHistorial.push({
       turno:S.sessionTurno, sup:S.sessionSup,
       hora:new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
+      ts:Date.now(),
       fletes:snapshot
     });
     hSave(); // persist to localStorage
@@ -1636,7 +1736,7 @@ function applyNew(){
 
   // Refresh Detalle and PTR maps if new files were uploaded
   if(S.buf.det2){
-    const detRows2=toObjects(parseSlot(S.buf.det2));
+    const detRows2=parseSlot(S.buf.det2);
     detRows2.forEach(r=>{
       const embRaw=fc(r,['No. Embarque','embarque']);
       if(!embRaw) return;
@@ -1647,7 +1747,7 @@ function applyNew(){
     });
   }
   if(S.buf.ptr2){
-    const ptrRows2=toObjects(parseSlot(S.buf.ptr2));
+    const ptrRows2=parseSlot(S.buf.ptr2);
     ptrRows2.forEach(r=>{
       const k=nk(fc(r,['No. Embarque','embarque']));
       if(k) S.ptrMap2=S.ptrMap2||{}; S.ptrMap2&&(S.ptrMap2[k]=r);
@@ -2135,7 +2235,12 @@ function cargarDesdeGuardado(){
       if(saved){
         const parsed = JSON.parse(saved);
         if(parsed.rows && parsed.rows.length){
-          Object.assign(S, parsed);
+          S.rows = parsed.rows;
+          if(parsed.userEdits) S.userEdits = parsed.userEdits;
+          if(parsed.sessionTurno) S.sessionTurno = parsed.sessionTurno;
+          if(parsed.sessionSup) S.sessionSup = parsed.sessionSup;
+          if(parsed.turnoHistorial && parsed.turnoHistorial.length)
+            S.turnoHistorial = parsed.turnoHistorial;
         }
       }
     }catch(e){}
@@ -2394,12 +2499,32 @@ function alertsRelevant(){
   return { fuera, riesgo, nuevos, desplazados };
 }
 
+
+// Returns employees going on vacation tomorrow
+function getVacacionesAlerts(){
+  if(!window.VAC_DATA||!VAC_DATA.length) return [];
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate()+1);
+  const tStr = tomorrow.toISOString().slice(0,10); // YYYY-MM-DD
+  return VAC_DATA.filter(v=>{
+    if(!v.inicio) return false;
+    // inicio is already YYYY-MM-DD format from the date input
+    return v.inicio === tStr;
+  }).map(v=>{
+    const emp = ALL_PERSONAL.find(p=>p.nombre===v.nombre)||{puesto:'—'};
+    return {...v, puesto: emp.puesto||'—'};
+  });
+}
+
 function alerts(){
   const l=g('alList');
   const { fuera, riesgo, nuevos, desplazados } = alertsRelevant();
   const total = fuera.length + riesgo.length + nuevos.length + desplazados.length;
 
-  if(!total){
+  // ── Vacation alerts ──────────────────────────────────
+  const vacAlerts = getVacacionesAlerts();
+
+  if(!total && !vacAlerts.length){
     l.innerHTML=`<div class="empty">
       <svg viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.3" style="margin-bottom:9px;opacity:.25"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
       <div style="font-size:13px">Sin alertas activas</div>
@@ -2466,14 +2591,17 @@ function alerts(){
 function swTab(el,t){
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
-  ['tk','up','al','rs','dc','vf','cl'].forEach(x=>g('p-'+x).classList.toggle('hidden',x!==t));
+  // Safe toggle — skip any panels that no longer exist in DOM
+  ['tk','al','rs','dc','vf','cl','vac'].forEach(x=>{
+    const el2=g('p-'+x); if(el2) el2.classList.toggle('hidden',x!==t);
+  });
   if(t==='tk') render();
   if(t==='al') alerts();
   if(t==='rs') renderResumen();
   if(t==='dc') renderDescargas();
   if(t==='vf') kpiVerif();
   if(t==='cl') renderClientes();
-
+  if(t==='vac') vacRender();
 }
 
 // ─── EVENTOS ESPECIALES ───────────────────────────────────────────────────────
@@ -2962,13 +3090,230 @@ function syncEvidenciasToHist(emb, evidencias){
 }
 
 function histSubTab(t){
-  ['emb','desc'].forEach(x=>{
-    document.getElementById('hpan-'+x).style.display = x===t?'':'none';
-    const btn = document.getElementById('htab-'+x);
+  ['emb','desc','vf'].forEach(x=>{
+    const panel=document.getElementById('hpan-'+x); if(panel) panel.style.display=x===t?'':'none';
+    const btn=document.getElementById('htab-'+x);
     if(btn){ btn.style.background=x===t?'var(--blue)':'none'; btn.style.color=x===t?'#fff':'var(--text3)'; }
   });
   if(t==='desc') renderHistDesc();
+  else if(t==='vf') renderHistVf();
   else renderHist();
+}
+
+
+function renderHistVf(){
+  const el = g('histVfContent'); if(!el) return;
+  const kpiEl = g('histVfKpis');
+  const q = (g('histVfSearch')?.value||'').toLowerCase();
+
+  // Build flat list of all verified fletes from turnoHistorial
+  const all = [];
+  [...S.turnoHistorial].sort((a,b)=>(b.ts||0)-(a.ts||0)).forEach(h=>{
+    (h.fletes||[]).forEach(f=>{
+      if(!f.verif) return; // only verified
+      all.push({
+        emb    : f.emb||'',
+        nom    : f.nom||'',
+        verif  : f.verif||'',
+        nombre : VERIFICADORES.find(v=>v.id===f.verif)?.nombre || f.verif,
+        turno  : h.turno||'',
+        fecha  : h.hora||h.fecha||'',
+        sup    : SUPS[h.sup]||h.sup||'—',
+        sem    : f.sem||''
+      });
+    });
+  });
+  // Also include current turn
+  S.rows.filter(r=>r.verif).forEach(r=>{
+    all.unshift({
+      emb    : r.emb||'',
+      nom    : r.nom||'',
+      verif  : r.verif||'',
+      nombre : VERIFICADORES.find(v=>v.id===r.verif)?.nombre || r.verif,
+      turno  : S.sessionTurno||'',
+      fecha  : 'Turno activo',
+      sup    : SUPS[S.sessionSup]||'—',
+      sem    : r.sem||''
+    });
+  });
+
+  // Filter by search
+  const filtered = q ? all.filter(r=>
+    r.nombre.toLowerCase().includes(q) ||
+    r.emb.toLowerCase().includes(q) ||
+    r.nom.toLowerCase().includes(q)
+  ) : all;
+
+  // KPIs
+  const totalFletes = filtered.length;
+  const verifSet = new Set(filtered.map(r=>r.verif));
+  const verifCount = verifSet.size;
+  const byVerif = {};
+  filtered.forEach(r=>{
+    if(!byVerif[r.verif]) byVerif[r.verif]={nombre:r.nombre, count:0};
+    byVerif[r.verif].count++;
+  });
+  const top = Object.values(byVerif).sort((a,b)=>b.count-a.count)[0];
+
+  if(kpiEl) kpiEl.innerHTML=[
+    ['Total fletes verificados','var(--purple)',totalFletes],
+    ['Verificadores activos','var(--cyan)',verifCount],
+    ['Mayor conteo',top?'var(--amber)':'var(--text3)',top?top.nombre.split(' ')[0]+' ('+top.count+')':'—'],
+  ].map(([l,c,v])=>`<div class="kpi" style="border-top:2px solid ${c}"><div class="kpi-v" style="color:${c};font-size:${typeof v==='string'&&v.length>6?'12px':'16px'}">${v}</div><div class="kpi-l">${l}</div></div>`).join('');
+
+  if(!filtered.length){
+    el.innerHTML='<div style="text-align:center;padding:32px;color:var(--text3)">Sin fletes verificados en el historial.</div>';
+    return;
+  }
+
+  // Group by fecha → then by verificador
+  const byFecha = {};
+  filtered.forEach(r=>{
+    if(!byFecha[r.fecha]) byFecha[r.fecha]=[];
+    byFecha[r.fecha].push(r);
+  });
+
+  const cards = Object.keys(byFecha).map(fecha=>{
+    const rows = byFecha[fecha];
+    // Sub-group by verificador
+    const byV = {};
+    rows.forEach(r=>{ if(!byV[r.nombre]) byV[r.nombre]=[]; byV[r.nombre].push(r); });
+
+    // Build unique key per section for toggle
+    let _vfSecIdx = 0;
+    const sections = Object.entries(byV).sort((a,b)=>b[1].length-a[1].length).map(([nombre,fletes])=>{
+      const secId = 'vfsec_'+Date.now()+'_'+(++_vfSecIdx);
+      const tbl = '<table style="width:100%;border-collapse:collapse;font-size:11px">'
+        +'<thead><tr style="background:var(--navy2)">'
+        +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border2)">#</th>'
+        +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border2)">No. Flete</th>'
+        +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border2)">Cliente</th>'
+        +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border2)">Semáforo</th>'
+        +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border2)">Fecha/Hora</th>'
+        +'</tr></thead><tbody>'
+        +fletes.map((f,i)=>'<tr style="border-bottom:1px solid var(--border)">'
+          +'<td style="padding:4px 10px;font-size:9px;color:var(--text3)">'+( i+1)+'</td>'
+          +'<td style="padding:4px 10px;font-family:monospace;font-size:10.5px;font-weight:600;color:var(--cyan)">'+es(f.emb)+'</td>'
+          +'<td style="padding:4px 10px;font-size:10.5px">'+es(f.nom)+'</td>'
+          +'<td style="padding:4px 10px;font-size:10px;color:var(--text3)">'+es(f.sem||'—')+'</td>'
+          +'<td style="padding:4px 10px;font-size:9px;color:var(--text3);white-space:nowrap">'+es(f.fecha||'—')+'</td>'
+          +'</tr>').join('')
+        +'</tbody></table>';
+      return '<div style="margin-bottom:8px">'
+        +'<div style="display:flex;align-items:center;gap:8px;padding:5px 10px;background:rgba(208,223,0,.08);border-left:3px solid var(--brand,#D0DF00);border-radius:0 4px 4px 0;margin-bottom:0;cursor:pointer" onclick="vfSecToggle(\''+secId+'\',this)">'
+        +'<span style="font-size:11px;font-weight:700;color:var(--brand,#D0DF00)">✅ '+es(nombre)+'</span>'
+        +'<span style="font-size:10px;color:var(--text3)">'+fletes.length+' flete'+(fletes.length>1?'s':'')+'</span>'
+        +'<span style="margin-left:auto;font-size:10px;color:var(--text3);background:var(--navy2);border:1px solid var(--border2);border-radius:4px;padding:2px 8px">▶ Ver detalle</span>'
+        +'</div>'
+        +'<div id="'+secId+'" style="display:none">'+tbl+'</div>'
+        +'</div>';
+    }).join('');
+
+    return `<div style="background:var(--card);border:1px solid var(--border2);border-radius:10px;margin-bottom:12px;overflow:hidden">
+      <div style="background:var(--navy2);padding:8px 14px;display:flex;align-items:center;gap:10px;border-left:4px solid var(--brand,#D0DF00)">
+        <span style="font-size:11px;font-weight:700">📅 ${es(fecha)}</span>
+        <span style="font-size:10px;color:var(--text3)">${rows.length} fletes · ${Object.keys(byV).length} verificadores</span>
+      </div>
+      <div style="padding:10px 12px">${sections}</div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = cards;
+}
+
+function vfSecToggle(id, header){
+  const panel = document.getElementById(id);
+  if(!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  const btn = header.querySelector('span:last-child');
+  if(btn) btn.textContent = isOpen ? '▶ Ver detalle' : '▼ Ocultar';
+}
+
+
+// ── Formatted XLSX export helper ──────────────────────────────────────────
+function makeStyledXLSX(headers, rows, sheetName, filename){
+  const wb = XLSX.utils.book_new();
+  const wsData = [headers, ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Auto column widths — max of header and data
+  ws['!cols'] = headers.map((h,ci)=>{
+    const maxData = rows.reduce((mx,row)=>Math.max(mx, String(row[ci]??'').length), 0);
+    return { wch: Math.min(Math.max(String(h).length+2, maxData+2, 10), 50) };
+  });
+
+  // Freeze header row
+  ws['!freeze'] = { xSplit:0, ySplit:1, topLeftCell:'A2', activeCell:'A2', sqref:'A2' };
+
+  // Header row style — dark navy bg + brand yellow text
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for(let C = range.s.c; C <= range.e.c; C++){
+    const addr = XLSX.utils.encode_cell({r:0, c:C});
+    if(!ws[addr]) continue;
+    ws[addr].s = {
+      fill: { patternType:'solid', fgColor:{ rgb:'1E293B' } },
+      font: { bold:true, color:{ rgb:'D0DF00' }, sz:10, name:'Arial' },
+      alignment: { horizontal:'center', vertical:'center', wrapText:true },
+      border: {
+        bottom:{ style:'medium', color:{ rgb:'D0DF00' } },
+        right: { style:'thin',   color:{ rgb:'334155' } }
+      }
+    };
+  }
+
+  // Data rows — alternating fill + borders
+  for(let R = 1; R <= range.e.r; R++){
+    const isEven = R % 2 === 0;
+    for(let C = range.s.c; C <= range.e.c; C++){
+      const addr = XLSX.utils.encode_cell({r:R, c:C});
+      if(!ws[addr]) ws[addr] = {t:'s', v:''};
+      ws[addr].s = {
+        fill: { patternType:'solid', fgColor:{ rgb: isEven ? 'F1F5F9' : 'FFFFFF' } },
+        font: { sz:10, name:'Arial', color:{ rgb:'1E293B' } },
+        alignment: { vertical:'center', wrapText:false },
+        border: {
+          top:    { style:'thin', color:{ rgb:'E2E8F0' } },
+          bottom: { style:'thin', color:{ rgb:'E2E8F0' } },
+          left:   { style:'thin', color:{ rgb:'E2E8F0' } },
+          right:  { style:'thin', color:{ rgb:'E2E8F0' } }
+        }
+      };
+    }
+  }
+
+  // Row height — header taller
+  ws['!rows'] = [{ hpt:22 }]; // header row 22pt
+  for(let R=1;R<=range.e.r;R++) ws['!rows'].push({ hpt:16 });
+
+  XLSX.utils.book_append_sheet(wb, ws, sheetName||'Datos');
+  XLSX.writeFile(wb, filename||'reporte.xlsx');
+}
+
+function exportHistVfCSV(){
+  const all = [];
+  [...S.turnoHistorial].sort((a,b)=>(b.ts||0)-(a.ts||0)).forEach(h=>{
+    (h.fletes||[]).forEach(f=>{
+      if(!f.verif) return;
+      all.push([
+        f.fecha||h.hora||h.fecha||'',
+        h.turno==='1'?'1er Turno':h.turno==='2'?'2do Turno':'3er Turno',
+        SUPS[h.sup]||h.sup||'',
+        VERIFICADORES.find(v=>v.id===f.verif)?.nombre||f.verif,
+        f.emb||'', f.nom||'', f.sem||''
+      ]);
+    });
+  });
+  S.rows.filter(r=>r.verif).forEach(r=>{
+    all.unshift(['Turno activo',
+      S.sessionTurno==='1'?'1er Turno':S.sessionTurno==='2'?'2do Turno':'3er Turno',
+      SUPS[S.sessionSup]||'',
+      VERIFICADORES.find(v=>v.id===r.verif)?.nombre||r.verif,
+      r.emb||'', r.nom||'', r.sem||'']);
+  });
+  if(!all.length){ alert('Sin datos de verificaciones para exportar.'); return; }
+  const headers = ['Fecha/Hora','Turno','Supervisor','Verificador','No. Flete','Cliente','Semáforo'];
+  makeStyledXLSX(headers, all, 'Verificadores', 'Verificadores_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
 function renderHist(){
@@ -3135,21 +3480,12 @@ function histDescPDF(key){
     fotos,
     d.fecha||new Date().toLocaleDateString('es-MX')
   );
-  // Open directly in new window — avoids blob:null URL issue
-  const win = window.open('','_blank');
-  if(win){
-    win.document.write(pdfHTML);
-    win.document.close();
-    setTimeout(()=>win.print(), 600);
-  } else {
-    // Popup blocked — fallback to download
-    const blob = new Blob([pdfHTML],{type:'text/html;charset=utf-8'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'Reporte_'+(d.folio||'INC')+'_'+new Date().toISOString().slice(0,10)+'.html';
-    a.click();
-    alert('Si no se abrió el reporte, activa las ventanas emergentes en tu navegador.');
-  }
+  const blob = new Blob([pdfHTML],{type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'Reporte_'+(d.folio||'INC')+'_'+new Date().toISOString().slice(0,10)+'.html';
+  a.click();
+  setTimeout(()=>{ window.open(url,'_blank'); }, 400);
 }
 
 function histDescEmail(key){
@@ -3367,11 +3703,7 @@ function exportHistDescXLSX(){
       ]));
     }
   });
-  const csv = '﻿' + rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download = 'Descargas_Incidencias_'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();
+  makeStyledXLSX(rows[0], rows.slice(1), 'Incidencias', 'Descargas_Incidencias_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
 function histBorrar(id){
@@ -3459,17 +3791,24 @@ function histVerIncidencias(emb){
 }
 
 function exportHistCSV(){
-  const rows=[['Fecha semáforo','Embarque','Cliente','Semáforo','Estatus','Pallets','% Tareas','Evidencias']];
-  S.turnoHistorial.forEach(h=>{
-    h.fletes.forEach(f=>{
-      rows.push([h.fecha,f.emb,f.nom,f.sem,f.estop||'—',f.pal||'—',f.pt!==null?f.pt+'%':'—',f.evidencias?.length||0]);
+  const rows = [['Folio','Fecha/Turno','Supervisor','No. Flete','Cliente','Semáforo','Montacarguista','Verificador','Precarga','Estado','%Tareas','%Restos','Pallets','Cortina']];
+  [...S.turnoHistorial].sort((a,b)=>(b.ts||0)-(a.ts||0)).forEach(h=>{
+    (h.fletes||[]).forEach(f=>{
+      rows.push([
+        '',
+        h.hora||'', SUPS[h.sup]||h.sup||'',
+        f.emb||'', f.nom||'', f.sem||'',
+        MONTACARGUISTAS.find(m=>m.id===f.monta)?.nombre||f.monta||'',
+        VERIFICADORES.find(v=>v.id===f.verif)?.nombre||f.verif||'',
+        f.precarga||'', f.estop||'',
+        f.pt!==null&&f.pt!==undefined?f.pt+'%':'',
+        f.pr!==null&&f.pr!==undefined?f.pr+'%':'',
+        f.pal||'', f.ci||''
+      ]);
     });
   });
-  const csv=rows.map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download='historico_semaforo_'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();
+  if(rows.length<=1){ alert('Sin datos en historial.'); return; }
+  makeStyledXLSX(rows[0], rows.slice(1), 'Historial', 'Historial_Embarques_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
 
@@ -3547,6 +3886,146 @@ function makeAC(inputEl, lista, onSelect){
 const INC = { registros:[] };
 
 // Initialize autocompletes after page loads
+
+// ══ MÓDULO VACACIONES ══════════════════════════════════════════════════════
+let VAC_DATA=[];
+let _vacYear=new Date().getFullYear();
+let _vacMonth=new Date().getMonth();
+(function(){try{const d=localStorage.getItem('trx_vacaciones');if(d)VAC_DATA=JSON.parse(d);}catch(e){}})();
+function vacSave(){try{localStorage.setItem('trx_vacaciones',JSON.stringify(VAC_DATA));}catch(e){}}
+function vacHoy(){_vacYear=new Date().getFullYear();_vacMonth=new Date().getMonth();vacRender();}
+function vacCambiarMes(d){_vacMonth+=d;if(_vacMonth<0){_vacMonth=11;_vacYear--;}if(_vacMonth>11){_vacMonth=0;_vacYear++;}vacRender();}
+function vacRender(){
+  const MES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const lbl=document.getElementById('vacMesLbl');if(lbl)lbl.textContent=MES[_vacMonth]+' '+_vacYear;
+  const grid=document.getElementById('vacCalGrid');if(!grid)return;
+  const vacDays={};
+  VAC_DATA.forEach(v=>{
+    const s=new Date(v.inicio+'T00:00:00');
+    for(let d=0;d<(parseInt(v.dias)||1);d++){
+      const c=new Date(s);c.setDate(c.getDate()+d);
+      if(c.getFullYear()===_vacYear&&c.getMonth()===_vacMonth){
+        const k=c.toISOString().slice(0,10);
+        if(!vacDays[k])vacDays[k]=[];vacDays[k].push(v.nombre);
+      }
+    }
+  });
+  const DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const fd=new Date(_vacYear,_vacMonth,1).getDay();
+  const dm=new Date(_vacYear,_vacMonth+1,0).getDate();
+  const tod=new Date().toISOString().slice(0,10);
+  let c=DIAS.map(d=>'<div style="text-align:center;font-size:9px;font-weight:700;color:var(--text3);padding:4px;text-transform:uppercase">'+d+'</div>').join('');
+  for(let i=0;i<fd;i++)c+='<div></div>';
+  for(let d=1;d<=dm;d++){
+    const ds=_vacYear+'-'+String(_vacMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const p=vacDays[ds]||[];const it=ds===tod;const hv=p.length>0;
+    c+='<div data-d="'+ds+'" onclick="vacDiaClick(this.dataset.d)" style="border-radius:6px;padding:4px 2px;min-height:42px;cursor:pointer;'+
+      'background:'+(it?'rgba(208,223,0,.18)':hv?'rgba(99,102,241,.15)':'var(--navy2)')+';'+
+      'border:'+(it?'1.5px solid var(--brand,#D0DF00)':hv?'1px solid rgba(99,102,241,.4)':'1px solid var(--border)')+';">'
+      +'<div style="font-size:11px;font-weight:'+(it?'700':'500')+';color:'+(it?'var(--brand,#D0DF00)':'var(--text)')+';text-align:center">'+d+'</div>'
+      +p.slice(0,2).map(n=>'<div style="font-size:8px;color:#818CF8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px">'+n.split(' ')[0]+'</div>').join('')
+      +(p.length>2?'<div style="font-size:8px;color:var(--text3);text-align:center">+'+( p.length-2)+'</div>':'')
+      +'</div>';
+  }
+  grid.innerHTML=c;
+  const lista=document.getElementById('vacLista');if(!lista)return;
+  const mes=VAC_DATA.filter(v=>{
+    const s=new Date(v.inicio+'T00:00:00');const e=new Date(s);e.setDate(e.getDate()+(parseInt(v.dias)||1)-1);
+    return(s.getFullYear()===_vacYear&&s.getMonth()===_vacMonth)||(e.getFullYear()===_vacYear&&e.getMonth()===_vacMonth);
+  }).sort((a,b)=>a.inicio.localeCompare(b.inicio));
+  if(!mes.length){lista.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">Sin vacaciones este mes.</div>';return;}
+  lista.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--navy2)">'
+    +'<th style="padding:5px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Empleado</th>'
+    +'<th style="padding:5px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Puesto</th>'
+    +'<th style="padding:5px 10px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase">Inicio</th>'
+    +'<th style="padding:5px 10px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase">Días</th>'
+    +'<th style="padding:5px 10px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase">Fin</th>'
+    +'<th></th></tr></thead><tbody>'
+    +mes.map(v=>{
+      const idx2=VAC_DATA.findIndex(x=>x.nombre===v.nombre&&x.inicio===v.inicio);
+      const fin=new Date(v.inicio+'T00:00:00');fin.setDate(fin.getDate()+(parseInt(v.dias)||1)-1);
+      const emp=ALL_PERSONAL.find(p=>p.nombre===v.nombre)||{puesto:'—'};
+      return '<tr style="border-bottom:1px solid var(--border)">'
+        +'<td style="padding:5px 10px;font-weight:600">'+v.nombre+'</td>'
+        +'<td style="padding:5px 10px;font-size:10px;color:var(--text3)">'+(emp.puesto||'—')+'</td>'
+        +'<td style="padding:5px 10px;text-align:center;font-family:monospace">'+v.inicio+'</td>'
+        +'<td style="padding:5px 10px;text-align:center;font-weight:700;color:var(--purple)">'+v.dias+'</td>'
+        +'<td style="padding:5px 10px;text-align:center;font-family:monospace">'+fin.toISOString().slice(0,10)+'</td>'
+        +'<td style="padding:4px 8px"><button onclick="vacEliminar('+idx2+')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:14px" title="Eliminar">🗑</button></td>'
+        +'</tr>';
+    }).join('')+'</tbody></table>';
+}
+function vacDiaClick(ds){
+  document.getElementById('vacFO')?.remove();
+  const opts=ALL_PERSONAL.map(p=>'<option value="'+p.nombre+'">'+p.nombre+' — '+p.puesto+'</option>').join('');
+  const ov=document.createElement('div');ov.id='vacFO';
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto';
+  ov.innerHTML='<div style="background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:20px;width:100%;max-width:400px">'
+    +'<div style="font-weight:700;font-size:14px;margin-bottom:14px;color:var(--brand,#D0DF00)">🏖 Registrar vacaciones</div>'
+    +'<div style="display:grid;gap:10px">'
+    +'<div><div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Empleado</div>'
+    +'<select id="vacEmpS" class="edt-sel" style="width:100%;height:32px;font-size:11px"><option value="">— Seleccionar —</option>'+opts+'</select></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +'<div><div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Fecha inicio</div>'
+    +'<input id="vacIniI" type="date" class="edt-sel" value="'+ds+'" style="width:100%;height:32px"></div>'
+    +'<div><div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Días</div>'
+    +'<input id="vacDiasI" type="number" min="1" max="30" value="6" class="edt-sel" style="width:100%;height:32px"></div></div>'
+    +'<div style="display:flex;gap:8px;padding-top:4px">'
+    +'<button onclick="vacGuardar()" class="btn ok" style="flex:1;justify-content:center">✓ Guardar</button>'
+    +'<button onclick="document.getElementById(&apos;vacFO&apos;).remove()" class="btn" style="border-color:var(--border2);color:var(--text3)">Cancelar</button>'
+    +'</div></div></div>';
+  document.body.appendChild(ov);
+}
+function vacCerrarForm(){document.getElementById('vacFO')?.remove();}
+function vacGuardar(){
+  const nombre=document.getElementById('vacEmpS')?.value;
+  const inicio=document.getElementById('vacIniI')?.value;
+  const dias=parseInt(document.getElementById('vacDiasI')?.value)||0;
+  if(!nombre){alert('Selecciona un empleado.');return;}
+  if(!inicio){alert('Selecciona fecha de inicio.');return;}
+  if(dias<1){alert('Ingresa al menos 1 día.');return;}
+  VAC_DATA.push({nombre,inicio,dias});vacSave();
+  document.getElementById('vacFO')?.remove();vacRender();
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10B981;color:#fff;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;z-index:99999;pointer-events:none';
+  t.textContent='✓ Vacaciones registradas';document.body.appendChild(t);setTimeout(()=>t.remove(),2500);
+}
+function vacEliminar(i){if(!confirm('¿Eliminar?'))return;VAC_DATA.splice(i,1);vacSave();vacRender();}
+function vacExportarExcel(){
+  if(!VAC_DATA.length){alert('Sin registros.');return;}
+  const rows=[['Empleado','Puesto','Fecha Inicio','Días','Fecha Fin']];
+  VAC_DATA.sort((a,b)=>a.inicio.localeCompare(b.inicio)).forEach(v=>{
+    const emp=ALL_PERSONAL.find(p=>p.nombre===v.nombre)||{puesto:'—'};
+    const fin=new Date(v.inicio+'T00:00:00');fin.setDate(fin.getDate()+(parseInt(v.dias)||1)-1);
+    rows.push([v.nombre,emp.puesto||'—',v.inicio,v.dias,fin.toISOString().slice(0,10)]);
+  });
+  const csv='﻿'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='Vacaciones_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+function vacExportarPDF(){
+  const rows=VAC_DATA.sort((a,b)=>a.inicio.localeCompare(b.inicio)).map(v=>{
+    const emp=ALL_PERSONAL.find(p=>p.nombre===v.nombre)||{puesto:'—'};
+    const fin=new Date(v.inicio+'T00:00:00');fin.setDate(fin.getDate()+(parseInt(v.dias)||1)-1);
+    return '<tr><td>'+v.nombre+'</td><td>'+(emp.puesto||'—')+'</td><td>'+v.inicio+'</td><td style="text-align:center">'+v.dias+'</td><td>'+fin.toISOString().slice(0,10)+'</td></tr>';
+  }).join('');
+  const pdfHTML='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Vacaciones MACRO TOLUCA</title>'
+    +'<style>body{font-family:Arial,sans-serif;padding:20px;color:#1a1a1a;font-size:12px}'
+    +'.hdr{background:#1e293b;color:#fff;padding:16px 24px;border-radius:8px;margin-bottom:16px;border-left:6px solid #D0DF00}'
+    +'table{width:100%;border-collapse:collapse}'
+    +'th{background:#f1f5f9;padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;border:1px solid #e2e8f0}'
+    +'td{padding:6px 10px;border:1px solid #f1f5f9}tr:nth-child(even){background:#f8fafc}'
+    +'@media print{body{padding:0}}</style></head><body>'
+    +'<div class="hdr"><div style="font-size:17px;font-weight:700">CALENDARIO DE VACACIONES</div>'
+    +'<div style="font-size:10px;opacity:.7;margin-top:3px">MACRO TOLUCA KCMX // TRAXION &nbsp;·&nbsp; '+new Date().toLocaleDateString('es-MX',{dateStyle:'full'})+'</div></div>'
+    +'<table><thead><tr><th>Empleado</th><th>Puesto</th><th>Inicio</th><th>Días</th><th>Fin</th></tr></thead>'
+    +'<tbody>'+(rows||'<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:16px">Sin registros</td></tr>')+'</tbody></table>'
+    +'</body></html>';
+  const win=window.open('','_blank');
+  if(win){win.document.write(pdfHTML);win.document.close();setTimeout(()=>win.print(),500);}
+}
+// ══ END VACACIONES ══════════════════════════════════════════════════════════
+
 window.addEventListener('load', ()=>{
   // Eventos: live flete lookup
   const evFletesInp=g('evFletes');
@@ -4506,107 +4985,216 @@ function dvIncDescargarPDF(){
 
 
 // dvIncBuildHTML(folio, emb, linea, placa, elab, skus, fotos, fecha)
-// skus = [{sku, cant, unidad, tipo}]
 function dvIncBuildHTML(folio, emb, linea, placa, elab, skus, fotos, fecha){
-  const tipColors = {
-    'DAÑOS':'#dc2626','COLAPSO':'#dc2626','CALIDAD':'#0891b2',
-    'FALTANTE':'#d97706','SOBRANTE':'#059669',
-    'DAÑO TRANSPORTE':'#7c3aed','MAL CERTIFICADO':'#7c3aed'
-  };
   const skuArr = Array.isArray(skus) ? skus : [];
-  const skuRows = skuArr.map((s,i)=>`<tr style="background:${i%2===0?'#fff':'#f8fafc'}">
-    <td style="border:1px solid #e2e8f0;padding:6px 10px;font-family:monospace;font-size:11px">${s.sku||'—'}</td>
-    <td style="border:1px solid #e2e8f0;padding:6px 10px;text-align:center;font-weight:700">${s.cant||'0'}</td>
-    <td style="border:1px solid #e2e8f0;padding:6px 10px;text-align:center">${s.unidad||'CAJAS'}</td>
-    <td style="border:1px solid #e2e8f0;padding:6px 10px;text-align:center">
-      <span style="background:${tipColors[s.tipo]||'#475569'};color:#fff;padding:2px 10px;border-radius:4px;font-size:10px;font-weight:700">${s.tipo||'—'}</span>
-    </td>
+  const tipColors = {
+    'DAÑOS':'#dc2626','COLAPSO':'#c2410c','CALIDAD':'#0891b2','MOJADO':'#0369a1',
+    'FALTANTE':'#d97706','SOBRANTE':'#059669','DAÑO TRANSPORTE':'#7c3aed',
+    'MAL CERTIFICADO':'#7c3aed','OTROS':'#475569'
+  };
 
-  </tr>`).join('');
+  // ── SKU rows ──────────────────────────────────────────────────────────────
+  const skuRows = skuArr.map((s,i)=>
+    `<tr style="background:${i%2===0?'#ffffff':'#f8fafc'}">
+      <td>${s.sku||'—'}</td>
+      <td style="text-align:center;font-weight:700">${s.cant||'0'}</td>
+      <td style="text-align:center">${s.unidad||'CAJAS'}</td>
+      <td style="text-align:center">
+        <span style="background:${tipColors[s.tipo]||'#475569'};color:#fff;
+          padding:2px 10px;border-radius:4px;font-size:10px;font-weight:700">${s.tipo||'—'}</span>
+      </td>
+    </tr>`
+  ).join('');
 
-  const fotosHTML = (fotos||[]).length ? `
-    <div class="foto-wrap">
-      ${(fotos||[]).map(f=>`<img src="${f}" style="width:100%;height:180px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;display:block">`).join('')}
-    </div>` : '';
+  // ── Photos — deduplicate, max 4 per page, 2-col grid ─────────────────────
+  const uniqueFotos = [...new Set(
+    (fotos||[]).filter(f=>f && typeof f==='string' && f.startsWith('data:'))
+  )];
 
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>Reporte Incidencia ${folio}</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:Arial,sans-serif;padding:20px;color:#1a1a1a;font-size:12px}
-    .hdr{background:#1e293b;color:#fff;padding:18px 24px;border-radius:8px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-start;border-left:6px solid #D0DF00}
-    .hdr-title{font-size:18px;font-weight:700;letter-spacing:-.01em}
-    .hdr-sub{font-size:10px;opacity:.65;margin-top:4px}
-    .folio{font-size:15px;font-weight:700;text-align:right}
-    .fecha{font-size:10px;opacity:.65;text-align:right;margin-top:4px}
-    .sec{border:1px solid #e2e8f0;border-radius:6px;margin-bottom:14px;overflow:hidden}
-    .sec-ttl{background:#f1f5f9;padding:8px 14px;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid #e2e8f0;color:#334155;border-left:3px solid #D0DF00}
-    .grid2{display:grid;grid-template-columns:1fr 1fr}
-    .fld{padding:8px 14px;border-bottom:1px solid #f8fafc}
-    .fld:nth-child(odd){border-right:1px solid #f1f5f9}
-    .lbl{font-size:8.5px;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
-    .val{font-size:12px;font-weight:500}
-    .full{grid-column:1/-1}
-    table{width:100%;border-collapse:collapse;font-size:11px}
-    th{background:#f1f5f9;border:1px solid #e2e8f0;padding:6px 10px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:#475569}
-    .firma-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;padding:20px 18px}
-    .firma-box{text-align:center}
-    .firma-line{border-top:1px solid #1a1a1a;margin-top:50px;padding-top:5px;font-size:9px;color:#64748b}
-    @media print{body{padding:10px}button{display:none}}
-  </style>
-  </head><body>
-  <div class="hdr">
-    <div>
-      <div class="hdr-title">REPORTE DE DAÑOS / INCIDENCIAS</div>
-      <div class="hdr-sub">MACRO TOLUCA KCMX // TRAXION</div>
-    </div>
-    <div>
-      <div class="folio">${folio}</div>
-      <div class="fecha">Fecha: ${fecha}</div>
-    </div>
+  // Build pages of 4 photos each
+  const photoPages = [];
+  for(let i=0; i<uniqueFotos.length; i+=4){
+    photoPages.push(uniqueFotos.slice(i, i+4));
+  }
+
+  const fotosHTML = photoPages.map((page, pi) => `
+    <div style="page-break-before:${pi>0?'always':'auto'}">
+      ${pi===0?`<div class="sec-ttl">4. EVIDENCIAS FOTOGRÁFICAS (${uniqueFotos.length})</div>`:'<div class="sec-ttl">EVIDENCIAS FOTOGRÁFICAS (continuación)</div>'}
+      <div class="photos-grid">
+        ${page.map((f, idx) => `
+          <div class="photo-cell">
+            <div class="photo">
+              <img src="${f}" alt="Evidencia ${pi*4+idx+1}">
+            </div>
+            <div class="photo-caption">Foto ${pi*4+idx+1}</div>
+          </div>`).join('')}
+      </div>
+    </div>`
+  ).join('');
+
+  const secDesc = skuArr[0]?.desc
+    ? `<div class="sec"><div class="sec-ttl">3. DESCRIPCIÓN / CAUSA RAÍZ</div>
+       <div class="sec-body">${skuArr[0].desc}</div></div>`
+    : '';
+
+  const secFotos = uniqueFotos.length
+    ? `<div class="sec">${fotosHTML}</div>` : '';
+
+  const firmaNum = 3 + (skuArr[0]?.desc?1:0) + (uniqueFotos.length?1:0);
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Reporte Incidencia ${folio}</title>
+<style>
+  /* ── Reset ── */
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:Arial,Helvetica,sans-serif; font-size:12px; color:#1a1a1a;
+         background:#fff; padding:20px 24px; }
+
+  /* ── Header ── */
+  .hdr { background:#1e293b; color:#fff; border-radius:8px; margin-bottom:16px;
+         border-left:7px solid #D0DF00; display:flex;
+         justify-content:space-between; align-items:flex-start; padding:14px 20px; }
+  .hdr-title { font-size:17px; font-weight:700; color:#fff; }
+  .hdr-sub   { font-size:9px; color:rgba(255,255,255,.55); margin-top:3px; }
+  .folio     { font-size:14px; font-weight:700; color:#D0DF00; text-align:right; }
+  .fecha     { font-size:9px; color:rgba(255,255,255,.55); text-align:right; margin-top:3px; }
+
+  /* ── Sections ── */
+  .sec { border:1px solid #e2e8f0; border-radius:7px; margin-bottom:14px; overflow:hidden; }
+  .sec-ttl { background:#f1f5f9; padding:7px 14px; font-size:9px; font-weight:700;
+             text-transform:uppercase; letter-spacing:.08em; color:#334155;
+             border-bottom:1px solid #e2e8f0; border-left:4px solid #D0DF00; }
+  .sec-body { padding:12px 16px; line-height:1.65; }
+
+  /* ── Data fields ── */
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; }
+  .fld   { padding:8px 14px; border-bottom:1px solid #f0f4f8; }
+  .fld:nth-child(odd)  { border-right:1px solid #e8edf2; }
+  .lbl   { font-size:8px; color:#64748b; text-transform:uppercase;
+           letter-spacing:.07em; margin-bottom:2px; font-weight:600; }
+  .val   { font-size:12px; font-weight:500; color:#1e293b; }
+  .full  { grid-column:1/-1; }
+
+  /* ── SKU table ── */
+  table { width:100%; border-collapse:collapse; font-size:11px; }
+  th    { background:#1e293b; color:#fff; border:1px solid #334155;
+          padding:7px 12px; text-align:left; font-size:9px;
+          text-transform:uppercase; letter-spacing:.07em; }
+  th:first-child { border-left:3px solid #D0DF00; }
+  td    { border:1px solid #e2e8f0; padding:7px 12px; }
+
+  /* ── Photos ── */
+  .photos-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    padding: 14px 16px;
+  }
+  .photo-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .photo {
+    width: 100%;
+    height: 250px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .photo-caption {
+    font-size: 9px;
+    color: #94a3b8;
+    text-align: center;
+    font-style: italic;
+  }
+
+  /* ── Signatures ── */
+  .firma-grid { display:grid; grid-template-columns:1fr 1fr 1fr;
+                gap:28px; padding:20px 20px 16px; }
+  .firma-line { border-top:1.5px solid #1a1a1a; margin-top:48px;
+                padding-top:5px; font-size:9px; color:#64748b; text-align:center; }
+
+  /* ── Footer ── */
+  .footer { text-align:center; font-size:8px; color:#94a3b8;
+            margin-top:10px; padding-top:8px; border-top:1px solid #f1f5f9; }
+
+  /* ── Print ── */
+  @media print {
+    body    { padding:8px 12px; }
+    button  { display:none !important; }
+    a::after { content:none !important; }
+    .sec    { break-inside:avoid; }
+    .photos-grid { break-inside:avoid; }
+    .photo  { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    .photo img { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-title">REPORTE DE DAÑOS / INCIDENCIAS</div>
+    <div class="hdr-sub">MACRO TOLUCA KCMX // TRAXION</div>
   </div>
-
-  <div class="sec">
-    <div class="sec-ttl">1. Datos del traspaso</div>
-    <div class="grid2">
-      <div class="fld"><div class="lbl">Línea / Transportista</div><div class="val">${linea||'—'}</div></div>
-      <div class="fld"><div class="lbl">No. de Placa / Caja</div><div class="val">${placa||'—'}</div></div>
-      <div class="fld"><div class="lbl">No. STO / Embarque</div><div class="val">${emb||'— Sin capturar —'}</div></div>
-      <div class="fld"><div class="lbl">Fecha de incidencia</div><div class="val">${fecha}</div></div>
-      <div class="fld full"><div class="lbl">Elaborado por</div><div class="val">${elab||'—'}</div></div>
-    </div>
+  <div>
+    <div class="folio">${folio}</div>
+    <div class="fecha">Fecha: ${fecha}</div>
   </div>
+</div>
 
-  <div class="sec">
-    <div class="sec-ttl">2. SKUs con incidencia (${skuArr.length})</div>
-    <table>
-      <thead><tr>
-        <th>SKU / Código</th>
-        <th>Cantidad</th>
-        <th>Unidad</th>
-        <th>Tipo de incidencia</th>
-      </tr></thead>
-      <tbody>${skuRows||`<tr><td colspan="4" style="padding:10px;text-align:center;color:#94a3b8">Sin SKUs registrados</td></tr>`}</tbody>
-    </table>
+<div class="sec">
+  <div class="sec-ttl">1. DATOS DEL TRASPASO</div>
+  <div class="grid2">
+    <div class="fld"><div class="lbl">Línea / Transportista</div><div class="val">${linea||'—'}</div></div>
+    <div class="fld"><div class="lbl">No. de Placa / Caja</div><div class="val">${placa||'—'}</div></div>
+    <div class="fld"><div class="lbl">No. STO / Embarque</div><div class="val">${emb||'—'}</div></div>
+    <div class="fld"><div class="lbl">Fecha de Incidencia</div><div class="val">${fecha}</div></div>
+    <div class="fld full"><div class="lbl">Elaborado por</div><div class="val">${elab||'—'}</div></div>
   </div>
+</div>
 
-  ${skuArr[0]?.desc ? `<div class="sec"><div class="sec-ttl">3. Descripción / Causa raíz</div><div style="padding:10px 14px;font-size:12px;color:#374151">${skuArr[0].desc}</div></div>` : ''}
-  ${fotosHTML ? `<div class="sec"><div class="sec-ttl">${skuArr[0]?.desc?'4':'3'}. Evidencias fotográficas (${(fotos||[]).length})</div>${fotosHTML}</div>` : ''}
+<div class="sec">
+  <div class="sec-ttl">2. SKUS CON INCIDENCIA (${skuArr.length})</div>
+  <table>
+    <thead><tr>
+      <th>SKU / Código</th><th>Cantidad</th><th>Unidad</th><th>Tipo de Incidencia</th>
+    </tr></thead>
+    <tbody>${skuRows||'<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:12px;font-style:italic">Sin SKUs registrados</td></tr>'}</tbody>
+  </table>
+</div>
 
-  <div class="sec">
-    <div class="sec-ttl">${fotosHTML ? '4' : '3'}. Firmas y autorización</div>
-    <div class="firma-grid">
-      <div class="firma-box"><div class="firma-line">Elaboró<br>${elab||'_______________'}</div></div>
-      <div class="firma-box"><div class="firma-line">Revisó / Logística<br>_______________</div></div>
-      <div class="firma-box"><div class="firma-line">Autorizó / Dirección<br>_______________</div></div>
-    </div>
+${secDesc}
+${secFotos}
+
+<div class="sec">
+  <div class="sec-ttl">${firmaNum}. FIRMAS Y AUTORIZACIÓN</div>
+  <div class="firma-grid">
+    <div><div class="firma-line">Elaboró<br><strong>${elab||'_______________'}</strong></div></div>
+    <div><div class="firma-line">Revisó / Logística<br>_______________</div></div>
+    <div><div class="firma-line">Autorizó / Dirección<br>_______________</div></div>
   </div>
+</div>
 
-  <div style="text-align:center;font-size:8.5px;color:#94a3b8;padding-top:8px">
-    Reporte generado automáticamente — MACRO TOLUCA KCMX // TRAXION
-  </div>
-  </body></html>`;
+<div class="footer">Reporte generado automáticamente — MACRO TOLUCA KCMX // TRAXION</div>
+</body></html>`;
 }
+
 
 function dvIncEmail(){
   // Works from modal (if open) OR last saved incidencia
@@ -5302,23 +5890,58 @@ function generarReporte(){
   const totalVerif=cur.filter(r=>r.verif).length;
   const pendVerif=cur.length-totalVerif;
 
+  // Build day-by-day verif history from S.turnoHistorial + current
+  const verifByDay = {};
+  // Current turn
+  const todayStr = new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});
+  cur.filter(r=>r.verif).forEach(r=>{
+    const nombre = VERIFICADORES.find(v=>v.id===r.verif)?.nombre || r.verif;
+    const day = todayStr;
+    if(!verifByDay[day]) verifByDay[day]={};
+    if(!verifByDay[day][r.verif]) verifByDay[day][r.verif]={nombre, count:0};
+    verifByDay[day][r.verif].count++;
+  });
+  // Historical turns
+  S.turnoHistorial.forEach(h=>{
+    const day = h.hora ? h.hora.split(',')[0].trim() : todayStr;
+    (h.fletes||[]).forEach(f=>{
+      if(!f.verif) return;
+      const nombre = VERIFICADORES.find(v=>v.id===f.verif)?.nombre || f.verif;
+      if(!verifByDay[day]) verifByDay[day]={};
+      if(!verifByDay[day][f.verif]) verifByDay[day][f.verif]={nombre, count:0};
+      verifByDay[day][f.verif].count++;
+    });
+  });
+  const dayKeys = Object.keys(verifByDay).sort().reverse();
+  const totalVerifAll = Object.values(verifByDay).reduce((a,d)=>a+Object.values(d).reduce((b,v)=>b+v.count,0),0);
+
   const verifHtml=`<div class="rep-section">
-    <div class="rep-section-ttl">Verificaciones del turno</div>
+    <div class="rep-section-ttl">Verificaciones — por día y acumulado</div>
     <div class="rep-kpis" style="margin-bottom:12px">
-      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--purple)">${totalVerif}</div><div class="rep-kpi-l">Con verificador</div></div>
-      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--red)">${pendVerif}</div><div class="rep-kpi-l">Sin asignar</div></div>
-      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--cyan)">${verifRows.length}</div><div class="rep-kpi-l">Verificadores activos</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--purple)">${totalVerif}</div><div class="rep-kpi-l">Turno actual</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--cyan)">${totalVerifAll}</div><div class="rep-kpi-l">Total acumulado</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--red)">${pendVerif}</div><div class="rep-kpi-l">Sin asignar hoy</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--amber)">${verifRows.length}</div><div class="rep-kpi-l">Verificadores activos</div></div>
     </div>
-    ${verifRows.length?`<table class="rep-table" style="table-layout:fixed;width:100%">
-      <colgroup><col style="width:10%"><col style="width:45%"><col style="width:10%"><col style="width:35%"></colgroup>
-      <thead><tr><th>#</th><th>Verificador</th><th>Conteos</th><th>Fletes asignados</th></tr></thead>
-      <tbody>${verifRows.map((v,i)=>`<tr>
-        <td style="font-family:'IBM Plex Mono',monospace;color:${i===0?'var(--amber)':'var(--text3)'};font-weight:700">${i+1}</td>
-        <td style="font-weight:500">${es(v.nombre)}</td>
-        <td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--purple)">${v.count}</td>
-        <td style="font-size:10px;color:var(--text3)">${v.fletes.slice(0,6).join(', ')}${v.fletes.length>6?'…':''}</td>
-      </tr>`).join('')}</tbody>
-    </table>`:'<p style="font-size:12px;color:var(--text3)">Sin verificadores asignados.</p>'}
+    ${dayKeys.map(day=>{
+      const verifs = Object.values(verifByDay[day]).sort((a,b)=>b.count-a.count);
+      return `<div style="margin-bottom:14px">
+        <div style="font-size:10px;color:var(--brand,#D0DF00);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px;padding:3px 8px;background:rgba(208,223,0,.1);border-left:3px solid var(--brand,#D0DF00);border-radius:0 4px 4px 0">📅 ${day}</div>
+        <table class="rep-table" style="width:100%">
+          <thead><tr><th>#</th><th>Nombre completo</th><th>Puesto</th><th style="text-align:center">Conteos</th></tr></thead>
+          <tbody>${verifs.map((v,i)=>{
+            const emp = VERIFICADORES.find(x=>x.nombre===v.nombre)||{puesto:'—'};
+            return `<tr>
+              <td style="font-family:'IBM Plex Mono',monospace;color:${i===0?'var(--amber)':'var(--text3)'};font-weight:700">${i+1}</td>
+              <td style="font-weight:600">${es(v.nombre)}</td>
+              <td style="font-size:10px;color:var(--text3)">${emp.puesto||'—'}</td>
+              <td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--purple)">${v.count}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+      </div>`;
+    }).join('')}
+    ${!dayKeys.length?'<p style="font-size:12px;color:var(--text3)">Sin verificadores asignados.</p>':''}
   </div>`;
 
   // ── Tareas por montacarguista ──
@@ -5411,7 +6034,50 @@ function imprimirReporte(){
       .ba{background:#FEF3C7;color:#92400E}.bb{background:#DBEAFE;color:#1E40AF}
       .bc{background:#CFFAFE;color:#164E63}.bx{background:#F1F5F9;color:#475569}
       @media print{body{padding:8px}}
-    </style></head><body>
+    </style>
+<style id="mobile-fix">
+/* ── Mobile responsive overrides ── */
+@media (max-width: 640px){
+  /* Modal overlays — scrollable on mobile */
+  div[style*="position:fixed"][style*="z-index:9999"],
+  div[style*="position:fixed"][style*="z-index: 9999"],
+  ._dv-modal-overlay {
+    padding: 8px !important;
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* Inner modal cards */
+  div[style*="max-width:520px"],
+  div[style*="max-width:540px"],
+  div[style*="max-width:560px"] {
+    max-width: 100% !important;
+    border-radius: 8px !important;
+  }
+  /* INC form grids → single column */
+  #incDvModal .grid-2,
+  #incDvModal [style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* SKU row grids → wrap */
+  #idf-sku-list > div,
+  #incSkuList > div {
+    grid-template-columns: 1fr 1fr !important;
+    row-gap: 6px !important;
+  }
+  /* Charts — constrain width */
+  canvas { max-width: 100% !important; height: auto !important; }
+  /* Tracker table — horizontal scroll */
+  #p-tk { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* Tabs — horizontal scroll */
+  .tabs { overflow-x: auto; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; }
+  .tab { white-space: nowrap; flex-shrink: 0; }
+  /* KPIs — wrap on mobile */
+  .kpis { flex-wrap: wrap; }
+  .kpi { min-width: 80px; }
+}
+</style>
+</head><body>
     <h1>Reporte de Turno — PRONUMEX / TRAXION</h1>
     <div class="sub">${sub}</div>
     ${content}
@@ -5495,7 +6161,7 @@ function applyGuestUI(){
     _origSW(v);
   };
   // IMPORTANTE: Ocultar Tracker maestro y mostrar solo Resumen
-  ['tk','up','al','vf','dc','cl'].forEach(x => {
+  ['tk','al','vf','dc','cl'].forEach(x => {
     const el = g('p-' + x); if(el) el.classList.add('hidden');
   });
   const rsEl = g('p-rs'); if(rsEl) rsEl.classList.remove('hidden');
@@ -5571,9 +6237,17 @@ function fbSave(){
         posAlerts: S.posAlerts,
         sessionTurno: S.sessionTurno,
         sessionSup: S.sessionSup,
+        // DV data for cross-device sync
+        dvRegistros: DV.registros,
+        dvHistorial: DV.historial,
+        dvTurno: DV.turno,
+        dvSup: DV.sup,
+        // INC data
+        incRegistros: INC.registros,
         ts, device: DEVICE_ID
       };
-      try{ localStorage.setItem('trx_state', JSON.stringify({rows:payload.rows,userEdits:payload.userEdits,sessionTurno:payload.sessionTurno,sessionSup:payload.sessionSup})); }catch(e){}
+      autoSaveVerifHistorial(); // persist verif assignments
+      try{ localStorage.setItem('trx_state', JSON.stringify({rows:payload.rows,userEdits:payload.userEdits,sessionTurno:payload.sessionTurno,sessionSup:payload.sessionSup,turnoHistorial:payload.turnoHistorial})); }catch(e){}
       const ref = FB.doc(FB.db, 'tracker', DOC_ID);
       await FB.setDoc(ref, payload);
       // Update sync dot green
@@ -5584,7 +6258,7 @@ function fbSave(){
       const dot=document.getElementById('syncDot');
       if(dot) dot.style.background='var(--red)';
     }
-  }, 1200);
+  }, 600);
 }
 
 function applyRemoteData(data){
@@ -5594,6 +6268,12 @@ function applyRemoteData(data){
   if(data.posAlerts)      S.posAlerts       = data.posAlerts;
   if(data.sessionTurno)   S.sessionTurno    = data.sessionTurno;
   if(data.sessionSup)     S.sessionSup      = data.sessionSup;
+  // Sync DV and INC from other devices
+  if(data.dvRegistros)    DV.registros      = data.dvRegistros;
+  if(data.dvHistorial)    DV.historial      = data.dvHistorial;
+  if(data.dvTurno)        DV.turno          = data.dvTurno;
+  if(data.dvSup)          DV.sup            = data.dvSup;
+  if(data.incRegistros)   INC.registros     = data.incRegistros;
   if(!S.rows || !S.rows.length) return;
 
   // Show UI chrome
@@ -5604,7 +6284,7 @@ function applyRemoteData(data){
 
   if(!fbIsAdmin){
     // GUEST: show only Resumen tab, always re-render it
-    ['tk','up','al','vf','dc','cl'].forEach(x=>{
+    ['tk','al','vf','dc','cl'].forEach(x=>{
       const el=g('p-'+x); if(el) el.classList.add('hidden');
     });
     const rsEl=g('p-rs'); if(rsEl) rsEl.classList.remove('hidden');
