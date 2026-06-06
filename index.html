@@ -2639,10 +2639,11 @@ function swTab(el,t){
   if(t==='tk') render();
   if(t==='al') alerts();
   if(t==='rs') renderResumen();
-  if(t==='dc') renderDescargas();
+  if(t==='dc'){ dvRender(); if(typeof renderDescargas==='function') renderDescargas(); }
   if(t==='vf') kpiVerif();
   if(t==='cl') renderClientes();
   if(t==='vac') vacRender();
+  if(t==='inc') incRender();
 }
 
 // ─── EVENTOS ESPECIALES ───────────────────────────────────────────────────────
@@ -3164,15 +3165,21 @@ function renderHistVf(){
       });
     });
   });
-  // Also include current turn
+  // Current turn — only today, no duplicates already in historial
+  const todayVfKey = new Date().toLocaleDateString('es-MX');
+  const inHistToday = new Set(
+    all.filter(r=> r.fecha && r.fecha.includes(todayVfKey)).map(r=>r.verif+'|'+r.emb)
+  );
   S.rows.filter(r=>r.verif).forEach(r=>{
+    const key = (r.verif||'')+'|'+(r.emb||'');
+    if(inHistToday.has(key)) return; // already in historial for today
     all.unshift({
       emb    : r.emb||'',
       nom    : r.nom||'',
       verif  : r.verif||'',
       nombre : VERIFICADORES.find(v=>v.id===r.verif)?.nombre || r.verif,
       turno  : S.sessionTurno||'',
-      fecha  : 'Turno activo',
+      fecha  : todayVfKey+' · Turno activo',
       sup    : SUPS[S.sessionSup]||'—',
       sem    : r.sem||''
     });
@@ -3208,17 +3215,25 @@ function renderHistVf(){
   }
 
   // Group by fecha → then by verificador
+  // Group by fecha, deduplicating by emb within each day
   const byFecha = {};
   filtered.forEach(r=>{
-    if(!byFecha[r.fecha]) byFecha[r.fecha]=[];
-    byFecha[r.fecha].push(r);
+    const dayKey = r.fecha ? r.fecha.split(',')[0].trim() : r.fecha;
+    if(!byFecha[dayKey]) byFecha[dayKey]=[];
+    // Only add if this emb not already counted for this verif+day
+    const exists = byFecha[dayKey].some(x=>x.emb===r.emb && x.verif===r.verif);
+    if(!exists) byFecha[dayKey].push(r);
   });
 
   const cards = Object.keys(byFecha).map(fecha=>{
     const rows = byFecha[fecha];
     // Sub-group by verificador
     const byV = {};
-    rows.forEach(r=>{ if(!byV[r.nombre]) byV[r.nombre]=[]; byV[r.nombre].push(r); });
+    rows.forEach(r=>{
+      if(!byV[r.nombre]) byV[r.nombre]=[];
+      // No duplicate emb per verif per day
+      if(!byV[r.nombre].some(x=>x.emb===r.emb)) byV[r.nombre].push(r);
+    });
 
     // Build unique key per section for toggle
     let _vfSecIdx = 0;
@@ -6366,6 +6381,8 @@ function fbSave(){
         dvSup: DV.sup,
         // INC data
         incRegistros: INC.registros,
+        // Vacaciones
+        vacData: (window.VAC_DATA||[]),
         ts, device: DEVICE_ID
       };
       autoSaveVerifHistorial(); // persist verif assignments
@@ -6397,6 +6414,12 @@ function applyRemoteData(data){
   if(data.dvTurno)      DV.turno      = data.dvTurno;
   if(data.dvSup)        DV.sup        = data.dvSup;
   if(data.incRegistros) INC.registros = data.incRegistros;
+  // Vacaciones sync
+  if(data.vacData && Array.isArray(data.vacData)){
+    window.VAC_DATA = data.vacData;
+    try{ localStorage.setItem('trx_vacaciones', JSON.stringify(data.vacData)); }catch(e){}
+    if(g('p-vac') && !g('p-vac').classList.contains('hidden')) vacRender();
+  }
   if(!S.rows || !S.rows.length) return;
   // Show UI if not yet visible (guest arriving fresh)
   if(document.getElementById('tabs')?.classList.contains('hidden')) _showUI();
@@ -6426,6 +6449,14 @@ function applyRemoteData(data){
     if(g('p-rs')&&!g('p-rs').classList.contains('hidden')) renderResumen();
     if(g('p-vf')&&!g('p-vf').classList.contains('hidden')) kpiVerif();
     if(g('p-cl')&&!g('p-cl').classList.contains('hidden')) renderClientes();
+    // Re-render DV/INC/Hist/Vac tabs if active
+    if(g('p-dc')&&!g('p-dc').classList.contains('hidden')) dvRender();
+    if(g('p-hist')&&!g('p-hist').classList.contains('hidden')){
+      renderHist(); renderHistDesc();
+      if(typeof renderHistVf==='function') renderHistVf();
+    }
+    if(g('p-vac')&&!g('p-vac').classList.contains('hidden')) vacRender();
+    if(g('p-inc')&&!g('p-inc').classList.contains('hidden')) incRender();
   }
 }
 
