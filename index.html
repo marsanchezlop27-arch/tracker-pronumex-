@@ -1567,15 +1567,29 @@ function build(){
   });
 
   // Debug samples
-  const semSample=semRows.slice(0,6).map(r=>nk(fc(r,['embarque','No. De Embarque','Embarque'])));
+  const semSample=semRows.slice(0,6).map(r=>nk(fc(r,['embarque','No. De Embarque','No.De Embarque','Embarque'])));
   const detSample=Object.keys(detMap).slice(0,6);
   const ptrSample=Object.keys(ptrMap).slice(0,6);
 
 
-  // ── Preserve previous rows before rebuild ──────────────────────────────────
-  const _prevRows = S.rows.length ? [...S.rows] : [];
-  // Save all assignments to userEdits so they survive the rebuild
+  // ── Snapshot: capture current rows (from memory OR storage) before rebuild ──
+  // This ensures we never lose data even after a refresh
+  let _prevRows = [];
+  if(S.rows && S.rows.length){
+    _prevRows = [...S.rows];
+  } else {
+    // Try to recover from localStorage if S.rows was empty
+    try{
+      const _lsRaw = sessionStorage.getItem('trx_state_ss') || localStorage.getItem('trx_state');
+      if(_lsRaw){
+        const _lsParsed = JSON.parse(_lsRaw);
+        if(_lsParsed && Array.isArray(_lsParsed.rows)) _prevRows = _lsParsed.rows;
+      }
+    }catch(e){}
+  }
+  // Persist ALL current assignments to userEdits so they survive the rebuild
   _prevRows.forEach(r=>{
+    if(!r.emb) return;
     if(!S.userEdits[r.emb]) S.userEdits[r.emb]={};
     ['monta','verif','precarga','estop','com','prio','prioNum','con','evidencias'].forEach(f=>{
       if(r[f]!==undefined&&r[f]!==''&&r[f]!==false&&r[f]!==0)
@@ -1586,7 +1600,7 @@ function build(){
 
   // ── BASE = SEMAFORO. Iterate semaforo rows only ──
   semRows.forEach((r,semIdx)=>{
-    const k=nk(fc(r,['embarque','No. De Embarque','Embarque']));
+    const k=nk(fc(r,['embarque','No. De Embarque','No.De Embarque','Embarque','NO. DE EMBARQUE']));
     if(!k||k.length<3) return;
 
     const D = detMap[k] || comMap[k] || {};
@@ -1818,7 +1832,7 @@ function applyNew(){
 
   const newMap={};
   newRows.forEach(r=>{
-    const k=nk(fc(r,['embarque','No. De Embarque','Embarque']));
+    const k=nk(fc(r,['embarque','No. De Embarque','No.De Embarque','Embarque','NO. DE EMBARQUE']));
     if(k) newMap[k]=r;
   });
 
