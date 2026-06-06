@@ -507,6 +507,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
         Reiniciar
       </button>
       <span id="st" style="font-size:11.5px;color:var(--text3)"></span>
+      <button class="btn" onclick="resetTracker()" style="border-color:var(--red);color:var(--red);font-size:11px" title="Limpiar todo y cargar desde cero">🔄 Reiniciar</button>
     </div>
     <div id="dbg" class="berr hidden"></div>
   </div><!-- /cargaBody -->
@@ -554,6 +555,10 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     <div class="tab" onclick="swTab(this,'vac')">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       Vacaciones
+    </div>
+    <div class="tab" onclick="swTab(this,'utt')">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      UTT
     </div>
   </div>
 
@@ -770,6 +775,11 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <div id="p-cl" class="hidden">
     <div id="clContent"></div>
   </div>
+  <!-- UTT -->
+  <div id="p-utt" class="hidden">
+    <div id="uttContent" style="padding:16px"></div>
+  </div>
+
   <!-- VACACIONES -->
   <div id="p-vac" class="hidden">
     <div style="padding:16px">
@@ -1354,14 +1364,17 @@ function fc(obj,keys){
   const okeys=Object.keys(obj);
   for(const k of keys){
     const kl=k.toLowerCase().trim();
-    // Exact first: find key that contains the search term, prefer shorter key (not _1 suffix)
     const matches=okeys.filter(ok=>{
       const okl=ok.toLowerCase().trim();
       return okl===kl||okl.includes(kl)||okl.replace(/_\d+$/,'')===kl;
-    }).sort((a,b)=>a.length-b.length); // shorter = no suffix = prefer
+    }).sort((a,b)=>a.length-b.length);
     for(const found of matches){
-      if(obj[found]!==''&&obj[found]!==null&&obj[found]!==undefined)
-        return obj[found];
+      const v=obj[found];
+      // Skip empty, null, undefined, and the literal string 'None'/'null'/'undefined'
+      if(v===''||v===null||v===undefined) continue;
+      const vs=String(v).trim();
+      if(vs===''||vs==='None'||vs==='null'||vs==='undefined') continue;
+      return v;
     }
   }
   return '';
@@ -1409,6 +1422,8 @@ function parseSlot(buf){
   return all;
 }
 
+
+// Actualiza Detalle/PTR sin recargar el semáforo
 function removeDupCols(aoa){
   if(!aoa||!aoa.length) return aoa;
   // Find header row index
@@ -1458,7 +1473,9 @@ function patchDetPtr(){
       r.tr = fc(D,['T. Restos','T.Restos'])||r.tr;
       r.ar = fc(D,['A. Restos','A.Restos'])||r.ar;
       r.tra = fc(D,['Transportista','Unidad'])||r.tra;
-      r.con = fc(D,['Cortina','cortina'])||r.con;
+      // Keep existing cortina if DETALLE has none
+      const _newCon=fc(D,['Cortina','cortina']);
+      if(_newCon&&String(_newCon).trim()!==''&&String(_newCon).trim()!=='None') r.con=String(_newCon).trim();
       r.contenedor = fc(D,['# Contenedor','Contenedor'])||r.contenedor;
     }
     const P = ptrMap[r.emb] || {};
@@ -1484,6 +1501,7 @@ function patchDetPtr(){
 
 // ─── BUILD ────────────────────────────────────────────────────────────────────
 function build(){
+  S._lastBuildTs = Date.now();
   const isFirstLoad = S.rows.length === 0;
   if(isFirstLoad){
     // Primera carga: los 3 archivos son obligatorios
@@ -1554,6 +1572,16 @@ function build(){
   const ptrSample=Object.keys(ptrMap).slice(0,6);
 
 
+  // ── Preserve previous rows before rebuild ──────────────────────────────────
+  const _prevRows = S.rows.length ? [...S.rows] : [];
+  // Save all assignments to userEdits so they survive the rebuild
+  _prevRows.forEach(r=>{
+    if(!S.userEdits[r.emb]) S.userEdits[r.emb]={};
+    ['monta','verif','precarga','estop','com','prio','prioNum','con','evidencias'].forEach(f=>{
+      if(r[f]!==undefined&&r[f]!==''&&r[f]!==false&&r[f]!==0)
+        S.userEdits[r.emb][f]=r[f];
+    });
+  });
   S.rows=[];
 
   // ── BASE = SEMAFORO. Iterate semaforo rows only ──
@@ -1619,7 +1647,13 @@ function build(){
       tr:  fc(D,['T. Restos','T.Restos','t restos','T.RESTOS','TOTAL RESTOS'])    || '',
       ar:  fc(D,['A. Restos','A.Restos','a restos'])    || '',
       tf:  fc(D,['T. Faltantes','T.Faltantes','faltantes']) || '',
-      con: fc(D,['Cortina','cortina']) || '',              // Cortina = DI-42 (rampa)
+      con: (()=>{
+        const _cs=fc(r,['CORTINA','Cortina','cortina']);
+        if(_cs&&String(_cs).trim()!==''&&String(_cs).trim()!=='0'&&String(_cs).trim()!=='None') return String(_cs).trim();
+        const _cd=fc(D,['Cortina','cortina']);
+        if(_cd&&String(_cd).trim()!==''&&String(_cd).trim()!=='None') return String(_cd).trim();
+        return '';
+      })(),
       contenedor: fc(D,['# Contenedor','contenedor','Contenedor']) || '', // Container ID for grouping
       com: fc(D,['Comentarios:','Comentarios','comentarios','comentario']) || '',
       tu:  'PRIMERO',
@@ -1666,6 +1700,19 @@ function build(){
   // Auto-detect shared containers in Eventos after build
   if(typeof evDetectarSilencioso==='function') evDetectarSilencioso();
   // Save to semaforo historico
+  // ── Add back previous fletes NOT in new semáforo (marked as semAnterior) ──
+  if(_prevRows.length){
+    const newEmbs = new Set(S.rows.map(r=>r.emb));
+    const carried = _prevRows.filter(r=>!newEmbs.has(r.emb));
+    carried.forEach(r=>{
+      // Mark as from previous semáforo so render can style differently
+      S.rows.push({...r, _semAnterior:true, est:'ANTERIOR'});
+    });
+    if(carried.length){
+      const d=document.getElementById('st');
+      if(d) d.textContent=S.rows.length+' fletes activos ('+carried.length+' del turno anterior)';
+    }
+  }
   guardarHistoricoSemaforo();
   document.getElementById('kRow').classList.remove('hidden');
   document.getElementById('tabs').classList.remove('hidden');
@@ -1675,11 +1722,6 @@ function build(){
   g('stp1').classList.remove('active'); g('stp1').classList.add('done');
   g('stp2').classList.add('active');
   document.getElementById('st').textContent=S.rows.length+' fletes del semáforo activos.';
-  // Save immediately to storage
-  const _saved = _saveStateToLocalStorage();
-  // Show status in UI
-  const _stEl = document.getElementById('st');
-  if(_stEl) _stEl.textContent = S.rows.length+' fletes activos'+(_saved?' · guardado':' · error al guardar');
 }
 
 // ─── APPLY NEW SEMAFORO — el nuevo semáforo se convierte en la base ───────────
@@ -1840,9 +1882,8 @@ function applyNew(){
     const wmsEmb=!S.detMap?.[k]&&S.comMap?.[k]?nk(fc(S.comMap[k],['No. Embarque','embarque'])):'';
     const ptrKey=wmsEmb||k;
     const P=S.ptrMap?.[ptrKey]||S.ptrMap?.[k]||{};
-    const pcVal=pct(fc(D,['% Carga','%Carga','carga']));
-    if(pcVal===100) return;
-    if(!Object.keys(D).length) return; // not in detalle → already executed
+    const pcVal = Object.keys(D).length ? pct(fc(D,['% Carga','%Carga','carga'])) : null;
+    if(pcVal===100) return; // 100% done → hide
     const saved=S.userEdits[k]||{};
     S.rows.push({
       emb:k, nom:fc(r,['Nombre','nombre'])||'',
@@ -1857,7 +1898,13 @@ function applyNew(){
       tr:fc(D,['T. Restos','T.Restos','t restos'])||'',
       ar:fc(D,['A. Restos','A.Restos','a restos'])||'',
       tf:fc(D,['T. Faltantes','T.Faltantes','faltantes'])||'',
-      con:fc(D,['Cortina','cortina','# Contenedor','Contenedor'])||fc(r,['CORTINA','cortina'])||'',
+      con:(()=>{
+        const _cs=fc(r,['CORTINA','Cortina','cortina']);
+        if(_cs&&String(_cs).trim()!==''&&String(_cs).trim()!=='0'&&String(_cs).trim()!=='None') return String(_cs).trim();
+        const _cd=fc(D,['Cortina','cortina','# Contenedor','Contenedor']);
+        if(_cd&&String(_cd).trim()!==''&&String(_cd).trim()!=='None') return String(_cd).trim();
+        return '';
+      })(),
       com:saved.com||fc(D,['Comentarios:','Comentarios','comentarios','comentario'])||'',
       tu:turno, al:'', est:'NUEVO',
       precarga:saved.precarga||'', monta:saved.monta||'',
@@ -2553,7 +2600,7 @@ function getVacacionesAlerts(){
     return v.inicio === tStr;
   }).map(v=>{
     const emp = ALL_PERSONAL.find(p=>p.nombre===v.nombre)||{puesto:'—'};
-    return {...v, puesto: emp.puesto||'—'};
+    return {...v, puesto: emp.puesto||'—', cubre: v.cubre||''};
   });
 }
 
@@ -2633,7 +2680,7 @@ function swTab(el,t){
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   el.classList.add('active');
   // Safe toggle — skip any panels that no longer exist in DOM
-  ['tk','al','rs','dc','vf','cl','vac'].forEach(x=>{
+  ['tk','al','rs','dc','vf','cl','vac','utt'].forEach(x=>{
     const el2=g('p-'+x); if(el2) el2.classList.toggle('hidden',x!==t);
   });
   if(t==='tk') render();
@@ -2643,6 +2690,7 @@ function swTab(el,t){
   if(t==='vf') kpiVerif();
   if(t==='cl') renderClientes();
   if(t==='vac') vacRender();
+  if(t==='utt') uttRender();
   if(t==='inc') incRender();
 }
 
@@ -3495,24 +3543,29 @@ function histDescEliminar(btn){
 }
 
 function dvEliminarRegistro(d){
-  // 1. Remove from DV.registros (live turn) by liveIdx or fingerprint
-  if(d.liveIdx !== undefined && DV.registros[d.liveIdx]){
+  // Use _uid as primary key — most precise, no false matches
+  const uid = d.uid;
+
+  // 1. Remove from DV.registros (live turn) — by _uid first, then liveIdx
+  if(uid){
+    const li = DV.registros.findIndex(r=>r._uid===uid);
+    if(li>=0){ DV.registros.splice(li,1); }
+  } else if(d.liveIdx !== undefined && DV.registros[d.liveIdx]){
     DV.registros.splice(d.liveIdx, 1);
-  } else if(d.fp){
-    const li = DV.registros.findIndex(r=>
-      ((r.monta||'')+'|'+(r.cortina||'')+'|'+(r.hora||'')+'|'+(r.origen||'')) === d.fp
-    );
-    if(li >= 0) DV.registros.splice(li, 1);
   }
-  // 2. Remove from DV.historial by _dvIdx or fingerprint or folio
-  DV.historial.forEach(b=>{
+
+  // 2. Remove EXACTLY ONE record from DV.historial — by _uid, then _dvIdx
+  let deletedOnce = false;
+  for(const b of DV.historial){
+    const before = b.registros.length;
     b.registros = b.registros.filter(r=>{
-      if(d.dvIdx !== undefined && r._dvIdx === d.dvIdx) return false;
-      if(d.fp && ((r.monta||'')+'|'+(r.cortina||'')+'|'+(r.hora||'')+'|'+(r.origen||'')) === d.fp) return false;
-      if(d.folio && (r.incidencias||[]).some(inc=>inc.folio===d.folio)) return false;
+      if(deletedOnce) return true; // only delete one record
+      if(uid && r._uid===uid){ deletedOnce=true; return false; }
+      if(!uid && d.dvIdx!==undefined && r._dvIdx===d.dvIdx){ deletedOnce=true; return false; }
+      if(!uid && d.folio && (r.incidencias||[]).some(inc=>inc.folio===d.folio)){ deletedOnce=true; return false; }
       return true;
     });
-  });
+  }
   DV.historial = DV.historial.filter(b=>b.registros.length>0);
 }
 
@@ -3669,12 +3722,12 @@ function renderHistDesc(){
     // Store data in cache for PDF/Email
     const cacheKey = 'hd_desc_'+num+'_'+(r.fechaTurno||'').replace(/[^a-z0-9]/gi,'');
     window._hdCache = window._hdCache||{};
-    // Fingerprint to identify row in both DV.registros and DV.historial
     const _fp = (r.monta||'')+'|'+(r.cortina||'')+'|'+(r.hora||'')+'|'+(r.origen||'');
     window._hdCache[cacheKey] = {
-      dvIdx: r._dvIdx,      // index in historial registros (if saved there)
-      liveIdx: r._liveIdx,  // index in DV.registros (if still live)
-      fp: _fp,              // fingerprint for matching
+      uid: r._uid||'',      // unique ID — most reliable
+      dvIdx: r._dvIdx,      // index in historial registros
+      liveIdx: r._liveIdx,  // index in DV.registros
+      fp: _fp,              // fingerprint fallback
       mnNom, cortina:r.cortina||'', origen:r.origen||'',
       linea:incs[0]?.linea||r.trans||'',
       placa:incs[0]?.placa||'',
@@ -4015,8 +4068,10 @@ function vacRender(){
     +'<th style="padding:5px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Empleado</th>'
     +'<th style="padding:5px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Puesto</th>'
     +'<th style="padding:5px 10px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase">Inicio</th>'
-    +'<th style="padding:5px 10px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase">Días</th>'
+    +'<th style="padding:5px 10px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase">Inicio</th>'
     +'<th style="padding:5px 10px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase">Fin</th>'
+    +'<th style="padding:5px 10px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase">Días hábiles</th>'
+    +'<th style="padding:5px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Cubre</th>'
     +'<th></th></tr></thead><tbody>'
     +mes.map(v=>{
       const idx2=VAC_DATA.findIndex(x=>x.nombre===v.nombre&&x.inicio===v.inicio);
@@ -4028,40 +4083,78 @@ function vacRender(){
         +'<td style="padding:5px 10px;text-align:center;font-family:monospace">'+v.inicio+'</td>'
         +'<td style="padding:5px 10px;text-align:center;font-weight:700;color:var(--purple)">'+v.dias+'</td>'
         +'<td style="padding:5px 10px;text-align:center;font-family:monospace">'+fin.toISOString().slice(0,10)+'</td>'
-        +'<td style="padding:4px 8px"><button onclick="vacEliminar('+idx2+')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:14px" title="Eliminar">🗑</button></td>'
+        +'<td style="padding:5px 10px;font-size:10.5px;color:var(--cyan)">'+( v.cubre||'—')+'</td>'
+        +'<td style="padding:4px 8px;white-space:nowrap"><button onclick="vacEditarCubre('+idx2+')" style="background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.25);color:var(--cyan);border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer;margin-right:4px" title="Editar cobertura">✏</button><button onclick="vacEliminar('+idx2+')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:14px" title="Eliminar">🗑</button></td>'
         +'</tr>';
     }).join('')+'</tbody></table>';
 }
+function vacCerrarForm(){ document.getElementById('vacFO')?.remove(); }
+
 function vacDiaClick(ds){
   document.getElementById('vacFO')?.remove();
-  const opts=ALL_PERSONAL.map(p=>'<option value="'+p.nombre+'">'+p.nombre+' — '+p.puesto+'</option>').join('');
-  const ov=document.createElement('div');ov.id='vacFO';
+  const makeOpts=(sel)=>ALL_PERSONAL.map(p=>`<option value="${es(p.nombre)}">${es(p.nombre)} — ${es(p.puesto)}</option>`).join('');
+  const ov=document.createElement('div');
+  ov.id='vacFO';
   ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto';
-  ov.innerHTML='<div style="background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:20px;width:100%;max-width:400px">'
-    +'<div style="font-weight:700;font-size:14px;margin-bottom:14px;color:var(--brand,#D0DF00)">🏖 Registrar vacaciones</div>'
-    +'<div style="display:grid;gap:10px">'
-    +'<div><div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Empleado</div>'
-    +'<select id="vacEmpS" class="edt-sel" style="width:100%;height:32px;font-size:11px"><option value="">— Seleccionar —</option>'+opts+'</select></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-    +'<div><div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Fecha inicio</div>'
-    +'<input id="vacIniI" type="date" class="edt-sel" value="'+ds+'" style="width:100%;height:32px"></div>'
-    +'<div><div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Días</div>'
-    +'<input id="vacDiasI" type="number" min="1" max="30" value="6" class="edt-sel" style="width:100%;height:32px"></div></div>'
-    +'<div style="display:flex;gap:8px;padding-top:4px">'
-    +'<button onclick="vacGuardar()" class="btn ok" style="flex:1;justify-content:center">✓ Guardar</button>'
-    +'<button onclick="document.getElementById(&apos;vacFO&apos;).remove()" class="btn" style="border-color:var(--border2);color:var(--text3)">Cancelar</button>'
-    +'</div></div></div>';
+  ov.innerHTML=`<div style="background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:20px;width:100%;max-width:440px">
+    <div style="font-weight:700;font-size:14px;margin-bottom:14px;color:var(--brand,#D0DF00)">🏖 Registrar vacaciones</div>
+    <div style="display:grid;gap:10px">
+      <div>
+        <div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Empleado (escribe para buscar)</div>
+        <input id="vacEmpS" class="edt-sel" type="text" list="vacEmpList" placeholder="Escribe el nombre..." style="width:100%;height:32px;font-size:11px">
+        <datalist id="vacEmpList">${makeOpts()}</datalist>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Fecha inicio</div>
+          <input id="vacIniI" type="date" class="edt-sel" value="${ds}" style="width:100%;height:32px" oninput="vacCalcDias()">
+        </div>
+        <div>
+          <div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Fecha fin</div>
+          <input id="vacFinI" type="date" class="edt-sel" value="${ds}" style="width:100%;height:32px" oninput="vacCalcDias()">
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer">
+          <input type="checkbox" id="vacSkipWknd" onchange="vacCalcDias()"> Excluir sáb/dom
+        </label>
+        <span id="vacDiasLabel" style="font-size:11px;color:var(--brand,#D0DF00);font-weight:700"></span>
+      </div>
+      <div>
+        <div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">¿Quién cubre? (escribe para buscar)</div>
+        <input id="vacCubreS" class="edt-sel" type="text" list="vacCubreList" placeholder="Opcional — escribe el nombre..." style="width:100%;height:32px;font-size:11px">
+        <datalist id="vacCubreList">${makeOpts()}</datalist>
+      </div>
+      <div style="display:flex;gap:8px;padding-top:4px">
+        <button onclick="vacGuardar()" class="btn ok" style="flex:1;justify-content:center">✓ Guardar</button>
+        <button onclick="vacCerrarForm()" class="btn" style="border-color:var(--border2);color:var(--text3)">✕ Cancelar</button>
+      </div>
+    </div>
+  </div>`;
   document.body.appendChild(ov);
+  setTimeout(vacCalcDias,50);
 }
-function vacCerrarForm(){document.getElementById('vacFO')?.remove();}
+
+
 function vacGuardar(){
-  const nombre=document.getElementById('vacEmpS')?.value;
+  // Get nombre — match input text against ALL_PERSONAL exactly
+  const _empInput=document.getElementById('vacEmpS')?.value?.trim()||'';
+  const _empMatch=ALL_PERSONAL.find(p=>p.nombre.toLowerCase()===_empInput.toLowerCase());
+  const nombre=_empMatch?_empMatch.nombre:_empInput;
   const inicio=document.getElementById('vacIniI')?.value;
-  const dias=parseInt(document.getElementById('vacDiasI')?.value)||0;
+  const fin=document.getElementById('vacFinI')?.value||inicio;
+  const skip=document.getElementById('vacSkipWknd')?.checked||false;
+  const _cubreInput=document.getElementById('vacCubreS')?.value?.trim()||'';
+  const _cubreMatch=ALL_PERSONAL.find(p=>p.nombre.toLowerCase()===_cubreInput.toLowerCase());
+  const cubre=_cubreMatch?_cubreMatch.nombre:_cubreInput;
   if(!nombre){alert('Selecciona un empleado.');return;}
   if(!inicio){alert('Selecciona fecha de inicio.');return;}
-  if(dias<1){alert('Ingresa al menos 1 día.');return;}
-  VAC_DATA.push({nombre,inicio,dias});vacSave();
+  if(fin<inicio){alert('La fecha fin no puede ser anterior al inicio.');return;}
+  // Calculate working days
+  let dias=0; const cur=new Date(inicio+'T00:00:00'), d1=new Date(fin+'T00:00:00');
+  while(cur<=d1){ const d=cur.getDay(); if(!skip||(d!==0&&d!==6)) dias++; cur.setDate(cur.getDate()+1); }
+  if(dias<1){alert('Sin días hábiles en ese rango.');return;}
+  VAC_DATA.push({nombre,inicio,fin,dias,skip,cubre});vacSave();
   document.getElementById('vacFO')?.remove();vacRender();
   const t=document.createElement('div');
   t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10B981;color:#fff;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;z-index:99999;pointer-events:none';
@@ -5735,7 +5828,7 @@ function renderResumen(){
     const semUrgente=(()=>{ if(!r.ci) return false; const d=new Date(r.ci); return !isNaN(d)&&(d-new Date())/3600000>=0&&(d-new Date())/3600000<2; })();
     const semBadgeCls=semUrgente?'br':scl(r.sem);
     const semLabel=semUrgente?(r.sem||'Sin estado')+' ⚠':(r.sem||'—');
-    const semCell=`<div><span class="b ${semBadgeCls}" data-cita="${r.ci||''}">${es(semLabel)}</span>${r.con?`<div style="margin-top:4px;font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;font-weight:600">${fmtCortina(r.con)}</div>`:''}</div>`;
+    const semCell=`<div><span class="b ${semBadgeCls}" data-cita="${r.ci||''}" style="${r._semAnterior?'background:rgba(100,116,139,.15);color:#94a3b8;border-color:rgba(100,116,139,.3)':''}">${es(r._semAnterior?'TURNO ANT.':semLabel)}</span>${r.con?`<div style="margin-top:4px;font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;font-weight:600">${fmtCortina(r.con)}</div>`:''}</div>`;
 
     const opts=['','POR VERIFICAR','POR CARGAR','PENDIENTE','CARGADO'].map(v=>
       `<option value="${v}"${(r.estop||'PENDIENTE')===v?' selected':''}>${v||'— estatus —'}</option>`).join('');
@@ -6436,37 +6529,33 @@ function fbSave(){
 }
 
 function applyRemoteData(data){
-  // Only overwrite rows if remote has data (never blank out existing rows)
+  // Guard: ignore snapshots within 3s of a local build (prevents stale data overwrite)
+  const _msSinceBuild = Date.now() - (S._lastBuildTs||0);
+
   if(data.rows && data.rows.length){
-    // Detect assignment changes from other devices and notify
-    if(S.rows && S.rows.length && data.device && data.device!==DEVICE_ID){
-      data.rows.forEach(nr=>{
-        const or = S.rows.find(r=>r.emb===nr.emb);
-        if(!or) return;
-        if(nr.monta && nr.monta!==or.monta){
-          const nom=MONTACARGUISTAS.find(m=>m.id===nr.monta)?.nombre||nr.monta;
-          _notifyAssignment('monta', nom, nr.emb||'', nr.nom||'');
-          _highlightRow(nr.emb);
-        }
-        if(nr.verif && nr.verif!==or.verif){
-          const nom=VERIFICADORES.find(v=>v.id===nr.verif)?.nombre||nr.verif;
-          _notifyAssignment('verificacion', nom, nr.emb||'', nr.nom||'');
-          _highlightRow(nr.emb);
-        }
-        if(nr.precarga && nr.precarga!==or.precarga){
-          _notifyAssignment('precarga', nr.precarga, nr.emb||'', nr.nom||'');
-          _highlightRow(nr.emb);
-        }
-      });
+    if(_msSinceBuild > 3000 || !S._lastBuildTs){
+      // Detect assignment changes from other devices → notify
+      if(S.rows && S.rows.length && data.device && data.device!==DEVICE_ID){
+        data.rows.forEach(nr=>{
+          const or=S.rows.find(r=>r.emb===nr.emb); if(!or) return;
+          if(nr.monta && nr.monta!==or.monta)
+            _notifyAssignment('monta',MONTACARGUISTAS.find(m=>m.id===nr.monta)?.nombre||nr.monta,nr.emb||'',nr.nom||'');
+          if(nr.verif && nr.verif!==or.verif)
+            _notifyAssignment('verificacion',VERIFICADORES.find(v=>v.id===nr.verif)?.nombre||nr.verif,nr.emb||'',nr.nom||'');
+          if(nr.precarga && nr.precarga!==or.precarga)
+            _notifyAssignment('precarga',nr.precarga,nr.emb||'',nr.nom||'');
+        });
+      }
+      S.rows = data.rows;
     }
-    S.rows = data.rows;
   }
-  if(data.userEdits)                  S.userEdits       = data.userEdits;
-  if(data.turnoHistorial)             S.turnoHistorial  = data.turnoHistorial;
-  if(data.posAlerts)                  S.posAlerts       = data.posAlerts;
-  if(data.sessionTurno)               S.sessionTurno    = data.sessionTurno;
-  if(data.sessionSup)                 S.sessionSup      = data.sessionSup;
-  // Sync DV and INC from other devices
+  if(data.userEdits)      S.userEdits      = data.userEdits;
+  if(data.turnoHistorial) S.turnoHistorial = data.turnoHistorial;
+  if(data.posAlerts)      S.posAlerts      = data.posAlerts;
+  if(data.sessionTurno)   S.sessionTurno   = data.sessionTurno;
+  if(data.sessionSup)     S.sessionSup     = data.sessionSup;
+
+  // DV sync
   if(data.dvRegistros !== undefined){
     DV.registros = data.dvRegistros;
     try{ localStorage.setItem('trx_dv_registros',JSON.stringify({registros:DV.registros,turno:DV.turno||'',sup:DV.sup||''})); }catch(e){}
@@ -6475,56 +6564,40 @@ function applyRemoteData(data){
     DV.historial = data.dvHistorial;
     try{ localStorage.setItem('trx_dv_historial',JSON.stringify(DV.historial)); }catch(e){}
   }
-  if(data.dvTurno)      DV.turno      = data.dvTurno;
-  if(data.dvSup)        DV.sup        = data.dvSup;
+  if(data.dvTurno) DV.turno = data.dvTurno;
+  if(data.dvSup)   DV.sup   = data.dvSup;
+
+  // INC sync
   if(data.incRegistros !== undefined){
     INC.registros = data.incRegistros;
     try{ localStorage.setItem('trx_incidencias',JSON.stringify(INC.registros)); }catch(e){}
   }
+
   // Vacaciones sync
   if(data.vacData && Array.isArray(data.vacData)){
     window.VAC_DATA = data.vacData;
-    try{ localStorage.setItem('trx_vacaciones', JSON.stringify(data.vacData)); }catch(e){}
-    if(g('p-vac') && !g('p-vac').classList.contains('hidden')) vacRender();
-  }
-  if(!S.rows || !S.rows.length) return;
-  // Show UI if not yet visible (guest arriving fresh)
-  if(document.getElementById('tabs')?.classList.contains('hidden')) _showUI();
-
-  // Show UI chrome
-  ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.classList.remove('hidden');
-  });
-  if(typeof updateTopbarSup==='function') updateTopbarSup();
-
-  if(!fbIsAdmin){
-    // GUEST: show only Resumen tab, always re-render it
-    ['tk','al','vf','dc','cl'].forEach(x=>{
-      const el=g('p-'+x); if(el) el.classList.add('hidden');
-    });
-    const rsEl=g('p-rs'); if(rsEl) rsEl.classList.remove('hidden');
-    document.querySelectorAll('.tab').forEach(t=>{
-      t.classList.toggle('active',(t.getAttribute('onclick')||'').includes("'rs'"));
-    });
-    kpi(); alerts(); badge();
-    renderResumen();
-    if(typeof kpiVerif==='function') kpiVerif();
-  } else {
-    // ADMIN: render everything, keep current tab active
-    kpi(); render(); alerts(); badge();
-    if(typeof kpiVerif==='function') kpiVerif();
-    if(g('p-rs')&&!g('p-rs').classList.contains('hidden')) renderResumen();
-    if(g('p-vf')&&!g('p-vf').classList.contains('hidden')) kpiVerif();
-    if(g('p-cl')&&!g('p-cl').classList.contains('hidden')) renderClientes();
-    // Re-render DV/INC/Hist/Vac tabs if active
-    if(g('p-dc')&&!g('p-dc').classList.contains('hidden')) dvRender();
-    if(g('p-hist')&&!g('p-hist').classList.contains('hidden')){
-      renderHist(); renderHistDesc();
-      if(typeof renderHistVf==='function') renderHistVf();
-    }
+    try{ localStorage.setItem('trx_vacaciones',JSON.stringify(data.vacData)); }catch(e){}
     if(g('p-vac')&&!g('p-vac').classList.contains('hidden')) vacRender();
-    if(g('p-inc')&&!g('p-inc').classList.contains('hidden')) incRender();
   }
+
+  // Persist to localStorage so refresh restores latest
+  _saveStateToLocalStorage();
+
+  if(!S.rows || !S.rows.length) return;
+
+  // Auto-show UI for guest/other devices
+  const tabs=g('tabs');
+  if(tabs && tabs.classList.contains('hidden')) _showUI();
+
+  kpi(); render(); alerts(); badge();
+  if(typeof kpiVerif==='function') kpiVerif();
+  if(g('p-rs')&&!g('p-rs').classList.contains('hidden')) renderResumen();
+  if(typeof renderResumen==='function') setTimeout(renderResumen,50);
+  if(g('p-vf')&&!g('p-vf').classList.contains('hidden')) kpiVerif();
+  if(g('p-cl')&&!g('p-cl').classList.contains('hidden')) renderClientes();
+  if(g('p-dc')&&!g('p-dc').classList.contains('hidden')) dvRender();
+  if(g('p-hist')&&!g('p-hist').classList.contains('hidden')){ renderHist(); renderHistDesc(); }
+  if(g('p-vac')&&!g('p-vac').classList.contains('hidden')) vacRender();
 }
 
 // ── LISTEN for real-time updates ──
@@ -6546,11 +6619,10 @@ function startSync(){
       applyRemoteData(data);
       return;
     }
-    // Admin: apply first snapshot, empty state, or changes from other devices
+    // Admin: apply first snapshot or changes from other devices
     const fromOtherDevice = !data.device || data.device !== DEVICE_ID;
-    const isNewer = data.ts > (lastSavedTs || 0);
-    const isEmpty = !S.rows || !S.rows.length;
-    if(_firstSnap || isEmpty || fromOtherDevice || isNewer){
+    const isNewer = data.ts > lastSavedTs;
+    if(_firstSnap || fromOtherDevice || isNewer){
       _firstSnap = false;
       applyRemoteData(data);
     }
@@ -6577,6 +6649,101 @@ window.addEventListener('online',()=>{
   if(window.FB){ console.log('Network restored, resyncing...'); startSync(); }
 });
 
+
+
+// ── UTT: Unidades de Transporte Total ─────────────────────────────────────────
+const UTT_EQ = {
+  'CAJA-53': 1,
+  'TORTHON': 0.5,
+  'CAJA 3.5': 0.3,
+  'CAJA-48': 1,
+  'CAJA 1.5': 0.3,
+  'CAJA 4.5': 0.3,
+  'MUDANCERA': 1,
+  'TERMO': 1
+};
+
+function uttCalc(){
+  let total = 0;
+  const counts = {};
+  S.rows.forEach(r=>{
+    const u = String(r.tra||'').trim().toUpperCase();
+    if(!u) return;
+    // Find equivalence — try exact then partial
+    let eq = UTT_EQ[u];
+    if(eq === undefined){
+      // Partial match
+      for(const [k,v] of Object.entries(UTT_EQ)){
+        if(u.includes(k.toUpperCase())||k.toUpperCase().includes(u)){
+          eq=v; break;
+        }
+      }
+    }
+    if(eq === undefined) eq = 1; // unknown unit = 1
+    if(!counts[u]) counts[u]={qty:0, eq, total:0};
+    counts[u].qty++;
+    counts[u].total = parseFloat((counts[u].total + eq).toFixed(2));
+    total = parseFloat((total + eq).toFixed(2));
+  });
+  return {total, counts};
+}
+
+function uttRender(){
+  const el = document.getElementById('uttContent');
+  if(!el) return;
+  if(!S.rows || !S.rows.length){
+    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">Carga el semáforo para ver UTT</div>';
+    return;
+  }
+  const {total, counts} = uttCalc();
+  const rows = Object.entries(counts).sort((a,b)=>b[1].total-a[1].total);
+
+  el.innerHTML=`
+    <div style="margin-bottom:16px">
+      <div style="font-size:13px;font-weight:700;color:var(--brand,#D0DF00);margin-bottom:4px">UTT — Unidades de Transporte Total</div>
+      <div style="font-size:11px;color:var(--text3)">Equivalencia por tipo de unidad del semáforo activo</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px">
+      <div class="kpi" style="border-top:2px solid var(--brand,#D0DF00)">
+        <div class="kpi-v" style="color:var(--brand,#D0DF00);font-size:28px">${total}</div>
+        <div class="kpi-l">Total UTT</div>
+      </div>
+      <div class="kpi" style="border-top:2px solid var(--cyan)">
+        <div class="kpi-v" style="color:var(--cyan)">${S.rows.length}</div>
+        <div class="kpi-l">Fletes activos</div>
+      </div>
+      <div class="kpi" style="border-top:2px solid var(--purple)">
+        <div class="kpi-v" style="color:var(--purple)">${Object.keys(counts).length}</div>
+        <div class="kpi-l">Tipos de unidad</div>
+      </div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:var(--navy2)">
+        <th style="padding:7px 12px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-left:3px solid var(--brand,#D0DF00)">Tipo Unidad</th>
+        <th style="padding:7px 12px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase">Equivalencia</th>
+        <th style="padding:7px 12px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase">Cantidad</th>
+        <th style="padding:7px 12px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase">Total UTT</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(([u,d],i)=>`<tr style="border-bottom:1px solid var(--border);background:${i%2?'var(--navy2)':'transparent'}">
+          <td style="padding:6px 12px;font-weight:600">${u}</td>
+          <td style="padding:6px 12px;text-align:center;color:var(--text3)">${d.eq}</td>
+          <td style="padding:6px 12px;text-align:center;font-family:monospace">${d.qty}</td>
+          <td style="padding:6px 12px;text-align:center;font-weight:700;color:var(--brand,#D0DF00)">${d.total}</td>
+        </tr>`).join('')}
+      </tbody>
+      <tfoot>
+        <tr style="background:var(--navy2);border-top:2px solid var(--brand,#D0DF00)">
+          <td colspan="3" style="padding:7px 12px;font-weight:700;text-align:right">TOTAL UTT</td>
+          <td style="padding:7px 12px;text-align:center;font-weight:700;font-size:14px;color:var(--brand,#D0DF00)">${total}</td>
+        </tr>
+      </tfoot>
+    </table>
+    <div style="margin-top:14px;padding:10px 14px;background:var(--navy2);border-radius:8px;font-size:10px;color:var(--text3)">
+      <strong style="color:var(--text)">Equivalencias:</strong>
+      ${Object.entries(UTT_EQ).map(([k,v])=>`${k}=${v}`).join(' · ')}
+    </div>`;
+}
 
 // ── Assignment notifications ─────────────────────────────────────────────────
 function _notifyAssignment(tipo, quien, numFlete, nomCliente){
@@ -6669,6 +6836,36 @@ function _highlightRow(emb){
       setTimeout(()=>{ tr.style.background=''; }, 2500);
     }
   });
+}
+
+
+function resetTracker(){
+  if(!confirm('¿Reiniciar el tracker? Se borrarán todos los datos cargados y tendrás que cargar los 3 archivos de nuevo.')) return;
+  S.rows = [];
+  S.buf = {};
+  S.userEdits = {};
+  S.turnoHistorial = [];
+  S.posAlerts = [];
+  S._lastBuildTs = 0;
+  try{ localStorage.removeItem('trx_state'); sessionStorage.removeItem('trx_state_ss'); }catch(e){}
+  // Reset UI
+  ['sem','det','ptr'].forEach(k=>{
+    const nm = document.getElementById('nm-'+k);
+    const sl = document.getElementById('sl-'+k);
+    const ck = document.getElementById('ck-'+k);
+    if(nm) nm.textContent = 'Sin cargar';
+    if(sl) sl.classList.remove('ok');
+    if(ck) ck.classList.add('hidden');
+  });
+  document.getElementById('kRow')?.classList.add('hidden');
+  document.getElementById('tabs')?.classList.add('hidden');
+  document.getElementById('btnExp')?.classList.add('hidden');
+  document.getElementById('btnReporte')?.classList.add('hidden');
+  document.getElementById('btnRecalc')?.classList.add('hidden');
+  document.getElementById('st').textContent = 'Tracker reiniciado. Carga los 3 archivos.';
+  // Reset steps
+  g('stp1').classList.remove('done'); g('stp1').classList.add('active');
+  g('stp2').classList.remove('active');
 }
 
 // ── Patch upd/listo/togglePrio/updCustom/updVerif to also save ──
