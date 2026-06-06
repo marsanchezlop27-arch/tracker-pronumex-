@@ -1029,7 +1029,10 @@ function hLoad(){
     if(d) S.turnoHistorial=JSON.parse(d);
   }catch(e){}
 }
-hLoad(); // cargar al inicio
+hLoad(); // cargar historial
+
+// ── Auto-restore from localStorage on startup ──────────────────
+// _autoRestore moved to window.load
 
 // ─── SUPERVISORES / MONTACARGUISTAS DATA ──────────────────────────────────────
 // Full personnel list — all roles
@@ -1672,6 +1675,11 @@ function build(){
   g('stp1').classList.remove('active'); g('stp1').classList.add('done');
   g('stp2').classList.add('active');
   document.getElementById('st').textContent=S.rows.length+' fletes del semáforo activos.';
+  // Save immediately to storage
+  const _saved = _saveStateToLocalStorage();
+  // Show status in UI
+  const _stEl = document.getElementById('st');
+  if(_stEl) _stEl.textContent = S.rows.length+' fletes activos'+(_saved?' · guardado':' · error al guardar');
 }
 
 // ─── APPLY NEW SEMAFORO — el nuevo semáforo se convierte en la base ───────────
@@ -2227,18 +2235,55 @@ function upd(idx,field,val){
 // ─── CARGAR DESDE GUARDADO ────────────────────────────────────────────────────
 // Renders the tracker using whatever is already in S.rows (loaded from Firebase
 // or localStorage on page load) without requiring any new file uploads.
+
+function _saveStateToLocalStorage(){
+  if(!S.rows || !S.rows.length) return;
+  const payload = {
+    rows          : S.rows,
+    userEdits     : S.userEdits,
+    sessionTurno  : S.sessionTurno,
+    sessionSup    : S.sessionSup,
+    turnoHistorial: S.turnoHistorial.slice(-50),
+    posAlerts     : S.posAlerts,
+    savedTs       : Date.now()
+  };
+  let savedOk = false;
+  try{
+    const json = JSON.stringify(payload);
+    localStorage.setItem('trx_state', json);
+    sessionStorage.setItem('trx_state_ss', json);
+    savedOk = true;
+    // Show save indicator in topbar
+    const dot = document.getElementById('syncDot');
+    if(dot){ dot.style.background='var(--brand,#D0DF00)'; setTimeout(()=>dot.style.background='',1500); }
+  }catch(e){
+    console.error('[STORAGE] Save failed:', e.message);
+    // Try minimal payload
+    try{
+      const mini = JSON.stringify({rows:S.rows,userEdits:S.userEdits,
+        sessionTurno:S.sessionTurno,sessionSup:S.sessionSup,savedTs:Date.now()});
+      sessionStorage.setItem('trx_state_ss', mini);
+      savedOk = true;
+    }catch(e2){ console.error('[STORAGE] Even sessionStorage failed:', e2.message); }
+  }
+  return savedOk;
+}
+
 function cargarDesdeGuardado(){
+  // If rows already loaded — just re-render (don't overwrite with stale cache)
   if(!S.rows || !S.rows.length){
-    // Try loading from localStorage as fallback
+    // No rows in memory — try Firebase first, then localStorage
+    // Firebase data arrives via applyRemoteData; here we try localStorage
     try{
       const saved = localStorage.getItem('trx_state');
       if(saved){
         const parsed = JSON.parse(saved);
         if(parsed.rows && parsed.rows.length){
-          S.rows = parsed.rows;
-          if(parsed.userEdits) S.userEdits = parsed.userEdits;
-          if(parsed.sessionTurno) S.sessionTurno = parsed.sessionTurno;
-          if(parsed.sessionSup) S.sessionSup = parsed.sessionSup;
+          S.rows         = parsed.rows;
+          S.userEdits    = parsed.userEdits    || {};
+          S.sessionTurno = parsed.sessionTurno || S.sessionTurno;
+          S.sessionSup   = parsed.sessionSup   || '';
+          S.posAlerts    = parsed.posAlerts    || [];
           if(parsed.turnoHistorial && parsed.turnoHistorial.length)
             S.turnoHistorial = parsed.turnoHistorial;
         }
@@ -2247,13 +2292,9 @@ function cargarDesdeGuardado(){
   }
 
   if(!S.rows || !S.rows.length){
-    // Show message in the build panel
     const st = g('st'); if(st) st.textContent = '';
     const dbg = g('dbg');
-    if(dbg){
-      dbg.classList.remove('hidden');
-      dbg.textContent = 'No hay datos guardados aún. Carga el semáforo y Detalle al menos una vez primero.';
-    }
+    if(dbg){ dbg.classList.remove('hidden'); dbg.textContent = 'No hay datos guardados. Carga el semáforo primero.'; }
     return;
   }
 
@@ -4026,6 +4067,75 @@ function vacExportarPDF(){
 }
 // ══ END VACACIONES ══════════════════════════════════════════════════════════
 
+// ── Startup restore from localStorage ────────────────────────────────────────
+
+// Load data from Firebase immediately on startup (one-time getDoc)
+async function _loadFromFirebase(){
+  const maxWait = 8000; // wait up to 8s for Firebase to init
+  const t0 = Date.now();
+  while(!window.FB && Date.now()-t0 < maxWait){
+    await new Promise(r=>setTimeout(r,200));
+  }
+  if(!window.FB) return; // Firebase never loaded
+  try{
+    const ref = FB.doc(FB.db, 'tracker', DOC_ID);
+    const snap = await FB.getDoc(ref);
+    if(!snap.exists()) return;
+    const data = snap.data();
+    if(data && data.rows && data.rows.length){
+      applyRemoteData(data);
+      _saveStateToLocalStorage(); // cache locally for future refreshes
+    }
+  }catch(e){ console.warn('[Firebase] getDoc failed:', e.message); }
+}
+
+function _restoreFromStorage(){
+  // Try sessionStorage first (survives refresh, more reliable than localStorage)
+  // Then localStorage (survives tab close)
+  let p = null;
+  const sources = [
+    ()=>sessionStorage.getItem('trx_state_ss'),
+    ()=>localStorage.getItem('trx_state')
+  ];
+  for(const src of sources){
+    try{
+      const raw = src();
+      if(!raw) continue;
+      const parsed = JSON.parse(raw);
+      if(parsed && Array.isArray(parsed.rows) && parsed.rows.length){
+        // Pick the most recent one
+        if(!p || (parsed.savedTs||0) > (p.savedTs||0)) p = parsed;
+      }
+    }catch(e){}
+  }
+  if(!p) return false;
+  S.rows         = p.rows;
+  S.userEdits    = p.userEdits    || {};
+  S.sessionTurno = p.sessionTurno || S.sessionTurno;
+  S.sessionSup   = p.sessionSup   || '';
+  S.posAlerts    = p.posAlerts    || [];
+  if(p.turnoHistorial && p.turnoHistorial.length)
+    S.turnoHistorial = p.turnoHistorial;
+  console.log('[restore] Loaded', S.rows.length, 'rows from storage, ts:', new Date(p.savedTs||0).toLocaleTimeString());
+  return true;
+}
+
+function _showUI(){
+  ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.classList.remove('hidden');
+  });
+  // Collapse the load panel
+  const cb = document.getElementById('cargaBody');
+  if(cb) cb.style.display='none';
+  const chev = document.getElementById('cargaChevron');
+  if(chev) chev.style.transform='rotate(-90deg)';
+  kpi(); render(); alerts(); badge();
+  if(typeof kpiVerif==='function') kpiVerif();
+  updateTopbarSup();
+  g('stp1').classList.remove('active'); g('stp1').classList.add('done');
+  g('stp2').classList.add('active');
+}
+
 window.addEventListener('load', ()=>{
   // Eventos: live flete lookup
   const evFletesInp=g('evFletes');
@@ -4047,6 +4157,18 @@ window.addEventListener('load', ()=>{
   // Incidencias: colaborador con incidencia
   const inpColabInc=g('incColabInc');
   if(inpColabInc) makeAC(inpColabInc, ALL_PERSONAL, (id,nombre)=>{ g('incColabIncId').value=id; });
+
+  // ── Startup: restore and show UI ────────────────────────────────────────
+  let _wasRestored = _restoreFromStorage();
+  if(_wasRestored && S.rows.length){
+    _showUI();
+    const st = document.getElementById('st');
+    if(st) st.textContent = S.rows.length + ' fletes · sesión restaurada';
+  } else {
+    // No local data — try Firebase immediately (getDoc, no wait for listener)
+    _loadFromFirebase();
+  }
+  // Firebase listener: when data arrives, applyRemoteData will show UI if not yet visible
 });
 
 // Load from localStorage
@@ -6247,7 +6369,7 @@ function fbSave(){
         ts, device: DEVICE_ID
       };
       autoSaveVerifHistorial(); // persist verif assignments
-      try{ localStorage.setItem('trx_state', JSON.stringify({rows:payload.rows,userEdits:payload.userEdits,sessionTurno:payload.sessionTurno,sessionSup:payload.sessionSup,turnoHistorial:payload.turnoHistorial})); }catch(e){}
+      _saveStateToLocalStorage();
       const ref = FB.doc(FB.db, 'tracker', DOC_ID);
       await FB.setDoc(ref, payload);
       // Update sync dot green
@@ -6262,19 +6384,22 @@ function fbSave(){
 }
 
 function applyRemoteData(data){
-  if(data.rows)           S.rows           = data.rows;
-  if(data.userEdits)      S.userEdits       = data.userEdits;
-  if(data.turnoHistorial) S.turnoHistorial  = data.turnoHistorial;
-  if(data.posAlerts)      S.posAlerts       = data.posAlerts;
-  if(data.sessionTurno)   S.sessionTurno    = data.sessionTurno;
-  if(data.sessionSup)     S.sessionSup      = data.sessionSup;
+  // Only overwrite rows if remote has data (never blank out existing rows)
+  if(data.rows && data.rows.length)   S.rows           = data.rows;
+  if(data.userEdits)                  S.userEdits       = data.userEdits;
+  if(data.turnoHistorial)             S.turnoHistorial  = data.turnoHistorial;
+  if(data.posAlerts)                  S.posAlerts       = data.posAlerts;
+  if(data.sessionTurno)               S.sessionTurno    = data.sessionTurno;
+  if(data.sessionSup)                 S.sessionSup      = data.sessionSup;
   // Sync DV and INC from other devices
-  if(data.dvRegistros)    DV.registros      = data.dvRegistros;
-  if(data.dvHistorial)    DV.historial      = data.dvHistorial;
-  if(data.dvTurno)        DV.turno          = data.dvTurno;
-  if(data.dvSup)          DV.sup            = data.dvSup;
-  if(data.incRegistros)   INC.registros     = data.incRegistros;
+  if(data.dvRegistros)  DV.registros  = data.dvRegistros;
+  if(data.dvHistorial)  DV.historial  = data.dvHistorial;
+  if(data.dvTurno)      DV.turno      = data.dvTurno;
+  if(data.dvSup)        DV.sup        = data.dvSup;
+  if(data.incRegistros) INC.registros = data.incRegistros;
   if(!S.rows || !S.rows.length) return;
+  // Show UI if not yet visible (guest arriving fresh)
+  if(document.getElementById('tabs')?.classList.contains('hidden')) _showUI();
 
   // Show UI chrome
   ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
@@ -6323,10 +6448,11 @@ function startSync(){
       applyRemoteData(data);
       return;
     }
-    // Admin: apply first snapshot or changes from other devices
+    // Admin: apply first snapshot, empty state, or changes from other devices
     const fromOtherDevice = !data.device || data.device !== DEVICE_ID;
-    const isNewer = data.ts > lastSavedTs;
-    if(_firstSnap || fromOtherDevice || isNewer){
+    const isNewer = data.ts > (lastSavedTs || 0);
+    const isEmpty = !S.rows || !S.rows.length;
+    if(_firstSnap || isEmpty || fromOtherDevice || isNewer){
       _firstSnap = false;
       applyRemoteData(data);
     }
@@ -6339,15 +6465,23 @@ function startSync(){
   });
 }
 
-// Keep-alive: reconnect if listener drops (mobile background, network change)
-setInterval(()=>{
-  if(!window.FB || !fbReady) return;
-  // Check if we haven't received a snapshot recently — force reconnect
-}, 60000);
+// Keep-alive: reconnect when app comes back to foreground (mobile)
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible' && window.FB){
+    if(!fbReady || !fbUnsubscribe){
+      console.log('Reconnecting on visibility change...');
+      startSync();
+    }
+  }
+});
+// Reconnect on network restore
+window.addEventListener('online',()=>{
+  if(window.FB){ console.log('Network restored, resyncing...'); startSync(); }
+});
 
 // ── Patch upd/listo/togglePrio/updCustom/updVerif to also save ──
 const _origUpd = upd;
-window.upd = function(idx,field,val){ _origUpd(idx,field,val); fbSave(); };
+window.upd = function(idx,field,val){ _origUpd(idx,field,val); _saveStateToLocalStorage(); fbSave(); };
 
 const _origListo = listo;
 window.listo = function(i){ _origListo(i); fbSave(); };
