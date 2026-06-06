@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tracker de Embarques — MACRO TOLUCA</title>
 <script type="module">
 // ─── FIREBASE SDK ─────────────────────────────────────────────────────────────
@@ -307,49 +307,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 .hidden{display:none!important}
 </style>
-
-<style id="mobile-fix">
-/* ── Mobile responsive overrides ── */
-@media (max-width: 640px){
-  /* Modal overlays — scrollable on mobile */
-  div[style*="position:fixed"][style*="z-index:9999"],
-  div[style*="position:fixed"][style*="z-index: 9999"],
-  ._dv-modal-overlay {
-    padding: 8px !important;
-    align-items: flex-start !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
-  /* Inner modal cards */
-  div[style*="max-width:520px"],
-  div[style*="max-width:540px"],
-  div[style*="max-width:560px"] {
-    max-width: 100% !important;
-    border-radius: 8px !important;
-  }
-  /* INC form grids → single column */
-  #incDvModal .grid-2,
-  #incDvModal [style*="grid-template-columns:1fr 1fr"] {
-    grid-template-columns: 1fr !important;
-  }
-  /* SKU row grids → wrap */
-  #idf-sku-list > div,
-  #incSkuList > div {
-    grid-template-columns: 1fr 1fr !important;
-    row-gap: 6px !important;
-  }
-  /* Charts — constrain width */
-  canvas { max-width: 100% !important; height: auto !important; }
-  /* Tracker table — horizontal scroll */
-  #p-tk { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  /* Tabs — horizontal scroll */
-  .tabs { overflow-x: auto; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; }
-  .tab { white-space: nowrap; flex-shrink: 0; }
-  /* KPIs — wrap on mobile */
-  .kpis { flex-wrap: wrap; }
-  .kpi { min-width: 80px; }
-}
-</style>
 </head>
 <body>
 
@@ -499,6 +456,14 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       </div>
     </div>
     <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+      <div>
+        <div style="font-size:10px;color:var(--text3);margin-bottom:4px;text-transform:uppercase">Turno</div>
+        <select id="tSelBuild" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 9px;font-size:12px;height:30px">
+          <option value="2">2do turno — 14:00 a 21:30</option>
+          <option value="1">1er turno — 06:00 a 14:00</option>
+          <option value="3">3er turno — 21:30 a 06:00</option>
+        </select>
+      </div>
       <button class="btn primary" onclick="build()">
         <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Construir tracker
@@ -555,10 +520,8 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
       Clientes
     </div>
-    <div class="tab" onclick="swTab(this,'vac')">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      Vacaciones
-    </div>
+
+
   </div>
 
   <!-- TRACKER -->
@@ -648,7 +611,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
             <div class="slot-ico" style="color:#378ADD"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
             <div style="flex:1;min-width:0"><div class="slot-lbl">Detalle (% avance) <span style="font-size:9px;color:var(--text3)">múltiples</span></div><div class="slot-nm" id="nm-det2">Sin cargar</div></div>
             <span class="slot-chk hidden" id="ck-det2">✓</span>
-            <input type="file" accept=".xlsx,.xls" class="hidden" id="fi-det2" multiple onchange="loadMulti('det2',this)">
+            <input type="file" accept=".xlsx,.xls" class="hidden" id="fi-det2" onchange="load('det2',this)">
           </div>
         </div>
         <div>
@@ -657,7 +620,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
             <div class="slot-ico" style="color:#10B981"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
             <div style="flex:1;min-width:0"><div class="slot-lbl">PTR (pallets/restos)</div><div class="slot-nm" id="nm-ptr2">Sin cargar</div></div>
             <span class="slot-chk hidden" id="ck-ptr2">✓</span>
-            <input type="file" accept=".xlsx,.xls" class="hidden" id="fi-ptr2" multiple onchange="loadMulti('ptr2',this)">
+            <input type="file" accept=".xlsx,.xls" class="hidden" id="fi-ptr2" onchange="load('ptr2',this)">
           </div>
         </div>
         <div>
@@ -825,27 +788,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <div id="p-cl" class="hidden">
     <div id="clContent"></div>
   </div>
-  <!-- VACACIONES -->
-  <div id="p-vac" class="hidden">
-    <div style="padding:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-        <div style="font-size:14px;font-weight:700;color:var(--brand,#D0DF00)">🏖 Calendario de Vacaciones</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn" onclick="vacExportarExcel()" style="border-color:var(--green);color:var(--green);font-size:11px">📊 Exportar CSV</button>
-          <button class="btn" onclick="vacExportarPDF()" style="border-color:var(--purple);color:var(--purple);font-size:11px">📄 Exportar PDF</button>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
-        <button onclick="vacCambiarMes(-1)" class="btn" style="padding:4px 10px;font-size:14px">‹</button>
-        <span id="vacMesLbl" style="font-weight:700;font-size:14px;min-width:160px;text-align:center"></span>
-        <button onclick="vacCambiarMes(1)" class="btn" style="padding:4px 10px;font-size:14px">›</button>
-        <button onclick="vacHoy()" class="btn" style="font-size:11px">Hoy</button>
-      </div>
-      <div id="vacCalGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:16px"></div>
-      <div style="margin-bottom:8px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Registros del mes</div>
-      <div id="vacLista" style="max-height:300px;overflow-y:auto"></div>
-    </div>
-  </div>
 </div><!-- /view-emb -->
 
 <!-- VISTA DESCARGAS -->
@@ -996,7 +938,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <div style="display:flex;gap:2px;background:var(--navy2);border-radius:8px;padding:3px;margin-bottom:14px;width:fit-content">
     <button id="htab-emb" onclick="histSubTab('emb')" style="background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 16px;font-size:11px;font-weight:600;cursor:pointer">📦 Embarques</button>
     <button id="htab-desc" onclick="histSubTab('desc')" style="background:none;color:var(--text3);border:none;border-radius:6px;padding:5px 16px;font-size:11px;font-weight:600;cursor:pointer">🚛 Descargas</button>
-    <button id="htab-vf" onclick="histSubTab('vf')" style="background:none;color:var(--text3);border:none;border-radius:6px;padding:5px 16px;font-size:11px;font-weight:600;cursor:pointer">✅ Verificadores</button>
   </div>
   <!-- Embarques panel -->
   <div id="hpan-emb">
@@ -1018,15 +959,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     <div id="histDescKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px"></div>
     <div id="histDescContent"></div>
   </div>
-  <!-- Verificadores panel -->
-  <div id="hpan-vf" style="display:none">
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-      <input id="histVfSearch" class="edt-sel" type="text" placeholder="Buscar verificador, flete o cliente..." style="height:30px;font-size:11px;min-width:220px" oninput="renderHistVf()">
-      <button class="btn" onclick="exportHistVfCSV()" style="font-size:11px;border-color:var(--green);color:var(--green)">⬇ Exportar CSV</button>
-    </div>
-    <div id="histVfKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px"></div>
-    <div id="histVfContent" style="max-height:65vh;overflow-y:auto"></div>
-  </div>
 </div><!-- /view-hist -->
 
 
@@ -1037,44 +969,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 const S = { rows:[], buf:{}, sc:'ci', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[] };
 
 // ─── HISTORIAL PERSISTENTE (localStorage) ────────────────────────────────────
-
-// Save current verif assignments to historial automatically (called on fbSave)
-function autoSaveVerifHistorial(){
-  const verifRows = S.rows.filter(r=>r.verif);
-  if(!verifRows.length) return;
-  const now = new Date();
-  const todayKey = now.toLocaleDateString('es-MX');
-  const hora = now.toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
-  // Find or create today's entry for current turno
-  let entry = S.turnoHistorial.find(h=>
-    h._autoKey && h._autoKey===todayKey+'_'+S.sessionTurno
-  );
-  if(!entry){
-    entry = {
-      _autoKey: todayKey+'_'+S.sessionTurno,
-      turno: S.sessionTurno,
-      sup: S.sessionSup,
-      hora, ts: now.getTime(),
-      fletes: []
-    };
-    S.turnoHistorial.push(entry);
-  }
-  // Upsert each verified flete by emb
-  verifRows.forEach(r=>{
-    const existing = entry.fletes.findIndex(f=>f.emb===r.emb);
-    const snap = {
-      emb:r.emb, nom:r.nom, sem:r.sem,
-      verif:r.verif||'', monta:r.monta||'',
-      estop:r.estop||'', pt:r.pt||'',
-      fecha:hora, ts:now.getTime()
-    };
-    if(existing>=0) entry.fletes[existing]=snap;
-    else entry.fletes.push(snap);
-  });
-  entry.hora = hora; // update timestamp
-  hSave();
-}
-
 function hSave(){
   try{ localStorage.setItem('trx_historial', JSON.stringify(S.turnoHistorial)); }catch(e){}
 }
@@ -1210,8 +1104,7 @@ function getVerifNombre(id){
   if(!id) return '';
   const v=VERIFICADORES.find(v=>v.id===id);
   const n=v?v.nombre:id;
-  // Return initials: JUAN CARLOS FUENTES → JCF
-  return n.trim().split(/\s+/).map(w=>w[0]||'').join('').toUpperCase();
+  return n.split(' ')[0]; // first name only
 }
 
 function getMontaNombre(id){
@@ -1447,50 +1340,21 @@ async function loadMulti(k, inp){
 }
 
 function parseSlot(buf){
-  // Parse supporting file (Detalle or PTR)
-  // Cols 29+ in DETALLE are duplicate/noise columns — only read cols 1-28
-  const results = [];
-  try{
-    const wb = XLSX.read(buf, {type:'array'});
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    // Find header row (row with most non-empty cells in cols 1-28)
-    const range = XLSX.utils.decode_range(ws['!ref']||'A1:Z200');
-    let headerRow = -1;
-    let maxCols = 0;
-    for(let r=range.s.r; r<=Math.min(range.s.r+10,range.e.r); r++){
-      let cnt=0;
-      for(let c=0; c<28; c++){
-        const cell=ws[XLSX.utils.encode_cell({r,c})];
-        if(cell&&cell.v) cnt++;
-      }
-      if(cnt>maxCols){ maxCols=cnt; headerRow=r; }
-    }
-    if(headerRow<0) return results;
-    // Build headers from cols 0-27 only (ignore cols 28+ = Staying, dup %Tareas etc)
-    const headers=[];
-    for(let c=0; c<28; c++){
-      const cell=ws[XLSX.utils.encode_cell({r:headerRow,c})];
-      headers.push(cell&&cell.v?String(cell.v).trim():'');
-    }
-    // Parse data rows — skip rows with no Embarque value
-    for(let r=headerRow+1; r<=range.e.r; r++){
-      const obj={};
-      let hasData=false;
-      for(let c=0; c<28; c++){
-        const cell=ws[XLSX.utils.encode_cell({r,c})];
-        if(cell&&cell.v!==undefined&&cell.v!==null&&cell.v!==''){
-          obj[headers[c]||('col'+(c+1))]=cell.v;
-          hasData=true;
-        }
-      }
-      // Only include rows that have an Embarque/Folio value
-      const emb = obj['No. Embarque']||obj['No.Embarque']||obj['Embarque']||obj['Folio']||obj['col11']||'';
-      if(hasData && emb) results.push(obj);
-    }
-  } catch(e){ console.warn('parseSlot error', e); }
-  return results;
+  if(!buf) return [];
+  const bufs = Array.isArray(buf) ? buf : [buf];
+  const all = [];
+  bufs.forEach((b, i) => {
+    try {
+      const rows = parseFile(b);
+      // First file: keep header row; subsequent: skip first row (header duplicate)
+      all.push(...(i === 0 ? rows : rows.slice(1)));
+    } catch(e){ console.warn('parseSlot error', e); }
+  });
+  return all;
 }
 
+
+// Actualiza Detalle/PTR sin recargar el semáforo
 function patchDetPtr(){
   const detRows = S.buf.det ? toObjects(parseSlot(S.buf.det)) : [];
   const ptrRows = S.buf.ptr ? toObjects(parseSlot(S.buf.ptr)) : [];
@@ -1573,7 +1437,9 @@ function build(){
     }
   }
 
-  // Turno auto-detected from system clock (detectTurno)
+  // Read turno from selector (user choice overrides auto-detection)
+  const _tSelBuild = document.getElementById('tSelBuild');
+  if(_tSelBuild && isFirstLoad) S.sessionTurno = _tSelBuild.value;
   document.getElementById('dbg').classList.add('hidden');
 
   const semRows = toObjects(parseFile(S.buf.sem));
@@ -1736,27 +1602,6 @@ function build(){
 
 // ─── APPLY NEW SEMAFORO — el nuevo semáforo se convierte en la base ───────────
 function applyNew(){
-  // If no new sem but rows exist → just apply det2/ptr2
-  if(!S.buf.new && S.rows.length){
-    if(S.buf.det2||S.buf.ptr2){
-      if(S.buf.det2){ const detRows2=toObjects(parseSlot(S.buf.det2));
-        detRows2.forEach(r=>{ const emb=nk(fc(r,['No. Embarque','No.Embarque','Embarque','Folio']));
-          if(!emb) return; const row=S.rows.find(x=>x.emb===emb); if(!row) return;
-          const pt=parseFloat(fc(r,['% Tareas','%Tareas']))||null;
-          const pr=parseFloat(fc(r,['% Restos','%Restos']))||null;
-          if(pt!=null) row.pt=pt; if(pr!=null) row.pr=pr; }); }
-      if(S.buf.ptr2){ const ptrRows2=toObjects(parseSlot(S.buf.ptr2));
-        ptrRows2.forEach(r=>{ const emb=nk(fc(r,['No. Embarque','No.Embarque','Embarque']));
-          if(!emb) return; const row=S.rows.find(x=>x.emb===emb); if(!row) return;
-          const pal=parseFloat(fc(r,['Total Pallets','Pallets','PAL']))||null;
-          if(pal!=null) row.pal=pal; }); }
-      render(); badge(); fbSave();
-      showRes('ok','Detalle/PTR actualizados sin cambio de semáforo.');
-      return;
-    }
-    showRes('err','Carga el Detalle y/o PTR para actualizar sin nuevo semáforo.');
-    return;
-  }
   if(!S.buf.new){ showRes('err','Primero carga el archivo del nuevo semáforo.'); return; }
   const turno=document.getElementById('tSel').value;
   S.sessionTurno = turno; // update session turno
@@ -1764,24 +1609,19 @@ function applyNew(){
 
   // 0. Snapshot CURRENT assignments into historial BEFORE wiping them
   //    Capture every row that has any operational data assigned
-  const _snapNow = new Date();
-  const _snapFecha = _snapNow.toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
   const snapshot = S.rows
-    .filter(r=>r.monta||r.precarga||r.estop||r.verif)  // include verif-only rows
+    .filter(r=>r.monta||r.precarga||r.estop)
     .map(r=>({
       emb:r.emb, nom:r.nom, sem:r.sem,
       monta:r.monta, precarga:r.precarga, estop:r.estop,
-      verif:r.verif||'',   // ← always include verif
       pt:r.pt, pr:r.pr, pal:r.pal, tr:r.tr, ar:r.ar, ci:r.ci, prio:r.prio,
       turno:S.sessionTurno, sup:S.sessionSup,
-      fecha:_snapFecha,    // ← full date+time
-      ts:_snapNow.getTime()
+      ts:new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'})
     }));
   if(snapshot.length){
     S.turnoHistorial.push({
       turno:S.sessionTurno, sup:S.sessionSup,
       hora:new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
-      ts:Date.now(),
       fletes:snapshot
     });
     hSave(); // persist to localStorage
@@ -3122,175 +2962,13 @@ function syncEvidenciasToHist(emb, evidencias){
 }
 
 function histSubTab(t){
-  ['emb','desc','vf'].forEach(x=>{
-    const panel=document.getElementById('hpan-'+x); if(panel) panel.style.display=x===t?'':'none';
-    const btn=document.getElementById('htab-'+x);
+  ['emb','desc'].forEach(x=>{
+    document.getElementById('hpan-'+x).style.display = x===t?'':'none';
+    const btn = document.getElementById('htab-'+x);
     if(btn){ btn.style.background=x===t?'var(--blue)':'none'; btn.style.color=x===t?'#fff':'var(--text3)'; }
   });
   if(t==='desc') renderHistDesc();
-  else if(t==='vf') renderHistVf();
   else renderHist();
-}
-
-
-function renderHistVf(){
-  const el = g('histVfContent'); if(!el) return;
-  const kpiEl = g('histVfKpis');
-  const q = (g('histVfSearch')?.value||'').toLowerCase();
-
-  // Build flat list of all verified fletes from turnoHistorial
-  const all = [];
-  [...S.turnoHistorial].sort((a,b)=>(b.ts||0)-(a.ts||0)).forEach(h=>{
-    (h.fletes||[]).forEach(f=>{
-      if(!f.verif) return; // only verified
-      all.push({
-        emb    : f.emb||'',
-        nom    : f.nom||'',
-        verif  : f.verif||'',
-        nombre : VERIFICADORES.find(v=>v.id===f.verif)?.nombre || f.verif,
-        turno  : h.turno||'',
-        fecha  : h.hora||h.fecha||'',
-        sup    : SUPS[h.sup]||h.sup||'—',
-        sem    : f.sem||''
-      });
-    });
-  });
-  // Also include current turn
-  S.rows.filter(r=>r.verif).forEach(r=>{
-    all.unshift({
-      emb    : r.emb||'',
-      nom    : r.nom||'',
-      verif  : r.verif||'',
-      nombre : VERIFICADORES.find(v=>v.id===r.verif)?.nombre || r.verif,
-      turno  : S.sessionTurno||'',
-      fecha  : 'Turno activo',
-      sup    : SUPS[S.sessionSup]||'—',
-      sem    : r.sem||''
-    });
-  });
-
-  // Filter by search
-  const filtered = q ? all.filter(r=>
-    r.nombre.toLowerCase().includes(q) ||
-    r.emb.toLowerCase().includes(q) ||
-    r.nom.toLowerCase().includes(q)
-  ) : all;
-
-  // KPIs
-  const totalFletes = filtered.length;
-  const verifSet = new Set(filtered.map(r=>r.verif));
-  const verifCount = verifSet.size;
-  const byVerif = {};
-  filtered.forEach(r=>{
-    if(!byVerif[r.verif]) byVerif[r.verif]={nombre:r.nombre, count:0};
-    byVerif[r.verif].count++;
-  });
-  const top = Object.values(byVerif).sort((a,b)=>b.count-a.count)[0];
-
-  if(kpiEl) kpiEl.innerHTML=[
-    ['Total fletes verificados','var(--purple)',totalFletes],
-    ['Verificadores activos','var(--cyan)',verifCount],
-    ['Mayor conteo',top?'var(--amber)':'var(--text3)',top?top.nombre.split(' ')[0]+' ('+top.count+')':'—'],
-  ].map(([l,c,v])=>`<div class="kpi" style="border-top:2px solid ${c}"><div class="kpi-v" style="color:${c};font-size:${typeof v==='string'&&v.length>6?'12px':'16px'}">${v}</div><div class="kpi-l">${l}</div></div>`).join('');
-
-  if(!filtered.length){
-    el.innerHTML='<div style="text-align:center;padding:32px;color:var(--text3)">Sin fletes verificados en el historial.</div>';
-    return;
-  }
-
-  // Group by fecha → then by verificador
-  const byFecha = {};
-  filtered.forEach(r=>{
-    if(!byFecha[r.fecha]) byFecha[r.fecha]=[];
-    byFecha[r.fecha].push(r);
-  });
-
-  const cards = Object.keys(byFecha).map(fecha=>{
-    const rows = byFecha[fecha];
-    // Sub-group by verificador
-    const byV = {};
-    rows.forEach(r=>{ if(!byV[r.nombre]) byV[r.nombre]=[]; byV[r.nombre].push(r); });
-
-    // Build unique key per section for toggle
-    let _vfSecIdx = 0;
-    const sections = Object.entries(byV).sort((a,b)=>b[1].length-a[1].length).map(([nombre,fletes])=>{
-      const secId = 'vfsec_'+Date.now()+'_'+(++_vfSecIdx);
-      const tbl = '<table style="width:100%;border-collapse:collapse;font-size:11px">'
-        +'<thead><tr style="background:var(--navy2)">'
-        +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border2)">#</th>'
-        +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border2)">No. Flete</th>'
-        +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border2)">Cliente</th>'
-        +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border2)">Semáforo</th>'
-        +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border2)">Fecha/Hora</th>'
-        +'</tr></thead><tbody>'
-        +fletes.map((f,i)=>'<tr style="border-bottom:1px solid var(--border)">'
-          +'<td style="padding:4px 10px;font-size:9px;color:var(--text3)">'+( i+1)+'</td>'
-          +'<td style="padding:4px 10px;font-family:monospace;font-size:10.5px;font-weight:600;color:var(--cyan)">'+es(f.emb)+'</td>'
-          +'<td style="padding:4px 10px;font-size:10.5px">'+es(f.nom)+'</td>'
-          +'<td style="padding:4px 10px;font-size:10px;color:var(--text3)">'+es(f.sem||'—')+'</td>'
-          +'<td style="padding:4px 10px;font-size:9px;color:var(--text3);white-space:nowrap">'+es(f.fecha||'—')+'</td>'
-          +'</tr>').join('')
-        +'</tbody></table>';
-      return '<div style="margin-bottom:8px">'
-        +'<div style="display:flex;align-items:center;gap:8px;padding:5px 10px;background:rgba(208,223,0,.08);border-left:3px solid var(--brand,#D0DF00);border-radius:0 4px 4px 0;margin-bottom:0;cursor:pointer" onclick="vfSecToggle(\''+secId+'\',this)">'
-        +'<span style="font-size:11px;font-weight:700;color:var(--brand,#D0DF00)">✅ '+es(nombre)+'</span>'
-        +'<span style="font-size:10px;color:var(--text3)">'+fletes.length+' flete'+(fletes.length>1?'s':'')+'</span>'
-        +'<span style="margin-left:auto;font-size:10px;color:var(--text3);background:var(--navy2);border:1px solid var(--border2);border-radius:4px;padding:2px 8px">▶ Ver detalle</span>'
-        +'</div>'
-        +'<div id="'+secId+'" style="display:none">'+tbl+'</div>'
-        +'</div>';
-    }).join('');
-
-    return `<div style="background:var(--card);border:1px solid var(--border2);border-radius:10px;margin-bottom:12px;overflow:hidden">
-      <div style="background:var(--navy2);padding:8px 14px;display:flex;align-items:center;gap:10px;border-left:4px solid var(--brand,#D0DF00)">
-        <span style="font-size:11px;font-weight:700">📅 ${es(fecha)}</span>
-        <span style="font-size:10px;color:var(--text3)">${rows.length} fletes · ${Object.keys(byV).length} verificadores</span>
-      </div>
-      <div style="padding:10px 12px">${sections}</div>
-    </div>`;
-  }).join('');
-
-  el.innerHTML = cards;
-}
-
-function vfSecToggle(id, header){
-  const panel = document.getElementById(id);
-  if(!panel) return;
-  const isOpen = panel.style.display !== 'none';
-  panel.style.display = isOpen ? 'none' : 'block';
-  const btn = header.querySelector('span:last-child');
-  if(btn) btn.textContent = isOpen ? '▶ Ver detalle' : '▼ Ocultar';
-}
-
-function exportHistVfCSV(){
-  const all = [];
-  [...S.turnoHistorial].sort((a,b)=>(b.ts||0)-(a.ts||0)).forEach(h=>{
-    (h.fletes||[]).forEach(f=>{
-      if(!f.verif) return;
-      all.push([
-        f.fecha||h.hora||h.fecha||'',
-        h.turno||'',
-        SUPS[h.sup]||h.sup||'',
-        VERIFICADORES.find(v=>v.id===f.verif)?.nombre||f.verif,
-        f.emb||'',
-        f.nom||'',
-        f.sem||''
-      ]);
-    });
-  });
-  // Current turn
-  S.rows.filter(r=>r.verif).forEach(r=>{
-    all.unshift(['Turno activo', S.sessionTurno, SUPS[S.sessionSup]||'',
-      VERIFICADORES.find(v=>v.id===r.verif)?.nombre||r.verif,
-      r.emb||'', r.nom||'', r.sem||'']);
-  });
-  if(!all.length){ alert('Sin datos de verificaciones para exportar.'); return; }
-  const headers = ['Fecha/Hora','Turno','Supervisor','Verificador (Nombre Completo)','No. Flete','Cliente','Semáforo'];
-  const csv = '\uFEFF' + [headers,...all].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download = 'Verificadores_Historial_'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();
 }
 
 function renderHist(){
@@ -3457,12 +3135,21 @@ function histDescPDF(key){
     fotos,
     d.fecha||new Date().toLocaleDateString('es-MX')
   );
-  const blob = new Blob([pdfHTML],{type:'text/html;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'Reporte_'+(d.folio||'INC')+'_'+new Date().toISOString().slice(0,10)+'.html';
-  a.click();
-  setTimeout(()=>{ window.open(url,'_blank'); }, 400);
+  // Open directly in new window — avoids blob:null URL issue
+  const win = window.open('','_blank');
+  if(win){
+    win.document.write(pdfHTML);
+    win.document.close();
+    setTimeout(()=>win.print(), 600);
+  } else {
+    // Popup blocked — fallback to download
+    const blob = new Blob([pdfHTML],{type:'text/html;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Reporte_'+(d.folio||'INC')+'_'+new Date().toISOString().slice(0,10)+'.html';
+    a.click();
+    alert('Si no se abrió el reporte, activa las ventanas emergentes en tu navegador.');
+  }
 }
 
 function histDescEmail(key){
@@ -3860,146 +3547,6 @@ function makeAC(inputEl, lista, onSelect){
 const INC = { registros:[] };
 
 // Initialize autocompletes after page loads
-
-// ══ MÓDULO VACACIONES ══════════════════════════════════════════════════════
-let VAC_DATA=[];
-let _vacYear=new Date().getFullYear();
-let _vacMonth=new Date().getMonth();
-(function(){try{const d=localStorage.getItem('trx_vacaciones');if(d)VAC_DATA=JSON.parse(d);}catch(e){}})();
-function vacSave(){try{localStorage.setItem('trx_vacaciones',JSON.stringify(VAC_DATA));}catch(e){}}
-function vacHoy(){_vacYear=new Date().getFullYear();_vacMonth=new Date().getMonth();vacRender();}
-function vacCambiarMes(d){_vacMonth+=d;if(_vacMonth<0){_vacMonth=11;_vacYear--;}if(_vacMonth>11){_vacMonth=0;_vacYear++;}vacRender();}
-function vacRender(){
-  const MES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const lbl=document.getElementById('vacMesLbl');if(lbl)lbl.textContent=MES[_vacMonth]+' '+_vacYear;
-  const grid=document.getElementById('vacCalGrid');if(!grid)return;
-  const vacDays={};
-  VAC_DATA.forEach(v=>{
-    const s=new Date(v.inicio+'T00:00:00');
-    for(let d=0;d<(parseInt(v.dias)||1);d++){
-      const c=new Date(s);c.setDate(c.getDate()+d);
-      if(c.getFullYear()===_vacYear&&c.getMonth()===_vacMonth){
-        const k=c.toISOString().slice(0,10);
-        if(!vacDays[k])vacDays[k]=[];vacDays[k].push(v.nombre);
-      }
-    }
-  });
-  const DIAS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  const fd=new Date(_vacYear,_vacMonth,1).getDay();
-  const dm=new Date(_vacYear,_vacMonth+1,0).getDate();
-  const tod=new Date().toISOString().slice(0,10);
-  let c=DIAS.map(d=>'<div style="text-align:center;font-size:9px;font-weight:700;color:var(--text3);padding:4px;text-transform:uppercase">'+d+'</div>').join('');
-  for(let i=0;i<fd;i++)c+='<div></div>';
-  for(let d=1;d<=dm;d++){
-    const ds=_vacYear+'-'+String(_vacMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    const p=vacDays[ds]||[];const it=ds===tod;const hv=p.length>0;
-    c+='<div data-d="'+ds+'" onclick="vacDiaClick(this.dataset.d)" style="border-radius:6px;padding:4px 2px;min-height:42px;cursor:pointer;'+
-      'background:'+(it?'rgba(208,223,0,.18)':hv?'rgba(99,102,241,.15)':'var(--navy2)')+';'+
-      'border:'+(it?'1.5px solid var(--brand,#D0DF00)':hv?'1px solid rgba(99,102,241,.4)':'1px solid var(--border)')+';">'
-      +'<div style="font-size:11px;font-weight:'+(it?'700':'500')+';color:'+(it?'var(--brand,#D0DF00)':'var(--text)')+';text-align:center">'+d+'</div>'
-      +p.slice(0,2).map(n=>'<div style="font-size:8px;color:#818CF8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px">'+n.split(' ')[0]+'</div>').join('')
-      +(p.length>2?'<div style="font-size:8px;color:var(--text3);text-align:center">+'+( p.length-2)+'</div>':'')
-      +'</div>';
-  }
-  grid.innerHTML=c;
-  const lista=document.getElementById('vacLista');if(!lista)return;
-  const mes=VAC_DATA.filter(v=>{
-    const s=new Date(v.inicio+'T00:00:00');const e=new Date(s);e.setDate(e.getDate()+(parseInt(v.dias)||1)-1);
-    return(s.getFullYear()===_vacYear&&s.getMonth()===_vacMonth)||(e.getFullYear()===_vacYear&&e.getMonth()===_vacMonth);
-  }).sort((a,b)=>a.inicio.localeCompare(b.inicio));
-  if(!mes.length){lista.innerHTML='<div style="font-size:12px;color:var(--text3);padding:8px">Sin vacaciones este mes.</div>';return;}
-  lista.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:var(--navy2)">'
-    +'<th style="padding:5px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Empleado</th>'
-    +'<th style="padding:5px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Puesto</th>'
-    +'<th style="padding:5px 10px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase">Inicio</th>'
-    +'<th style="padding:5px 10px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase">Días</th>'
-    +'<th style="padding:5px 10px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase">Fin</th>'
-    +'<th></th></tr></thead><tbody>'
-    +mes.map(v=>{
-      const idx2=VAC_DATA.findIndex(x=>x.nombre===v.nombre&&x.inicio===v.inicio);
-      const fin=new Date(v.inicio+'T00:00:00');fin.setDate(fin.getDate()+(parseInt(v.dias)||1)-1);
-      const emp=ALL_PERSONAL.find(p=>p.nombre===v.nombre)||{puesto:'—'};
-      return '<tr style="border-bottom:1px solid var(--border)">'
-        +'<td style="padding:5px 10px;font-weight:600">'+v.nombre+'</td>'
-        +'<td style="padding:5px 10px;font-size:10px;color:var(--text3)">'+(emp.puesto||'—')+'</td>'
-        +'<td style="padding:5px 10px;text-align:center;font-family:monospace">'+v.inicio+'</td>'
-        +'<td style="padding:5px 10px;text-align:center;font-weight:700;color:var(--purple)">'+v.dias+'</td>'
-        +'<td style="padding:5px 10px;text-align:center;font-family:monospace">'+fin.toISOString().slice(0,10)+'</td>'
-        +'<td style="padding:4px 8px"><button onclick="vacEliminar('+idx2+')" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:14px" title="Eliminar">🗑</button></td>'
-        +'</tr>';
-    }).join('')+'</tbody></table>';
-}
-function vacDiaClick(ds){
-  document.getElementById('vacFO')?.remove();
-  const opts=ALL_PERSONAL.map(p=>'<option value="'+p.nombre+'">'+p.nombre+' — '+p.puesto+'</option>').join('');
-  const ov=document.createElement('div');ov.id='vacFO';
-  ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto';
-  ov.innerHTML='<div style="background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:20px;width:100%;max-width:400px">'
-    +'<div style="font-weight:700;font-size:14px;margin-bottom:14px;color:var(--brand,#D0DF00)">🏖 Registrar vacaciones</div>'
-    +'<div style="display:grid;gap:10px">'
-    +'<div><div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Empleado</div>'
-    +'<select id="vacEmpS" class="edt-sel" style="width:100%;height:32px;font-size:11px"><option value="">— Seleccionar —</option>'+opts+'</select></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-    +'<div><div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Fecha inicio</div>'
-    +'<input id="vacIniI" type="date" class="edt-sel" value="'+ds+'" style="width:100%;height:32px"></div>'
-    +'<div><div style="font-size:9.5px;color:var(--text3);text-transform:uppercase;margin-bottom:4px">Días</div>'
-    +'<input id="vacDiasI" type="number" min="1" max="30" value="6" class="edt-sel" style="width:100%;height:32px"></div></div>'
-    +'<div style="display:flex;gap:8px;padding-top:4px">'
-    +'<button onclick="vacGuardar()" class="btn ok" style="flex:1;justify-content:center">✓ Guardar</button>'
-    +'<button onclick="document.getElementById(&apos;vacFO&apos;).remove()" class="btn" style="border-color:var(--border2);color:var(--text3)">Cancelar</button>'
-    +'</div></div></div>';
-  document.body.appendChild(ov);
-}
-function vacCerrarForm(){document.getElementById('vacFO')?.remove();}
-function vacGuardar(){
-  const nombre=document.getElementById('vacEmpS')?.value;
-  const inicio=document.getElementById('vacIniI')?.value;
-  const dias=parseInt(document.getElementById('vacDiasI')?.value)||0;
-  if(!nombre){alert('Selecciona un empleado.');return;}
-  if(!inicio){alert('Selecciona fecha de inicio.');return;}
-  if(dias<1){alert('Ingresa al menos 1 día.');return;}
-  VAC_DATA.push({nombre,inicio,dias});vacSave();
-  document.getElementById('vacFO')?.remove();vacRender();
-  const t=document.createElement('div');
-  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#10B981;color:#fff;padding:10px 22px;border-radius:8px;font-size:13px;font-weight:600;z-index:99999;pointer-events:none';
-  t.textContent='✓ Vacaciones registradas';document.body.appendChild(t);setTimeout(()=>t.remove(),2500);
-}
-function vacEliminar(i){if(!confirm('¿Eliminar?'))return;VAC_DATA.splice(i,1);vacSave();vacRender();}
-function vacExportarExcel(){
-  if(!VAC_DATA.length){alert('Sin registros.');return;}
-  const rows=[['Empleado','Puesto','Fecha Inicio','Días','Fecha Fin']];
-  VAC_DATA.sort((a,b)=>a.inicio.localeCompare(b.inicio)).forEach(v=>{
-    const emp=ALL_PERSONAL.find(p=>p.nombre===v.nombre)||{puesto:'—'};
-    const fin=new Date(v.inicio+'T00:00:00');fin.setDate(fin.getDate()+(parseInt(v.dias)||1)-1);
-    rows.push([v.nombre,emp.puesto||'—',v.inicio,v.dias,fin.toISOString().slice(0,10)]);
-  });
-  const csv='﻿'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download='Vacaciones_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
-}
-function vacExportarPDF(){
-  const rows=VAC_DATA.sort((a,b)=>a.inicio.localeCompare(b.inicio)).map(v=>{
-    const emp=ALL_PERSONAL.find(p=>p.nombre===v.nombre)||{puesto:'—'};
-    const fin=new Date(v.inicio+'T00:00:00');fin.setDate(fin.getDate()+(parseInt(v.dias)||1)-1);
-    return '<tr><td>'+v.nombre+'</td><td>'+(emp.puesto||'—')+'</td><td>'+v.inicio+'</td><td style="text-align:center">'+v.dias+'</td><td>'+fin.toISOString().slice(0,10)+'</td></tr>';
-  }).join('');
-  const pdfHTML='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Vacaciones MACRO TOLUCA</title>'
-    +'<style>body{font-family:Arial,sans-serif;padding:20px;color:#1a1a1a;font-size:12px}'
-    +'.hdr{background:#1e293b;color:#fff;padding:16px 24px;border-radius:8px;margin-bottom:16px;border-left:6px solid #D0DF00}'
-    +'table{width:100%;border-collapse:collapse}'
-    +'th{background:#f1f5f9;padding:7px 10px;text-align:left;font-size:10px;text-transform:uppercase;border:1px solid #e2e8f0}'
-    +'td{padding:6px 10px;border:1px solid #f1f5f9}tr:nth-child(even){background:#f8fafc}'
-    +'@media print{body{padding:0}}</style></head><body>'
-    +'<div class="hdr"><div style="font-size:17px;font-weight:700">CALENDARIO DE VACACIONES</div>'
-    +'<div style="font-size:10px;opacity:.7;margin-top:3px">MACRO TOLUCA KCMX // TRAXION &nbsp;·&nbsp; '+new Date().toLocaleDateString('es-MX',{dateStyle:'full'})+'</div></div>'
-    +'<table><thead><tr><th>Empleado</th><th>Puesto</th><th>Inicio</th><th>Días</th><th>Fin</th></tr></thead>'
-    +'<tbody>'+(rows||'<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:16px">Sin registros</td></tr>')+'</tbody></table>'
-    +'</body></html>';
-  const win=window.open('','_blank');
-  if(win){win.document.write(pdfHTML);win.document.close();setTimeout(()=>win.print(),500);}
-}
-// ══ END VACACIONES ══════════════════════════════════════════════════════════
-
 window.addEventListener('load', ()=>{
   // Eventos: live flete lookup
   const evFletesInp=g('evFletes');
@@ -5007,50 +4554,7 @@ function dvIncBuildHTML(folio, emb, linea, placa, elab, skus, fotos, fecha){
     .firma-line{border-top:1px solid #1a1a1a;margin-top:50px;padding-top:5px;font-size:9px;color:#64748b}
     @media print{body{padding:10px}button{display:none}}
   </style>
-  
-<style id="mobile-fix">
-/* ── Mobile responsive overrides ── */
-@media (max-width: 640px){
-  /* Modal overlays — scrollable on mobile */
-  div[style*="position:fixed"][style*="z-index:9999"],
-  div[style*="position:fixed"][style*="z-index: 9999"],
-  ._dv-modal-overlay {
-    padding: 8px !important;
-    align-items: flex-start !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
-  /* Inner modal cards */
-  div[style*="max-width:520px"],
-  div[style*="max-width:540px"],
-  div[style*="max-width:560px"] {
-    max-width: 100% !important;
-    border-radius: 8px !important;
-  }
-  /* INC form grids → single column */
-  #incDvModal .grid-2,
-  #incDvModal [style*="grid-template-columns:1fr 1fr"] {
-    grid-template-columns: 1fr !important;
-  }
-  /* SKU row grids → wrap */
-  #idf-sku-list > div,
-  #incSkuList > div {
-    grid-template-columns: 1fr 1fr !important;
-    row-gap: 6px !important;
-  }
-  /* Charts — constrain width */
-  canvas { max-width: 100% !important; height: auto !important; }
-  /* Tracker table — horizontal scroll */
-  #p-tk { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  /* Tabs — horizontal scroll */
-  .tabs { overflow-x: auto; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; }
-  .tab { white-space: nowrap; flex-shrink: 0; }
-  /* KPIs — wrap on mobile */
-  .kpis { flex-wrap: wrap; }
-  .kpi { min-width: 80px; }
-}
-</style>
-</head><body>
+  </head><body>
   <div class="hdr">
     <div>
       <div class="hdr-title">REPORTE DE DAÑOS / INCIDENCIAS</div>
@@ -5101,7 +4605,6 @@ function dvIncBuildHTML(folio, emb, linea, placa, elab, skus, fotos, fecha){
   <div style="text-align:center;font-size:8.5px;color:#94a3b8;padding-top:8px">
     Reporte generado automáticamente — MACRO TOLUCA KCMX // TRAXION
   </div>
-  <scr'+'ipt>window.addEventListener("load",()=>{setTimeout(()=>window.print(),600);});</scr'+'ipt>
   </body></html>`;
 }
 
@@ -5799,58 +5302,23 @@ function generarReporte(){
   const totalVerif=cur.filter(r=>r.verif).length;
   const pendVerif=cur.length-totalVerif;
 
-  // Build day-by-day verif history from S.turnoHistorial + current
-  const verifByDay = {};
-  // Current turn
-  const todayStr = new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});
-  cur.filter(r=>r.verif).forEach(r=>{
-    const nombre = VERIFICADORES.find(v=>v.id===r.verif)?.nombre || r.verif;
-    const day = todayStr;
-    if(!verifByDay[day]) verifByDay[day]={};
-    if(!verifByDay[day][r.verif]) verifByDay[day][r.verif]={nombre, count:0};
-    verifByDay[day][r.verif].count++;
-  });
-  // Historical turns
-  S.turnoHistorial.forEach(h=>{
-    const day = h.hora ? h.hora.split(',')[0].trim() : todayStr;
-    (h.fletes||[]).forEach(f=>{
-      if(!f.verif) return;
-      const nombre = VERIFICADORES.find(v=>v.id===f.verif)?.nombre || f.verif;
-      if(!verifByDay[day]) verifByDay[day]={};
-      if(!verifByDay[day][f.verif]) verifByDay[day][f.verif]={nombre, count:0};
-      verifByDay[day][f.verif].count++;
-    });
-  });
-  const dayKeys = Object.keys(verifByDay).sort().reverse();
-  const totalVerifAll = Object.values(verifByDay).reduce((a,d)=>a+Object.values(d).reduce((b,v)=>b+v.count,0),0);
-
   const verifHtml=`<div class="rep-section">
-    <div class="rep-section-ttl">Verificaciones — por día y acumulado</div>
+    <div class="rep-section-ttl">Verificaciones del turno</div>
     <div class="rep-kpis" style="margin-bottom:12px">
-      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--purple)">${totalVerif}</div><div class="rep-kpi-l">Turno actual</div></div>
-      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--cyan)">${totalVerifAll}</div><div class="rep-kpi-l">Total acumulado</div></div>
-      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--red)">${pendVerif}</div><div class="rep-kpi-l">Sin asignar hoy</div></div>
-      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--amber)">${verifRows.length}</div><div class="rep-kpi-l">Verificadores activos</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--purple)">${totalVerif}</div><div class="rep-kpi-l">Con verificador</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--red)">${pendVerif}</div><div class="rep-kpi-l">Sin asignar</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--cyan)">${verifRows.length}</div><div class="rep-kpi-l">Verificadores activos</div></div>
     </div>
-    ${dayKeys.map(day=>{
-      const verifs = Object.values(verifByDay[day]).sort((a,b)=>b.count-a.count);
-      return `<div style="margin-bottom:14px">
-        <div style="font-size:10px;color:var(--brand,#D0DF00);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:6px;padding:3px 8px;background:rgba(208,223,0,.1);border-left:3px solid var(--brand,#D0DF00);border-radius:0 4px 4px 0">📅 ${day}</div>
-        <table class="rep-table" style="width:100%">
-          <thead><tr><th>#</th><th>Nombre completo</th><th>Puesto</th><th style="text-align:center">Conteos</th></tr></thead>
-          <tbody>${verifs.map((v,i)=>{
-            const emp = VERIFICADORES.find(x=>x.nombre===v.nombre)||{puesto:'—'};
-            return `<tr>
-              <td style="font-family:'IBM Plex Mono',monospace;color:${i===0?'var(--amber)':'var(--text3)'};font-weight:700">${i+1}</td>
-              <td style="font-weight:600">${es(v.nombre)}</td>
-              <td style="font-size:10px;color:var(--text3)">${emp.puesto||'—'}</td>
-              <td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--purple)">${v.count}</td>
-            </tr>`;
-          }).join('')}</tbody>
-        </table>
-      </div>`;
-    }).join('')}
-    ${!dayKeys.length?'<p style="font-size:12px;color:var(--text3)">Sin verificadores asignados.</p>':''}
+    ${verifRows.length?`<table class="rep-table" style="table-layout:fixed;width:100%">
+      <colgroup><col style="width:10%"><col style="width:45%"><col style="width:10%"><col style="width:35%"></colgroup>
+      <thead><tr><th>#</th><th>Verificador</th><th>Conteos</th><th>Fletes asignados</th></tr></thead>
+      <tbody>${verifRows.map((v,i)=>`<tr>
+        <td style="font-family:'IBM Plex Mono',monospace;color:${i===0?'var(--amber)':'var(--text3)'};font-weight:700">${i+1}</td>
+        <td style="font-weight:500">${es(v.nombre)}</td>
+        <td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--purple)">${v.count}</td>
+        <td style="font-size:10px;color:var(--text3)">${v.fletes.slice(0,6).join(', ')}${v.fletes.length>6?'…':''}</td>
+      </tr>`).join('')}</tbody>
+    </table>`:'<p style="font-size:12px;color:var(--text3)">Sin verificadores asignados.</p>'}
   </div>`;
 
   // ── Tareas por montacarguista ──
@@ -5943,50 +5411,7 @@ function imprimirReporte(){
       .ba{background:#FEF3C7;color:#92400E}.bb{background:#DBEAFE;color:#1E40AF}
       .bc{background:#CFFAFE;color:#164E63}.bx{background:#F1F5F9;color:#475569}
       @media print{body{padding:8px}}
-    </style>
-<style id="mobile-fix">
-/* ── Mobile responsive overrides ── */
-@media (max-width: 640px){
-  /* Modal overlays — scrollable on mobile */
-  div[style*="position:fixed"][style*="z-index:9999"],
-  div[style*="position:fixed"][style*="z-index: 9999"],
-  ._dv-modal-overlay {
-    padding: 8px !important;
-    align-items: flex-start !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch;
-  }
-  /* Inner modal cards */
-  div[style*="max-width:520px"],
-  div[style*="max-width:540px"],
-  div[style*="max-width:560px"] {
-    max-width: 100% !important;
-    border-radius: 8px !important;
-  }
-  /* INC form grids → single column */
-  #incDvModal .grid-2,
-  #incDvModal [style*="grid-template-columns:1fr 1fr"] {
-    grid-template-columns: 1fr !important;
-  }
-  /* SKU row grids → wrap */
-  #idf-sku-list > div,
-  #incSkuList > div {
-    grid-template-columns: 1fr 1fr !important;
-    row-gap: 6px !important;
-  }
-  /* Charts — constrain width */
-  canvas { max-width: 100% !important; height: auto !important; }
-  /* Tracker table — horizontal scroll */
-  #p-tk { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  /* Tabs — horizontal scroll */
-  .tabs { overflow-x: auto; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; }
-  .tab { white-space: nowrap; flex-shrink: 0; }
-  /* KPIs — wrap on mobile */
-  .kpis { flex-wrap: wrap; }
-  .kpi { min-width: 80px; }
-}
-</style>
-</head><body>
+    </style></head><body>
     <h1>Reporte de Turno — PRONUMEX / TRAXION</h1>
     <div class="sub">${sub}</div>
     ${content}
@@ -6146,16 +5571,8 @@ function fbSave(){
         posAlerts: S.posAlerts,
         sessionTurno: S.sessionTurno,
         sessionSup: S.sessionSup,
-        // DV data for cross-device sync
-        dvRegistros: DV.registros,
-        dvHistorial: DV.historial,
-        dvTurno: DV.turno,
-        dvSup: DV.sup,
-        // INC data
-        incRegistros: INC.registros,
         ts, device: DEVICE_ID
       };
-      autoSaveVerifHistorial(); // persist verif assignments
       try{ localStorage.setItem('trx_state', JSON.stringify({rows:payload.rows,userEdits:payload.userEdits,sessionTurno:payload.sessionTurno,sessionSup:payload.sessionSup})); }catch(e){}
       const ref = FB.doc(FB.db, 'tracker', DOC_ID);
       await FB.setDoc(ref, payload);
@@ -6177,12 +5594,6 @@ function applyRemoteData(data){
   if(data.posAlerts)      S.posAlerts       = data.posAlerts;
   if(data.sessionTurno)   S.sessionTurno    = data.sessionTurno;
   if(data.sessionSup)     S.sessionSup      = data.sessionSup;
-  // Sync DV and INC from other devices
-  if(data.dvRegistros)    DV.registros      = data.dvRegistros;
-  if(data.dvHistorial)    DV.historial      = data.dvHistorial;
-  if(data.dvTurno)        DV.turno          = data.dvTurno;
-  if(data.dvSup)          DV.sup            = data.dvSup;
-  if(data.incRegistros)   INC.registros     = data.incRegistros;
   if(!S.rows || !S.rows.length) return;
 
   // Show UI chrome
