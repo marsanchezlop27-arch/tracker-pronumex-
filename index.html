@@ -6445,14 +6445,17 @@ function applyRemoteData(data){
         if(!or) return;
         if(nr.monta && nr.monta!==or.monta){
           const nom=MONTACARGUISTAS.find(m=>m.id===nr.monta)?.nombre||nr.monta;
-          _notifyAssignment('Montacarguista',nom,nr.nom||nr.emb||'');
+          _notifyAssignment('monta', nom, nr.emb||'', nr.nom||'');
+          _highlightRow(nr.emb);
         }
         if(nr.verif && nr.verif!==or.verif){
           const nom=VERIFICADORES.find(v=>v.id===nr.verif)?.nombre||nr.verif;
-          _notifyAssignment('Verificador',nom,nr.nom||nr.emb||'');
+          _notifyAssignment('verificacion', nom, nr.emb||'', nr.nom||'');
+          _highlightRow(nr.emb);
         }
         if(nr.precarga && nr.precarga!==or.precarga){
-          _notifyAssignment('Precarga',nr.precarga,nr.nom||nr.emb||'');
+          _notifyAssignment('precarga', nr.precarga, nr.emb||'', nr.nom||'');
+          _highlightRow(nr.emb);
         }
       });
     }
@@ -6575,37 +6578,98 @@ window.addEventListener('online',()=>{
 });
 
 
-// Show local notification for assignment changes
-function _notifyAssignment(tipo, quien, flete){
-  // Push Notification API (if permission granted)
-  if(window.Notification && Notification.permission==='granted'){
-    new Notification('MACRO TOLUCA · '+tipo+' asignado', {
-      body: quien+' → '+flete,
-      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" fill="%231e293b"/><text y="24" font-size="20" x="6">📦</text></svg>'
-    });
-    return;
+// ── Assignment notifications ─────────────────────────────────────────────────
+function _notifyAssignment(tipo, quien, numFlete, nomCliente){
+  const emb  = numFlete  || '';
+  const nom  = nomCliente|| '';
+  // Build specific message per type
+  let titulo, cuerpo, emoji;
+  if(tipo==='monta'){
+    emoji  = '🚛';
+    titulo = 'Montacarguista asignado';
+    cuerpo = quien+' → Flete '+emb+(nom?' · '+nom.slice(0,30):'');
+  } else if(tipo==='precarga'){
+    emoji  = '📦';
+    titulo = 'Precarga asignada';
+    cuerpo = 'Flete '+emb+' → '+quien+(nom?' · '+nom.slice(0,30):'');
+  } else if(tipo==='verificacion'){
+    emoji  = '✅';
+    titulo = 'Verificación asignada';
+    cuerpo = quien+' verificando flete '+emb+(nom?' · '+nom.slice(0,30):'');
+  } else {
+    emoji  = '📋';
+    titulo = tipo+' actualizado';
+    cuerpo = quien+' · '+emb;
   }
-  // Request permission if not yet asked
-  if(window.Notification && Notification.permission==='default'){
-    Notification.requestPermission().then(p=>{
-      if(p==='granted') _notifyAssignment(tipo, quien, flete);
-    });
-    return;
+
+  // Try browser Notification API
+  function doNotify(){
+    try{
+      new Notification(emoji+' MACRO TOLUCA · '+titulo, {
+        body : cuerpo,
+        icon : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+      });
+    }catch(e){}
   }
-  // Fallback: in-app toast
-  const t = document.createElement('div');
-  t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:var(--card,#1e293b);color:var(--text,#fff);border:1px solid var(--brand,#D0DF00);border-radius:10px;padding:10px 16px;font-size:12px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.4);max-width:280px';
-  t.innerHTML = '<div style="font-size:10px;color:var(--brand,#D0DF00);font-weight:700;margin-bottom:3px">'+tipo.toUpperCase()+' ASIGNADO</div><div style="font-weight:600">'+quien+'</div><div style="font-size:10px;color:var(--text3,#94a3b8);margin-top:2px">'+flete+'</div>';
-  document.body.appendChild(t);
-  setTimeout(()=>{ t.style.transition='opacity .4s'; t.style.opacity='0'; setTimeout(()=>t.remove(),400); }, 4000);
+  if(window.Notification){
+    if(Notification.permission==='granted'){ doNotify(); }
+    else if(Notification.permission==='default'){
+      Notification.requestPermission().then(p=>{ if(p==='granted') doNotify(); });
+    }
+  }
+
+  // Always show in-app toast (bottom-right)
+  _showToast(emoji+' '+titulo, cuerpo);
 }
 
-// Request notification permission on startup
-(function(){
-  if(window.Notification && Notification.permission==='default'){
-    // Don't auto-request — wait for first assignment
-  }
-})();
+function _showToast(titulo, cuerpo, dur){
+  const t = document.createElement('div');
+  t.style.cssText = [
+    'position:fixed','bottom:24px','right:20px',
+    'background:var(--card,#1e293b)',
+    'color:var(--text,#f8fafc)',
+    'border:1px solid var(--brand,#D0DF00)',
+    'border-left:4px solid var(--brand,#D0DF00)',
+    'border-radius:10px','padding:12px 16px',
+    'font-size:12px','z-index:2147483647',
+    'box-shadow:0 6px 24px rgba(0,0,0,.5)',
+    'max-width:300px','min-width:220px',
+    'animation:slideInToast .25s ease'
+  ].join(';');
+  t.innerHTML =
+    '<div style="font-weight:700;font-size:12px;margin-bottom:4px">'+titulo+'</div>'+
+    '<div style="font-size:11px;color:var(--text2,#cbd5e1);line-height:1.4">'+cuerpo+'</div>';
+  document.body.appendChild(t);
+  const ms = dur||5000;
+  setTimeout(()=>{
+    t.style.transition='opacity .4s,transform .4s';
+    t.style.opacity='0'; t.style.transform='translateX(20px)';
+    setTimeout(()=>t.remove(), 400);
+  }, ms);
+}
+
+// Add slideIn animation if not already present
+if(!document.getElementById('toast-anim')){
+  const s=document.createElement('style');
+  s.id='toast-anim';
+  s.textContent='@keyframes slideInToast{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}';
+  document.head.appendChild(s);
+}
+
+// Row highlight when a field changes (yellow flash)
+function _highlightRow(emb){
+  if(!emb) return;
+  // Find the row element in the tracker table
+  const rows = document.querySelectorAll('#tkBody tr, #trackerBody tr, #p-tk table tbody tr');
+  rows.forEach(tr=>{
+    const firstTd = tr.querySelector('td');
+    if(firstTd && firstTd.textContent.trim().includes(String(emb).replace(/^0+/,''))){
+      tr.style.transition='background .2s';
+      tr.style.background='rgba(208,223,0,.18)';
+      setTimeout(()=>{ tr.style.background=''; }, 2500);
+    }
+  });
+}
 
 // ── Patch upd/listo/togglePrio/updCustom/updVerif to also save ──
 const _origUpd = upd;
@@ -6613,17 +6677,17 @@ window.upd = function(idx,field,val){
   _origUpd(idx,field,val);
   _saveStateToLocalStorage();
   fbSave();
-  // Notify other users of assignment changes
   if(['monta','precarga','verif'].includes(field) && val){
     const r = S.rows[idx];
-    if(!r) return;
-    const labels = {monta:'Montacarguista',precarga:'Precarga',verif:'Verificador'};
-    const who = field==='monta'
-      ? (MONTACARGUISTAS.find(m=>m.id===val)?.nombre||val)
-      : field==='verif'
-      ? (VERIFICADORES.find(v=>v.id===val)?.nombre||val)
-      : val;
-    _notifyAssignment(labels[field], who, r.nom||r.emb||'');
+    if(r){
+      const who = field==='monta'
+        ? (MONTACARGUISTAS.find(m=>m.id===val)?.nombre||val)
+        : field==='verif'
+        ? (VERIFICADORES.find(v=>v.id===val)?.nombre||val)
+        : val;
+      _notifyAssignment(field, who, r.emb||'', r.nom||'');
+      _highlightRow(r.emb);
+    }
   }
 };
 
@@ -6637,7 +6701,18 @@ const _origUpdCustom = updCustom;
 window.updCustom = function(idx,checked){ _origUpdCustom(idx,checked); fbSave(); };
 
 const _origUpdVerif = updVerif;
-window.updVerif = function(idx,val){ _origUpdVerif(idx,val); fbSave(); };
+window.updVerif = function(idx,val){
+  _origUpdVerif(idx,val);
+  fbSave();
+  if(val){
+    const r = S.rows[idx];
+    if(r){
+      const nom = VERIFICADORES.find(v=>v.id===val)?.nombre || val;
+      _notifyAssignment('verificacion', nom, r.emb||'', r.nom||'');
+      _highlightRow(r.emb);
+    }
+  }
+};
 
 // Also save after build() and applyNew()
 const _origBuild = build;
