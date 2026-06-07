@@ -4831,11 +4831,8 @@ function dvIncGuardar(){
 
     console.log('[dvIncGuardar] DV.historial entries:', DV.historial.length);
 
-    // Save to INC.registros
-    incRecords.forEach(inc => INC.registros.push(inc));
-    try{ localStorage.setItem('trx_inc_desc', JSON.stringify(INC.registros)); }catch(e){
-      console.error('[dvIncGuardar] INC save error:', e);
-    }
+    // DV incidencias stay in DV only — NOT added to global INC module
+    // (INC module is for tracker embarques incidencias, not descargas)
 
     // Mark timestamp so applyRemoteData won't overwrite our fresh save
     DV._lastSaveTs = Date.now();
@@ -6111,6 +6108,16 @@ let fbReady = false;
 let fbUnsubscribe = null;
 
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
+// ══ FIRESTORE SECURITY RULES (apply in Firebase Console → Firestore → Rules) ══
+// rules_version = '2';
+// service cloud.firestore {
+//   match /databases/{database}/documents {
+//     match /tracker/{docId} {
+//       allow read, write: if request.auth != null
+//         && request.auth.token.email in ['admin@pronumex.com','marsanchezlop27@gmail.com'];
+//     }
+//   }
+// }
 const ADMIN_EMAILS = ['admin@pronumex.com', 'marsanchezlop27@gmail.com'];
 let currentUserEmail = '';
 
@@ -6223,9 +6230,26 @@ function fbSave(){
         sessionTurno: S.sessionTurno,
         sessionSup: S.sessionSup,
         // DV data for cross-device sync
-        // DV data: localStorage only (photos too large for Firebase, and per-device)
-        dvRegistros: [],  // not synced via Firebase — use localStorage
-        dvHistorial: [],  // not synced via Firebase — use localStorage
+        // DV sync: metadata only (fotos stripped — too large for Firebase)
+        dvRegistros: DV.registros.map(r=>({
+          ...r,
+          incidencias:(r.incidencias||[]).map(inc=>({
+            ...inc,
+            fotos:[], // fotos stay in localStorage only
+            _hasFotos:(inc.fotos||[]).length>0 // flag so other devices know fotos exist
+          }))
+        })),
+        dvHistorial: DV.historial.map(b=>({
+          ...b,
+          registros:(b.registros||[]).map(r=>({
+            ...r,
+            incidencias:(r.incidencias||[]).map(inc=>({
+              ...inc,
+              fotos:[],
+              _hasFotos:(inc.fotos||[]).length>0
+            }))
+          }))
+        })),
         dvTurno: DV.turno,
         dvSup: DV.sup,
         // INC data
@@ -6255,9 +6279,34 @@ function applyRemoteData(data){
   if(data.sessionTurno)   S.sessionTurno    = data.sessionTurno;
   if(data.sessionSup)     S.sessionSup      = data.sessionSup;
   // Sync DV and INC from other devices
-  // DV.registros/historial: localStorage only — never overwrite from Firebase
-  // (Firebase sends empty arrays since photos can't fit in 1MB limit)
-  // DV.historial: localStorage only (never overwrite from Firebase)
+  // DV sync: accept from Firebase, but restore fotos from localStorage
+  if(data.dvRegistros && Array.isArray(data.dvRegistros) && data.dvRegistros.length > 0){
+    const _msSinceDvSave = Date.now() - (DV._lastSaveTs||0);
+    if(_msSinceDvSave > 5000 || DV.registros.length === 0){
+      // Merge: keep local fotos, take remote metadata
+      const _localRegMap = {};
+      DV.registros.forEach(r=>{ if(r._uid||r.hora) _localRegMap[r._uid||r.hora]=r; });
+      DV.registros = data.dvRegistros.map(remReg=>{
+        const localReg = _localRegMap[remReg._uid||remReg.hora];
+        if(!localReg) return remReg;
+        // Restore fotos from local for each incidencia
+        return { ...remReg, incidencias:(remReg.incidencias||[]).map((remInc,ii)=>{
+          const localInc=(localReg.incidencias||[])[ii];
+          return {...remInc, fotos:localInc?.fotos||[]};
+        })};
+      });
+      DV._lastSaveTs = Date.now(); // prevent echo loop
+    }
+  }
+  // DV.historial: same approach
+  if(data.dvHistorial && Array.isArray(data.dvHistorial) && data.dvHistorial.length > 0){
+    const _msSinceDvSave = Date.now() - (DV._lastSaveTs||0);
+    if(_msSinceDvSave > 5000 || DV.historial.length === 0){
+      DV.historial = data.dvHistorial;
+      try{ localStorage.setItem('trx_dv_historial',JSON.stringify(DV.historial)); }catch(e){}
+    }
+  }
+  // DV.historial handled above
   if(data.dvTurno)        DV.turno          = data.dvTurno;
   if(data.dvSup)          DV.sup            = data.dvSup;
   if(data.incRegistros)   INC.registros     = data.incRegistros;
