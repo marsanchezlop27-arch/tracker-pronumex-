@@ -1571,7 +1571,7 @@ function build(){
 
     S.rows.push({
       emb: k,
-      nom: fc(r,['Nombre','nombre','Cliente','cliente','Destino','destino','CLIENTE','DESTINO']) || fc(r,['NOMBRE']) || '',
+      nom: fc(D,['Nombre','nombre','NOMBRE','Cliente','cliente']) || fc(r,['Nombre','nombre','Cliente','cliente','Destino','destino','CLIENTE','DESTINO']) || fc(r,['NOMBRE']) || '',
       tra: fc(D,['Transportista','transportista','Unidad','unidad','Tipo trailer'])||fc(r,['Tipo trailer','trailer','Unidad'])||'',
       sem: (()=>{
         const v=fc(r,['SEMAFORO CARGA','Semaforo Carga','semaforo','SEMÁFORO']);
@@ -1615,7 +1615,7 @@ function build(){
       tr:  fc(D,['T. Restos','T.Restos','t restos','T.RESTOS','TOTAL RESTOS'])    || '',
       ar:  fc(D,['A. Restos','A.Restos','a restos'])    || '',
       tf:  fc(D,['T. Faltantes','T.Faltantes','faltantes']) || '',
-      con: (()=>{ const _v=String(fc(r,['CORTINA','Cortina','cortina'])||fc(D,['Cortina','cortina'])||'').trim(); return /^[Dd][Ii][-.]?\d+$/.test(_v)?_v:''; })(),
+      con: getCortina(D), // from DETALLE 'Cortina' col, must be DI-N
       contenedor: fc(D,['# Contenedor','contenedor','Contenedor']) || '', // Container ID for grouping
       com: fc(D,['Comentarios:','Comentarios','comentarios','comentario']) || '',
       tu:  'PRIMERO',
@@ -1634,9 +1634,12 @@ function build(){
       tipo_sem: fc(r,['TIPO','tipo']) || '',  // WM / NAC / HFS from semaforo
       _wmsMatch, _wmsEmb
     });
-    // Restore saved edits; default estop to PENDIENTE if not saved
+    // Restore saved edits (precarga, monta, verif, etc.)
     const saved=S.userEdits[k];
     if(saved){ Object.assign(S.rows[S.rows.length-1], saved); }
+    // ALWAYS re-apply con from DETALLE — file wins over saved edits
+    const _con = getCortina(D);
+    S.rows[S.rows.length-1].con = _con; // '' if no DI in DETALLE
     if(!S.rows[S.rows.length-1].estop) S.rows[S.rows.length-1].estop='PENDIENTE';
   });
 
@@ -1945,15 +1948,31 @@ function semPri(r){
 }
 
 // Helper: does this row have transport (non-empty contenedor)?
-function hasTrans(r){ return fmtCortina(r.con||'')!=='—'; }
+function hasTrans(r){ return !!(r.con && String(r.con).startsWith('Rampa')); }
 
 // Convert cortina format: "DI-17" → "Rampa 17", "DI17" → "Rampa 17", "17" → "Rampa 17"
+// Read Cortina from a DETALLE row object → 'Rampa N' or ''
+// Rule: find column 'Cortina' left-to-right, value must start with 'DI'
+function getCortina(D){
+  if(!D||!Object.keys(D).length) return '';
+  // Find the Cortina key (left-to-right order preserved by object insertion)
+  const key = Object.keys(D).find(k=>k.trim().toLowerCase()==='cortina');
+  if(!key) return '';
+  const raw = String(D[key]||'').trim();
+  // Must match DI-N or DIN pattern
+  const m = raw.match(/^[Dd][Ii][-.]?(\d+)$/);
+  if(!m) return '';
+  const n = parseInt(m[1]);
+  return n > 0 ? 'Rampa '+n : '';
+}
+
+// Display formatter — same rule (for manually set values)
 function fmtCortina(v){
-  if(!v||v==='—'||v==='0'||v==='None'||v==='') return '—';
-  const s=String(v).trim();
-  if(!s||s==='0') return '—';
-  const m=s.match(/^[Dd][Ii][-.]?(\d+)$/);
-  if(m){ const n=parseInt(m[1]); return n===0?'—':'Rampa '+n; }
+  if(!v||v==='—'||v==='') return '—';
+  const s = String(v).trim();
+  const m = s.match(/^[Dd][Ii][-.]?(\d+)$/);
+  if(m){ const n=parseInt(m[1]); return n>0?'Rampa '+n:'—'; }
+  if(s.startsWith('Rampa ')) return s; // already formatted
   return '—';
 }
 
@@ -2203,6 +2222,7 @@ function render(){
 
   const nn=rows.filter(r=>r.est==='NUEVO').length;
   const nFuera=rows.filter(r=>semPri(r)===1).length;
+  const na=rows.filter(r=>r.al&&r.al!=='').length; // con alerta
   const nCon=rows.filter(r=>hasTrans(r)).length;
   const nSin=rows.filter(r=>!hasTrans(r)).length;
   g('tf').innerHTML=
@@ -3428,25 +3448,22 @@ function hdToggle(btn){
 }
 
 function histDescPDF(key){
-  const d = (window._hdCache||{})[key]; if(!d){ alert('Datos no encontrados.'); return; }
-  const skus = d.skus||[];
-  const fotos = d.fotos||[];
-  const pdfHTML = dvIncBuildHTML(
-    d.folio||'—', d.emb||'—',
-    d.linea||d.trans||'—',
-    d.placa||'—',
-    d.elab||d.mnNom||'—',
-    skus.map(s=>({...s,desc:d.desc||''})),
-    fotos,
-    d.fecha||new Date().toLocaleDateString('es-MX')
+  const d=(window._hdCache||{})[key];
+  if(!d){ alert('Datos no encontrados.'); return; }
+  // All fotos from all incidencias
+  const allFotos=[...(d.allIncs||[]).flatMap(i=>i.fotos||[]),...(d.fotos||[])];
+  const pdfHTML=dvIncBuildHTML(
+    d.folio||'—', d.emb||'—', d.linea||d.trans||'—',
+    d.placa||'—', d.elab||d.mnNom||'—',
+    (d.skus||[]).map(s=>({...s,desc:d.desc||''})),
+    allFotos, d.fecha||new Date().toLocaleDateString('es-MX')
   );
-  const blob = new Blob([pdfHTML],{type:'text/html;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'Reporte_'+(d.folio||'INC')+'_'+new Date().toISOString().slice(0,10)+'.html';
-  a.click();
-  setTimeout(()=>{ window.open(url,'_blank'); }, 400);
+  const win=window.open('','_blank','width=960,height=720,scrollbars=yes');
+  if(!win){ alert('Permite ventanas emergentes para generar el PDF.'); return; }
+  win.document.open(); win.document.write(pdfHTML); win.document.close();
+  win.addEventListener('load',function(){ setTimeout(function(){ try{ win.print(); }catch(e){} },800); });
 }
+
 
 function histDescEmail(key){
   const d = (window._hdCache||{})[key]; if(!d){ alert('Datos no encontrados.'); return; }
@@ -4320,25 +4337,53 @@ const DV = {
     const r=localStorage.getItem('trx_dv_registros');
     if(r){
       const d=JSON.parse(r);
-      if(d.registros?.length){ DV.registros=d.registros; DV.turno=d.turno||''; DV.sup=d.sup||''; }
+      if(d && Array.isArray(d.registros)){
+        DV.registros=d.registros;
+        DV.turno=d.turno||'';
+        DV.sup=d.sup||'';
+      }
     }
   }catch(e){}
 })();
 
 function dvSaveHistorial(){
-  try{ localStorage.setItem('trx_dv_historial',JSON.stringify(DV.historial)); }catch(e){}
+  try{
+    // Sanitize historial fotos
+    const safeHist = DV.historial.map(b=>({
+      ...b,
+      registros: (b.registros||[]).map(r=>({
+        ...r,
+        incidencias: (r.incidencias||[]).map(inc=>({
+          ...inc,
+          fotos: (inc.fotos||[]).filter(f=>typeof f==='string'&&f.startsWith('data:'))
+        }))
+      }))
+    }));
+    localStorage.setItem('trx_dv_historial', JSON.stringify(safeHist));
+  } catch(err){
+    console.error('[dvSaveHistorial] ERROR:', err.message, err);
+  }
   dvSaveRegistros();
   if(typeof fbSave==='function') clearTimeout(window._dvFbT), window._dvFbT=setTimeout(fbSave,400);
 }
 
 function dvSaveRegistros(){
   try{
-    localStorage.setItem('trx_dv_registros',JSON.stringify({
-      registros: DV.registros,
-      turno: DV.turno,
-      sup: DV.sup
+    // Sanitize: remove any non-serializable values from fotos
+    const safe = DV.registros.map(r=>({
+      ...r,
+      incidencias: (r.incidencias||[]).map(inc=>({
+        ...inc,
+        fotos: (inc.fotos||[]).filter(f=>typeof f==='string'&&f.startsWith('data:'))
+      }))
     }));
-  }catch(e){}
+    const payload = { registros: safe, turno: DV.turno, sup: DV.sup };
+    localStorage.setItem('trx_dv_registros', JSON.stringify(payload));
+    return true;
+  } catch(err){
+    console.error('[dvSaveRegistros] ERROR:', err.message, err);
+    return false;
+  }
 }
 
 const CORTINAS_LIST = Array.from({length:54},(_,i)=>i+1);
@@ -4403,6 +4448,8 @@ function dvCortinOpts(sel){
 
 function dvAgregar(){
   DV.registros.push({ monta:'', cortina:'', origen:'', hora:new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}) });
+  DV._lastSaveTs = Date.now(); // mark so Firebase won't overwrite immediately
+  dvSaveRegistros(); // persist immediately to localStorage
   dvRender();
   setTimeout(()=>{ const el=g('dvList'); if(el) el.lastElementChild?.scrollIntoView({behavior:'smooth'}); },50);
 }
@@ -4702,7 +4749,7 @@ async function paSendIncidencia(data){
 
 function dvIncGuardar(){
   // ── GATE: block if already saved ──────────────────────
-  if(!_incDvActive || _incDvActive._saved) return;
+  if(!_incDvActive) return;
 
   // ── VALIDATE ──────────────────────────────────────────
   const _skuList = document.getElementById('idf-sku-list');
@@ -4720,10 +4767,13 @@ function dvIncGuardar(){
   if(!_allRows.length){ alert('Agrega al menos un SKU con cantidad.'); return; }
   if(!skus.length){ alert('Selecciona el tipo de incidencia para al menos un SKU.'); return; }
 
-  // ── LOCK IMMEDIATELY — before any async work ──────────
-  _incDvActive._saved = true;
   const _sb = document.querySelector('#incDvModal .save-btn');
-  if(_sb){ _sb.setAttribute('disabled',''); _sb.style.opacity='0.4'; _sb.style.pointerEvents='none'; }
+  if(_sb){ _sb.setAttribute('disabled',''); _sb.style.opacity='0.4'; }
+  setTimeout(()=>{
+    // Re-query in case dvRender() rebuilt the DOM
+    const _sbNow = document.querySelector('#incDvModal .save-btn');
+    if(_sbNow){ _sbNow.removeAttribute('disabled'); _sbNow.style.opacity=''; }
+  }, 1500);
 
   // ── COLLECT DATA ──────────────────────────────────────
   const folio  = (g('idf-folio')?.value||'INC-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-4)).trim();
@@ -4732,9 +4782,15 @@ function dvIncGuardar(){
   const placa  = (g('idf-placa')?.value||'').trim();
   const elab   = (g('idf-elab')?.value||'').trim();
   const desc   = (g('idf-desc')?.value||'').trim();
-  const fotos  = [...(_incDvActive.fotos||[])];
+  // Declare regIdx FIRST — used throughout
   const regIdx = _incDvActive.regIdx ?? -1;
   const isNew  = !DV.registros[regIdx]?.incidencias?.length;
+  // Merge existing fotos with new ones
+  const _existFotos = regIdx >= 0
+    ? (DV.registros[regIdx]?.incidencias||[]).flatMap(i=>i.fotos||[])
+    : [];
+  const fotos = [...new Set([...(_incDvActive.fotos||[]),..._existFotos])]
+    .filter(f=>typeof f==='string'&&f.startsWith('data:'));
   const ts     = Date.now();
   const fecha  = new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
 
@@ -4750,14 +4806,49 @@ function dvIncGuardar(){
   }));
 
   // ── PERSIST ───────────────────────────────────────────
-  if(regIdx >= 0){
+  try {
+    // Validate regIdx
+    if(regIdx < 0 || !DV.registros[regIdx]){
+      throw new Error('regIdx inválido: '+regIdx+' | registros.length='+DV.registros.length);
+    }
+
+    // Validate fotos are serializable
+    const badFotos = fotos.filter(f=>!(typeof f==='string'&&f.startsWith('data:')));
+    if(badFotos.length) console.warn('[dvIncGuardar] Fotos no serializables removidas:', badFotos.length);
+
+    console.log('[dvIncGuardar] regIdx='+regIdx, 'incRecords='+incRecords.length, 'fotos='+fotos.length);
+
     if(!DV.registros[regIdx].incidencias) DV.registros[regIdx].incidencias = [];
     incRecords.forEach(inc => DV.registros[regIdx].incidencias.push(inc));
+
+    console.log('[dvIncGuardar] DV.registros[regIdx] after push:', JSON.stringify(DV.registros[regIdx]).slice(0,200));
+
+    // Save to localStorage IMMEDIATELY
+    const saved = dvSaveRegistros();
+    if(!saved) throw new Error('dvSaveRegistros falló — revisar consola');
+
     dvGuardarEnHistorial(DV.registros[regIdx], regIdx);
+
+    console.log('[dvIncGuardar] DV.historial entries:', DV.historial.length);
+
+    // Save to INC.registros
+    incRecords.forEach(inc => INC.registros.push(inc));
+    try{ localStorage.setItem('trx_inc_desc', JSON.stringify(INC.registros)); }catch(e){
+      console.error('[dvIncGuardar] INC save error:', e);
+    }
+
+    // Mark timestamp so applyRemoteData won't overwrite our fresh save
+    DV._lastSaveTs = Date.now();
+    fbSave();
+
+  } catch(err) {
+    console.error('[dvIncGuardar] ERROR GUARDANDO INCIDENCIA:', err.message, err);
+    alert('❌ Error al guardar incidencia:\n' + err.message + '\n\nRevisa la consola (F12) para más detalle.');
+    // Re-enable save button on error
+    const _sbErr = document.querySelector('#incDvModal .save-btn');
+    if(_sbErr){ _sbErr.removeAttribute('disabled'); _sbErr.style.opacity=''; }
+    return;
   }
-  incRecords.forEach(inc => INC_DESC.push(inc));
-  try{ localStorage.setItem('trx_inc_desc', JSON.stringify(INC_DESC)); }catch(e){}
-  fbSave();
   // Trigger Power Automate if configured
   if(PA_WEBHOOK_URL && regIdx>=0){
     const _paD = window._hdCache?.[Object.keys(window._hdCache||{}).pop()]||{};
@@ -4845,26 +4936,42 @@ function dvIncEditar(){
   }
 }
 function dvGuardarEnHistorial(reg, regIdx){
-  const todayKey = new Date().toLocaleDateString('es-MX');
-  // Find entry for today + same turno (turno can be empty string)
-  let entry = DV.historial.find(b => b._dayKey===todayKey && b.turno===(DV.turno||''));
-  if(!entry){
-    entry = {
-      _dayKey   : todayKey,
-      turno     : DV.turno||'',
-      sup       : DV.sup||'',
-      supNombre : SUPS[DV.sup]||DV.sup||'—',
-      fecha     : new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
-      registros : []
+  try {
+    if(!reg){ throw new Error('reg es undefined/null'); }
+    const todayKey = new Date().toLocaleDateString('es-MX');
+    let entry = DV.historial.find(b => b._dayKey===todayKey && b.turno===(DV.turno||''));
+    if(!entry){
+      entry = {
+        _dayKey   : todayKey,
+        turno     : DV.turno||'',
+        sup       : DV.sup||'',
+        supNombre : SUPS[DV.sup]||DV.sup||'—',
+        fecha     : new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
+        registros : []
+      };
+      DV.historial.push(entry);
+    }
+    const d = new Date();
+    // Deep copy + sanitize fotos
+    const snap = {
+      ...reg,
+      _dvIdx    : regIdx,
+      _ts       : d.getTime(),
+      _isoDate  : d.toISOString().slice(0,10),
+      incidencias: (reg.incidencias||[]).map(inc=>({
+        ...inc,
+        fotos: (inc.fotos||[]).filter(f=>typeof f==='string'&&f.startsWith('data:'))
+      }))
     };
-    DV.historial.push(entry);
+    const ei = entry.registros.findIndex(r=>r._dvIdx===regIdx);
+    if(ei>=0) entry.registros[ei]=snap;
+    else entry.registros.push(snap);
+    dvSaveHistorial();
+    console.log('[dvGuardarEnHistorial] saved — entry.registros:', entry.registros.length);
+  } catch(err) {
+    console.error('[dvGuardarEnHistorial] ERROR:', err.message, err);
+    throw err; // re-throw so dvIncGuardar catch sees it
   }
-  // Upsert by regIdx
-  const d=new Date(); const snap = {...reg, _dvIdx:regIdx, _ts:d.getTime(), _isoDate:d.toISOString().slice(0,10)};
-  const ei = entry.registros.findIndex(r=>r._dvIdx===regIdx);
-  if(ei>=0) entry.registros[ei]=snap;
-  else entry.registros.push(snap);
-  dvSaveHistorial();
 }
 
 // Guardar + abrir PDF en una acción
@@ -4930,10 +5037,27 @@ function dvIncBuildHTML(folio, emb, linea, placa, elab, skus, fotos, fecha){
 
   </tr>`).join('');
 
-  const fotosHTML = (fotos||[]).length ? `
-    <div class="foto-wrap">
-      ${(fotos||[]).map(f=>`<img src="${f}" style="width:100%;height:180px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;display:block">`).join('')}
-    </div>` : '';
+  // Deduplicate: only data: URIs, no blob/URLs
+  const _uniqueFotos=[...new Set((fotos||[]).filter(f=>typeof f==='string'&&f.startsWith('data:')))];
+  // Pages of 4 (2×2 grid)
+  const _photoPages=[];
+  for(let _i=0;_i<_uniqueFotos.length;_i+=4) _photoPages.push(_uniqueFotos.slice(_i,_i+4));
+  const fotosHTML = _photoPages.length ? _photoPages.map((_pg,_pi)=>`
+    <div style="${_pi>0?'page-break-before:always':''}">
+      <div style="background:#f1f5f9;padding:7px 14px;font-weight:700;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#334155;border-left:4px solid #D0DF00;margin-bottom:10px">
+        EVIDENCIAS FOTOGRÁFICAS${_pi>0?' (continuación)':' ('+_uniqueFotos.length+')'}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 4px">
+        ${_pg.map((_f,_fi)=>`
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:100%;height:250px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden">
+              <img src="${_f}" style="max-width:100%;max-height:250px;object-fit:contain;display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact" onerror="this.style.display='none'">
+            </div>
+            <span style="font-size:9px;color:#94a3b8">Foto ${_pi*4+_fi+1}</span>
+          </div>`).join('')}
+        ${_pg.length===1?'<div></div>':''}
+      </div>
+    </div>`).join('') : '';
 
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">
   <title>Reporte Incidencia ${folio}</title>
@@ -5054,7 +5178,6 @@ function dvIncBuildHTML(folio, emb, linea, placa, elab, skus, fotos, fecha){
   <div style="text-align:center;font-size:8.5px;color:#94a3b8;padding-top:8px">
     Reporte generado automáticamente — MACRO TOLUCA KCMX // TRAXION
   </div>
-  <scr'+'ipt>window.addEventListener("load",()=>{setTimeout(()=>window.print(),600);});</scr'+'ipt>
   </body></html>`;
 }
 
@@ -6100,8 +6223,9 @@ function fbSave(){
         sessionTurno: S.sessionTurno,
         sessionSup: S.sessionSup,
         // DV data for cross-device sync
-        dvRegistros: DV.registros,
-        dvHistorial: DV.historial,
+        // DV data: localStorage only (photos too large for Firebase, and per-device)
+        dvRegistros: [],  // not synced via Firebase — use localStorage
+        dvHistorial: [],  // not synced via Firebase — use localStorage
         dvTurno: DV.turno,
         dvSup: DV.sup,
         // INC data
@@ -6131,17 +6255,9 @@ function applyRemoteData(data){
   if(data.sessionTurno)   S.sessionTurno    = data.sessionTurno;
   if(data.sessionSup)     S.sessionSup      = data.sessionSup;
   // Sync DV and INC from other devices
-  if(data.dvRegistros)    DV.registros      = data.dvRegistros;
-  if(data.dvHistorial !== undefined && Array.isArray(data.dvHistorial)){
-    // Merge: keep local entries not in remote (preserve local history)
-    if(data.dvHistorial.length > 0){
-      DV.historial = data.dvHistorial;
-      try{ localStorage.setItem('trx_dv_historial',JSON.stringify(DV.historial)); }catch(e){}
-    } else if(DV.historial.length === 0){
-      DV.historial = data.dvHistorial; // accept empty only if local is also empty
-    }
-    // If remote is empty but local has data → keep local (don't overwrite)
-  }
+  // DV.registros/historial: localStorage only — never overwrite from Firebase
+  // (Firebase sends empty arrays since photos can't fit in 1MB limit)
+  // DV.historial: localStorage only (never overwrite from Firebase)
   if(data.dvTurno)        DV.turno          = data.dvTurno;
   if(data.dvSup)          DV.sup            = data.dvSup;
   if(data.incRegistros)   INC.registros     = data.incRegistros;
