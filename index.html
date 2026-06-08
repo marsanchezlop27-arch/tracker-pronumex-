@@ -578,10 +578,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
         <option value="nv">Fletes nuevos</option>
         <option value="li">Marcados listos</option>
       </select>
-      <select id="fEstop" onchange="render()">
-        <option value="">Todos los estatus op.</option>
-        <option>POR VERIFICAR</option><option>POR CARGAR</option><option>PENDIENTE</option><option>CARGADO</option>
-      </select>
+      <div id="fEstopWrap" style="position:relative;display:inline-block"><button id="fEstopBtn" onclick="dvToggleEstopDrop(event)" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;min-width:160px;text-align:left;display:flex;align-items:center;gap:6px;height:32px"><span id="fEstopLbl" style="flex:1">Todos los estatus op.</span><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M0 3l5 5 5-5z"/></svg></button><div id="fEstopDrop" style="display:none;position:absolute;top:100%;left:0;z-index:500;background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:6px;min-width:190px;box-shadow:0 4px 20px rgba(0,0,0,.4);margin-top:3px"><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px;white-space:nowrap"><input type="checkbox" value="POR VERIFICAR" onchange="dvEstopChange()"> POR VERIFICAR</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px;white-space:nowrap"><input type="checkbox" value="POR CARGAR" onchange="dvEstopChange()"> POR CARGAR</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px;white-space:nowrap"><input type="checkbox" value="PENDIENTE" onchange="dvEstopChange()"> PENDIENTE</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px;white-space:nowrap"><input type="checkbox" value="CARGADO" onchange="dvEstopChange()"> CARGADO</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px;white-space:nowrap"><input type="checkbox" value="EN PROCESO" onchange="dvEstopChange()"> EN PROCESO</label><div style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px"><button onclick="dvEstopClear()" style="background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;padding:2px 6px">✕ Limpiar</button></div></div></div>
       <select id="fTrans" onchange="render()">
         <option value="">Con y sin transporte</option>
         <option value="con">Con cortina (Rampa asignada)</option>
@@ -976,7 +973,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
-const S = { rows:[], buf:{}, sc:'ci', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[] };
+const S = { rows:[], buf:{}, sc:'', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[] };
 
 // ─── HISTORIAL PERSISTENTE (localStorage) ────────────────────────────────────
 
@@ -1007,6 +1004,7 @@ function autoSaveVerifHistorial(){
     const snap = {
       emb:r.emb, nom:r.nom, sem:r.sem,
       verif:r.verif||'', monta:r.monta||'',
+      precarga:r.precarga||'',
       estop:r.estop||'', pt:r.pt||'',
       fecha:hora, ts:now.getTime()
     };
@@ -1172,17 +1170,27 @@ function toggleCarga(){
 }
 
 function updateTopbarSup(){
-  const turnoLbl=['','1er turno (06-14h)','2do turno (14-21:30h)','3er turno (21:30-06h)'];
-  const supNombre=SUPS[S.sessionSup]||'';
-  const tl=turnoLbl[parseInt(S.sessionTurno)||1]||'';
-  g('topbarSup').textContent=supNombre?`${supNombre}  ·  ${tl}`:tl;
+  // Re-detect turno from current hour every call
+  const _h=new Date().getHours()*60+new Date().getMinutes();
+  const _t = _h>=360&&_h<840?'1':_h>=840&&_h<1290?'2':'3';
+  if(!S.sessionTurno || S.sessionTurno!==_t) S.sessionTurno=_t;
+  const turnoLbl=['','1er Turno (06:00–14:00)','2do Turno (14:00–21:30)','3er Turno (21:30–06:00)'];
+  const supNombre=SUPS[S.sessionSup]||S.sessionSup||'';
+  const tl=turnoLbl[parseInt(_t)]||'';
+  const el=g('topbarSup'); if(el) el.textContent=supNombre?supNombre+' · '+tl:tl;
+  console.log('[TURNO] Detected T'+_t+' at '+new Date().toLocaleTimeString());
 }
 
-// Auto-detect turno on load
+// Auto-detect turno on load + refresh every minute
 (function(){
-  const tot=new Date().getHours()*60+new Date().getMinutes();
-  S.sessionTurno = tot>=360&&tot<840?'1':tot>=840&&tot<1290?'2':'3';
-  updateTopbarSup();
+  const detectTurno=()=>{
+    const tot=new Date().getHours()*60+new Date().getMinutes();
+    const t=tot>=360&&tot<840?'1':tot>=840&&tot<1290?'2':'3';
+    S.sessionTurno=t;
+    updateTopbarSup();
+  };
+  detectTurno();
+  setInterval(detectTurno, 60000); // update every minute
 })();
 
 // ─── LIVE TICKER — runs every second ─────────────────────────────────────────
@@ -1440,14 +1448,31 @@ function patchDetPtr(){
     const k = nk(fc(r,['No. Embarque','embarque','Embarque']));
     if(k) ptrMap[k] = r;
   });
+  // Trace log for emb 1570985
+  const _pre1570985 = S.rows.find(r=>String(r.emb)==='1570985');
+  console.log('[TRACE 1570985 BEFORE patchDetPtr]',_pre1570985?{emb:_pre1570985.emb,estop:_pre1570985.estop,pc:_pre1570985.pc}:'NOT IN S.rows');
   S.rows.forEach(r=>{
     const D = detMap[r.emb] || comMap[r.emb] || {};
     if(Object.keys(D).length){
       const pc = pct(fc(D,['% Carga','%Carga','carga']));
-      if(pc >= 100){ r._rm = true; return; }
-      r.pt = pct(fc(D,['% Tareas','%Tareas','tareas']));
-      r.pr = pct(fc(D,['% Restos','%Restos','restos']));
-      r.pc = pc;
+      // pc=100: keep visible, set estop=CARGADO automatically
+      if(pc >= 100){
+        r.pc = 100;
+        r.pt = pct(fc(D,['% Tareas','%Tareas','tareas']));
+        r.pr = pct(fc(D,['% Restos','%Restos','restos']));
+        r.tra = fc(D,['Transportista','Unidad'])||r.tra;
+        r.con = fc(D,['Cortina','cortina'])||r.con;
+        if(r.estop !== 'CARGADO'){
+          r.estop = 'CARGADO';
+          if(!S.userEdits[r.emb]) S.userEdits[r.emb]={};
+          S.userEdits[r.emb].estop = 'CARGADO';
+        }
+        if(String(r.emb)==='1570985') console.log('[TRACE 1570985 pc=100] keeping visible, estop=CARGADO');
+      } else {
+        r.pt = pct(fc(D,['% Tareas','%Tareas','tareas']));
+        r.pr = pct(fc(D,['% Restos','%Restos','restos']));
+        r.pc = pc;
+      }
       r.tr = fc(D,['T. Restos','T.Restos'])||r.tr;
       r.ar = fc(D,['A. Restos','A.Restos'])||r.ar;
       r.tra = fc(D,['Transportista','Unidad'])||r.tra;
@@ -1460,11 +1485,15 @@ function patchDetPtr(){
       r.res = fc(P,['Restos','restos'])||r.res;
     }
     const ue = S.userEdits[r.emb]||{};
-    ['estop','monta','verif','precarga','com','prio','prioNum','con'].forEach(f=>{
+    // Restore operational fields — com always from DETALLE, not from userEdits
+    ['estop','monta','verif','precarga','prio','prioNum','con'].forEach(f=>{
       if(ue[f] !== undefined) r[f] = ue[f];
     });
+    // com is already set from fc(D,['Comentarios:',...]) above
   });
-  S.rows = S.rows.filter(r => !r._rm);
+  // _rm filter removed — 100% fletes are kept visible with estop=CARGADO
+  const _post1570985 = S.rows.find(r=>String(r.emb)==='1570985');
+  console.log('[TRACE 1570985 AFTER patchDetPtr]',_post1570985?{emb:_post1570985.emb,estop:_post1570985.estop,pc:_post1570985.pc}:'NOT IN S.rows — DISAPPEARED HERE');
   kpi(); render(); alerts(); badge();
   if(typeof kpiVerif==='function') kpiVerif();
   ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
@@ -1633,7 +1662,27 @@ function build(){
     });
     // Restore saved edits (precarga, monta, verif, etc.)
     const saved=S.userEdits[k];
-    if(saved){ Object.assign(S.rows[S.rows.length-1], saved); }
+    if(saved){
+      // Restore operational fields from userEdits (manual assignments persist)
+      // estop is restored EXACTLY as saved — no automatic changes
+      const {com:_savedCom, ...savedWithoutCom} = saved;
+      Object.assign(S.rows[S.rows.length-1], savedWithoutCom);
+    }
+    // ESTOP TRACE LOG — shows exactly where CARGADO comes from
+    const _row = S.rows[S.rows.length-1];
+    const _hist = (S.turnoHistorial||[]).flatMap(h=>h.fletes||[]).find(f=>f.emb===k);
+    if(_row.estop==='CARGADO'||_row.estop==='POR CARGAR'){
+      console.log('[ESTOP TRACE]',{
+        emb:k,
+        savedEstop:saved?.estop,
+        histEstop:_hist?.estop,
+        finalEstop:_row.estop,
+        sourceIsUserEdits: !!saved?.estop,
+        sourceIsHist: !saved?.estop && !!_hist?.estop
+      });
+    }
+    // com (comentarios) ALWAYS comes from DETALLE file — never from userEdits
+    // Already set from fc(D,['Comentarios:',...]) in S.rows.push above — no override needed
     // ALWAYS re-apply con from DETALLE — file wins over saved edits
     const _con = getCortina(D);
     S.rows[S.rows.length-1].con = _con; // '' if no DI in DETALLE
@@ -1861,7 +1910,8 @@ function applyNew(){
       com:saved.com||fc(D,['Comentarios:','Comentarios','comentarios','comentario'])||'',
       tu:turno, al:'', est:'NUEVO',
       precarga:saved.precarga||'', monta:saved.monta||'',
-      estop:saved.estop||'', prio:saved.prio||false,
+      estop:saved.estop||'', // restore exactly as saved — no automatic changes
+      prio:saved.prio||false,
       _wmsMatch:!!wmsEmb, _wmsEmb:wmsEmb
     });
     nv++;
@@ -1873,8 +1923,16 @@ function applyNew(){
     if(!newMap[ex.emb] && ex.est!=='NUEVO') return false; // not in new semaforo
     const D=S.detMap?.[ex.emb]||S.comMap?.[ex.emb]||{};
     const pc=pct(fc(D,['% Carga','%Carga','carga']));
-    if(pc===100) return false; // executed → hide
-    return true;
+    // When % Carga = 100 → mark as CARGADO but keep visible in tracker
+    if(pc===100){
+      ex.pc=100;
+      if(ex.estop!=='CARGADO'){
+        ex.estop='CARGADO';
+        if(!S.userEdits[ex.emb]) S.userEdits[ex.emb]={};
+        S.userEdits[ex.emb].estop='CARGADO';
+      }
+    }
+    return true; // always keep flete visible
   });
   drop=beforeCount-S.rows.length;
 
@@ -2014,9 +2072,18 @@ function sortedForPosition(arr){
 // ─── SORT ─────────────────────────────────────────────────────────────────────
 function sort(th){
   const c=th.dataset.c;
-  if(S.sc===c) S.sa=!S.sa; else{S.sc=c;S.sa=true;}
-  document.querySelectorAll('thead th').forEach(t=>t.classList.remove('asc','desc'));
-  th.classList.add(S.sa?'asc':'desc');
+  if(S.sc===c && !S.sa){
+    // Third click = reset to original order
+    S.sc=''; S.sa=true;
+    document.querySelectorAll('thead th').forEach(t=>t.classList.remove('asc','desc'));
+  } else if(S.sc===c){
+    S.sa=false;
+    th.classList.remove('asc'); th.classList.add('desc');
+  } else {
+    S.sc=c; S.sa=true;
+    document.querySelectorAll('thead th').forEach(t=>t.classList.remove('asc','desc'));
+    th.classList.add('asc');
+  }
   render();
 }
 
@@ -2058,7 +2125,11 @@ function render(){
   const ft=g('fTur')?.value||'';
   const fe=g('fEst')?.value||'';
   const ftr=g('fTrans')?.value||'';
-  const festop=g('fEstop')?.value||'';
+  // Read multi-select estop checkboxes
+  const festop=(()=>{
+    const boxes=document.querySelectorAll('#fEstopDrop input[type=checkbox]:checked');
+    return boxes.length?[...boxes].map(b=>b.value):[];
+  })();
 
   let rows=S.rows.filter(r=>{
     if(q&&!r.emb.toLowerCase().includes(q)&&!r.nom.toLowerCase().includes(q)) return false;
@@ -2069,7 +2140,7 @@ function render(){
     if(fe==='li'&&r.est!=='LISTO') return false;
     if(ftr==='con'&&!hasTrans(r)) return false;
     if(ftr==='sin'&&hasTrans(r)) return false;
-    if(festop&&r.estop!==festop) return false;
+    if(festop.length && !festop.includes(r.estop)) return false;
     return true;
   });
 
@@ -2077,22 +2148,22 @@ function render(){
   const prioRows = rows.filter(r=>r.prio).sort((a,b)=>(a.prioNum||999)-(b.prioNum||999));
   const normalRows = rows.filter(r=>!r.prio);
 
-  normalRows.sort((a,b)=>{
-    const pa=semPri(a),pb=semPri(b);
-    if(pa!==pb) return pa-pb;
-    if(pa===2&&pb===2){
-      const da=new Date(a.ci), db=new Date(b.ci);
-      if(!isNaN(da)&&!isNaN(db)) return da-db;
-    }
-    return (a.semOrder||0)-(b.semOrder||0);
-    const c=S.sc;
-    let av=a[c],bv=b[c];
-    if(av===''||av===null) av=S.sa?'\uFFFF':'';
-    if(bv===''||bv===null) bv=S.sa?'\uFFFF':'';
-    if(!isNaN(parseFloat(av))&&!isNaN(parseFloat(bv)))
-      return S.sa?parseFloat(av)-parseFloat(bv):parseFloat(bv)-parseFloat(av);
-    return S.sa?String(av).localeCompare(String(bv),'es'):String(bv).localeCompare(String(av),'es');
-  });
+  if(S.sc){
+    // User explicitly sorted by a column — respect that
+    normalRows.sort((a,b)=>{
+      const c=S.sc;
+      let av=a[c],bv=b[c];
+      if(av===''||av===null) av=S.sa?'\uFFFF':'';
+      if(bv===''||bv===null) bv=S.sa?'\uFFFF':'';
+      if(!isNaN(parseFloat(av))&&!isNaN(parseFloat(bv)))
+        return S.sa?parseFloat(av)-parseFloat(bv):parseFloat(bv)-parseFloat(av);
+      return S.sa?String(av).localeCompare(String(bv)):String(bv).localeCompare(String(av));
+    });
+  } else {
+    // No column selected — preserve original file order (semOrder)
+    normalRows.sort((a,b)=>(a.semOrder||0)-(b.semOrder||0));
+  }
+
 
   // Splice priority rows into their exact requested positions (1-based)
   // Insert from lowest prioNum to highest to maintain relative order
@@ -2126,7 +2197,7 @@ function render(){
     const restHtml = trN===null||trN===0
       ? '<span style="color:var(--text3);font-size:10px">N/A</span>'
       : restante===0
-        ? '<span class="b bg" style="font-size:8px;padding:1px 5px">Completo</span>'
+        ? '<span class="b bg" style="font-size:8px;padding:1px 5px">✓ Listo</span>'
         : `<div style="display:flex;align-items:center;gap:5px">
              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#FCD34D">${restante}</span>
              <span class="b ba" style="font-size:8px;padding:1px 5px">Pendiente</span>
@@ -2232,6 +2303,7 @@ function render(){
 
   const nn=rows.filter(r=>r.est==='NUEVO').length;
   const nFuera=rows.filter(r=>semPri(r)===1).length;
+  const na=rows.filter(r=>r.al&&r.al!=='').length;
   const nCon=rows.filter(r=>hasTrans(r)).length;
   const nSin=rows.filter(r=>!hasTrans(r)).length;
   g('tf').innerHTML=
@@ -2906,7 +2978,7 @@ function renderClientes(){
     const gPickComp=fl.filter(r=>{const tr=parseFloat(r.tr)||0,ar=parseFloat(r.ar)||0;return tr>0&&Math.max(0,tr-ar)===0;}).length;
     const gPickNA=fl.filter(r=>!r.tr||parseFloat(r.tr)===0).length;
 
-    const pickVal=gPick>0?gPick.toLocaleString('es-MX'):(gPickNA===fl.length?'N/A':'Completo');
+    const pickVal=gPick>0?gPick.toLocaleString('es-MX'):(gPickNA===fl.length?'N/A':'✓ Listo');
     const pickClr=gPick>0?'var(--amber)':'var(--green)';
 
     const fleteRows=fl.map(r=>{
@@ -3827,6 +3899,8 @@ function switchView(v){
     }
   }
 }
+window._switchViewOriginal = switchView;
+
 
 // ─── COLUMN VISIBILITY (nth-child CSS injection) ─────────────────────────────
 const hiddenCols = new Set();
@@ -5217,6 +5291,12 @@ function dvRender(){
   g('dv-montas').textContent   = new Set(regs.map(r=>r.monta).filter(Boolean)).size;
   g('dv-cortinas').textContent = new Set(regs.map(r=>r.cortina).filter(Boolean)).size;
 
+  // Auto-detect current turno if not set
+  if(!DV.turno){
+    const _tot=new Date().getHours()*60+new Date().getMinutes();
+    DV.turno = _tot>=360&&_tot<840?'1':_tot>=840&&_tot<1290?'2':'3';
+    dvSaveRegistros();
+  }
   const turnoOpts = ['<option value="">— Turno —</option>',
     '<option value="1"'+(DV.turno==='1'?' selected':'')+'>1er turno — 06:00–14:00</option>',
     '<option value="2"'+(DV.turno==='2'?' selected':'')+'>2do turno — 14:00–21:30</option>',
@@ -5624,6 +5704,31 @@ function renderDescargas(){
 let filtroPrio = false;
 let mostrarCargados = false;
 
+// ── Multi-select Estop filter helpers ──────────────────────────
+function dvToggleEstopDrop(e){
+  e.stopPropagation();
+  const d=g('fEstopDrop');
+  d.style.display=d.style.display==='none'?'block':'none';
+}
+function dvEstopChange(){
+  const boxes=[...document.querySelectorAll('#fEstopDrop input[type=checkbox]:checked')];
+  const lbl=g('fEstopLbl');
+  if(lbl) lbl.textContent=boxes.length?boxes.map(b=>b.value).join(', '):'Todos los estatus op.';
+  render();
+}
+function dvEstopClear(){
+  document.querySelectorAll('#fEstopDrop input[type=checkbox]').forEach(b=>b.checked=false);
+  const lbl=g('fEstopLbl'); if(lbl) lbl.textContent='Todos los estatus op.';
+  g('fEstopDrop').style.display='none';
+  render();
+}
+// Close dropdown when clicking outside
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#fEstopWrap')){
+    const d=g('fEstopDrop'); if(d) d.style.display='none';
+  }
+});
+
 function toggleFiltroPrio(){
   filtroPrio = !filtroPrio;
   const btn = g('fRsPrio');
@@ -5736,7 +5841,7 @@ function renderResumen(){
     const pendPickHtml = pendPick===null
       ? '<span style="color:var(--text3);font-size:10px">N/A</span>'
       : pendPick===0
-        ? '<span class="b bg" style="font-size:9px">Completo</span>'
+        ? '<span class="b bg" style="font-size:9px">✓ Listo</span>'
         : `<span style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--amber)">${pendPick.toLocaleString('es-MX')}</span>`;
 
     // Pendiente Tarea
@@ -5826,7 +5931,7 @@ function exportResumen(){
   const d=rows.map(r=>{
     const trV=parseFloat(r.tr), arV=parseFloat(r.ar)||0;
     const pendPick=(!r.tr||isNaN(trV)||trV===0)?'N/A':Math.max(0,trV-arV).toString();
-    const pendTarea=(parseFloat(r.pal)||0)===0?'N/A':r.pt===null||r.pt<100?(100-(r.pt||0))+'%':'Completo';
+    const pendTarea=(parseFloat(r.pal)||0)===0?'N/A':r.pt===null||r.pt<100?(100-(r.pt||0))+'%':'Listo';
     return [r.prio?'⭐ PRIORIDAD':'',r.emb,r.nom,r.sem,r.precarga,r.estop,pendPick,pendTarea,String(r.com||'').replace(/,/g,';')];
   });
   const csv=[h,...d].map(r=>r.map(v=>`"${v??''}"`).join(',')).join('\n');
@@ -5936,7 +6041,7 @@ function generarReporte(){
         <td style="text-align:center;font-family:'IBM Plex Mono',monospace;font-weight:700">${m.totalFletes}</td>
         <td style="text-align:center;color:var(--green);font-weight:700;font-family:'IBM Plex Mono',monospace">${m.cargados}</td>
         <td style="text-align:center;color:var(--purple);font-weight:700;font-family:'IBM Plex Mono',monospace">${m.tareasComp}</td>
-        <td style="text-align:center;color:${m.pickingPend>0?'var(--amber)':'var(--green)'};font-weight:700;font-family:'IBM Plex Mono',monospace">${m.pickingPend>0?m.pickingPend.toLocaleString('es-MX'):'✓ Completo'}</td>
+        <td style="text-align:center;color:${m.pickingPend>0?'var(--amber)':'var(--green)'};font-weight:700;font-family:'IBM Plex Mono',monospace">${m.pickingPend>0?m.pickingPend.toLocaleString('es-MX'):'✓ Listo'}</td>
       </tr>`).join('')}</tbody>
     </table>
   </div>` : `<div class="rep-section"><div class="rep-section-ttl">Productividad por montacarguista</div><p style="font-size:12px;color:var(--text3);padding:8px 0">Sin asignaciones de montacarguista registradas aún.</p></div>`;
@@ -5986,7 +6091,7 @@ function generarReporte(){
         const mn=MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta||'—';
         const trN=parseFloat(r.tr)||0,arN=parseFloat(r.ar)||0;
         const noP=(r.tr===''||r.tr===null||parseFloat(r.tr)===0);
-        const pickTxt=noP?'N/A':Math.max(0,trN-arN)===0?'✓ Completo':Math.max(0,trN-arN).toLocaleString('es-MX');
+        const pickTxt=noP?'N/A':Math.max(0,trN-arN)===0?'✓ Listo':Math.max(0,trN-arN).toLocaleString('es-MX');
         const pickClr=noP?'var(--text3)':Math.max(0,trN-arN)===0?'var(--green)':'var(--amber)';
         const estClr=r.estop==='CARGADO'?'var(--green)':r.estop==='EN PROCESO'?'var(--amber)':r.estop==='PENDIENTE'?'var(--purple)':'var(--text3)';
         return `<tr>
@@ -6283,49 +6388,20 @@ let fbUnsubscribe = null;
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
 const ADMIN_EMAILS = ['admin@pronumex.com', 'marsanchezlop27@gmail.com'];
 let currentUserEmail = '';
+let fbIsAdmin = false;
+let fbIsDocumentador = false;
 
-function applyAdminUI(){
-  const banner = g('viewerBanner');
-  banner.classList.remove('hidden');
-  banner.style.cssText = 'background:rgba(139,92,246,.12);border-bottom:1px solid rgba(139,92,246,.3);padding:6px 20px;font-size:11.5px;color:#C4B5FD;display:flex;align-items:center;gap:8px';
-  g('viewerMsg').innerHTML = '<strong>⚙ Admin:</strong> ' + currentUserEmail + ' — edición habilitada';
-  document.body.classList.remove('guest-mode');
-  document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
-  document.querySelectorAll('.tab').forEach(el => el.classList.remove('hidden'));
-  // Restore ALL vsw buttons
-  ['vsw-emb','vsw-desc','vsw-hist','vsw-inc'].forEach(id=>{
-    const el=g(id); if(el) el.style.display='';
-  });
-  // Restore hist sub-tabs
-  ['htab-emb','htab-desc','htab-vf'].forEach(id=>{
-    const el=g(id); if(el) el.style.display='';
-  });
-  // Show Embarques view
-  ['view-emb','view-desc','view-inc','view-hist'].forEach(id=>{
-    const el=g(id);
-    if(el) el.classList.toggle('hidden', id!=='view-emb');
-  });
-  document.querySelectorAll('.vsw-btn').forEach(b=>{
-    b.classList.toggle('active', b.id==='vsw-emb');
-  });
-  // Show tabs and KPI row immediately
-  ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
-    const el=g(id); if(el) el.classList.remove('hidden');
-  });
-  // Render from localStorage IMMEDIATELY — don't wait for Firebase
-  
 function _restoreFromStorage(){
-  if(S.rows && S.rows.length) return;
+  if(S.rows&&S.rows.length) return;
   try{
-    const saved = localStorage.getItem('trx_state');
-    if(saved){
-      const p = JSON.parse(saved);
-      if(p.rows && p.rows.length){
-        S.rows = p.rows;
-        if(p.userEdits) S.userEdits = p.userEdits;
-        if(p.sessionTurno) S.sessionTurno = p.sessionTurno;
-        if(p.sessionSup) S.sessionSup = p.sessionSup;
-        if(p.turnoHistorial) S.turnoHistorial = p.turnoHistorial;
+    const saved=localStorage.getItem('trx_state');
+    if(saved){ const p=JSON.parse(saved);
+      if(p.rows&&p.rows.length){
+        S.rows=p.rows;
+        if(p.userEdits) S.userEdits=p.userEdits;
+        if(p.sessionTurno) S.sessionTurno=p.sessionTurno;
+        if(p.sessionSup) S.sessionSup=p.sessionSup;
+        if(p.turnoHistorial) S.turnoHistorial=p.turnoHistorial;
         console.log('[restore] '+S.rows.length+' rows from localStorage');
       }
     }
@@ -6333,7 +6409,7 @@ function _restoreFromStorage(){
   try{
     const dv=localStorage.getItem('trx_dv_registros');
     if(dv){ const d=JSON.parse(dv);
-      if(d&&Array.isArray(d.registros)){ DV.registros=d.registros; DV.turno=d.turno||''; DV.sup=d.sup||''; }
+      if(d&&Array.isArray(d.registros)){DV.registros=d.registros;DV.turno=d.turno||'';DV.sup=d.sup||'';}
     }
   }catch(e){}
   try{
@@ -6345,18 +6421,41 @@ function _restoreFromStorage(){
     if(inc){ const d=JSON.parse(inc); if(Array.isArray(d)) INC.registros=d; }
   }catch(e){}
 }
-
-_restoreFromStorage();
+function applyAdminUI(){
+  const banner=g('viewerBanner');
+  banner.classList.remove('hidden');
+  banner.style.cssText='background:rgba(139,92,246,.12);border-bottom:1px solid rgba(139,92,246,.3);padding:6px 20px;font-size:11.5px;color:#C4B5FD;display:flex;align-items:center;gap:8px';
+  g('viewerMsg').innerHTML='<strong>\u2699 Admin:</strong> '+currentUserEmail+' \u2014 edici\u00f3n habilitada';
+  document.body.classList.remove('guest-mode');
+  if(window._switchViewOriginal) window.switchView=window._switchViewOriginal;
+  document.querySelectorAll('.admin-only').forEach(el=>el.classList.remove('hidden'));
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('hidden'));
+  ['vsw-emb','vsw-desc','vsw-hist','vsw-inc'].forEach(id=>{
+    const el=g(id); if(el){el.style.display='';el.style.visibility='';}
+  });
+  ['htab-emb','htab-desc','htab-vf'].forEach(id=>{
+    const el=g(id); if(el) el.style.display='';
+  });
+  ['view-emb','view-desc','view-inc','view-hist'].forEach(id=>{
+    const el=g(id); if(el) el.classList.toggle('hidden',id!=='view-emb');
+  });
+  document.querySelectorAll('.vsw-btn').forEach(b=>{
+    b.classList.toggle('active',b.id==='vsw-emb');
+  });
+  ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
+    const el=g(id); if(el) el.classList.remove('hidden');
+  });
+  console.log('[ROLE] applyAdminUI done fbIsAdmin='+fbIsAdmin);
+  console.log('[UI CHECK]',{
+    admin:fbIsAdmin, documentador:fbIsDocumentador,
+    embarques:g('vsw-emb')&&!g('vsw-emb').classList.contains('hidden')&&g('vsw-emb').style.display!=='none',
+    descargas:g('vsw-desc')&&!g('vsw-desc').classList.contains('hidden')&&g('vsw-desc').style.display!=='none',
+    historico:g('vsw-hist')&&!g('vsw-hist').classList.contains('hidden')&&g('vsw-hist').style.display!=='none',
+    incidencias:g('vsw-inc')&&!g('vsw-inc').classList.contains('hidden')&&g('vsw-inc').style.display!=='none'
+  });
+  _restoreFromStorage();
   if(S.rows&&S.rows.length){
-    requestAnimationFrame(()=>{
-      kpi(); render(); alerts(); badge();
-    });
-  } else {
-    // No local data — show the load panel
-    const panelCarga=g('panelCarga');
-    if(panelCarga) panelCarga.classList.remove('hidden');
-    const cargaBody=g('cargaBody');
-    if(cargaBody) cargaBody.classList.remove('hidden');
+    requestAnimationFrame(()=>{ kpi(); render(); alerts(); badge(); });
   }
 }
 
@@ -6463,21 +6562,33 @@ function applyDocumentadorUI(){
   const htabVf2=g('htab-vf');   if(htabVf2)  htabVf2.style.display='none';
 }
 
+let _authApplied = false;
+let _authCallCount = 0;
+let _syncCallCount = 0;
+let _listenerCount = 0;
 waitForFB(()=>{
-  FB.onAuth(async (user) => {
+FB.onAuth(async (user) => {
+    _authCallCount++;
+    console.log('[AUTH] onAuthStateChanged #'+_authCallCount+' user='+(user?user.email:'null')+' _authApplied='+_authApplied);
     if(!user){
+      _authApplied = false;
       g('loginModal').classList.remove('hidden');
       return;
     }
     currentUserEmail = user.email || '';
     fbIsAdmin = ADMIN_EMAILS.includes(currentUserEmail);
+    console.log('[ROLE]',{email:user.email,fbIsAdmin:fbIsAdmin,fbIsDocumentador:fbIsDocumentador});
     g('loginModal').classList.add('hidden');
-    if(fbIsAdmin){
-      applyAdminUI();
-    } else {
-      applyGuestUI();
+    // Only apply UI once per login session — token refreshes don't re-apply
+    if(!_authApplied){
+      _authApplied = true;
+      if(fbIsAdmin){
+        applyAdminUI();
+      } else {
+        applyGuestUI();
+      }
+      startSync();
     }
-    startSync();
   });
 });
 
@@ -6545,6 +6656,7 @@ function fbSave(){
 }
 
 function applyRemoteData(data){
+  console.log('[DATA] applyRemoteData fbIsAdmin='+fbIsAdmin+' fbIsDoc='+fbIsDocumentador+' rows='+(data.rows?data.rows.length:0));
   if(data.rows)           S.rows           = data.rows;
   if(data.userEdits)      S.userEdits       = data.userEdits;
   if(data.turnoHistorial) S.turnoHistorial  = data.turnoHistorial;
@@ -6587,16 +6699,8 @@ function applyRemoteData(data){
   });
   if(typeof updateTopbarSup==='function') updateTopbarSup();
 
-  if(!fbIsAdmin){
-    // GUEST: show only Resumen tab
-    ['tk','al','vf','dc','cl'].forEach(x=>{
-      const el=g('p-'+x); if(el) el.classList.add('hidden');
-    });
-    const rsEl=g('p-rs'); if(rsEl) rsEl.classList.remove('hidden');
-    document.querySelectorAll('.tab').forEach(t=>{
-      t.classList.toggle('active',(t.getAttribute('onclick')||'').includes("'rs'"));
-    });
-    // Render only what's visible — defer heavy renders
+  if(!fbIsAdmin && !fbIsDocumentador){
+    // GUEST only: update resumen data
     kpi(); badge();
     requestAnimationFrame(()=>{
       if(typeof renderResumen==='function') renderResumen();
@@ -6620,7 +6724,9 @@ function applyRemoteData(data){
 
 function startSync(){
   if(!window.FB) return;
-  if(fbUnsubscribe){ fbUnsubscribe(); fbUnsubscribe=null; }
+  _syncCallCount++; _listenerCount++;
+  console.log('[SYNC] startSync #'+_syncCallCount+' listeners='+_listenerCount);
+  if(fbUnsubscribe){ fbUnsubscribe(); fbUnsubscribe=null; _listenerCount--; }
   const dot = document.getElementById('syncDot');
   if(dot){ dot.style.background='var(--amber)'; dot.title='Conectando...'; }
   const ref = FB.doc(FB.db, 'tracker', DOC_ID);
