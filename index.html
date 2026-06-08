@@ -518,8 +518,9 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <!-- KPI -->
   <div class="kpis hidden" id="kRow">
     <div class="kpi kt"><div class="kpi-v" id="kT">0</div><div class="kpi-l">Total fletes</div></div>
-    <div class="kpi" style="border-top:2px solid var(--green)"><div class="kpi-v" id="kConTrans" style="color:var(--green)">0</div><div class="kpi-l">Con cortina</div></div>
-    <div class="kpi" style="border-top:2px solid var(--red)"><div class="kpi-v" id="kSinTrans" style="color:var(--red)">0</div><div class="kpi-l">Sin cortina</div></div>
+    <div class="kpi" style="border-top:2px solid var(--green)"><div class="kpi-v" id="kConTrans" style="color:var(--green)">0</div><div class="kpi-l">Con transporte</div></div>
+    <div class="kpi" style="border-top:2px solid var(--red)"><div class="kpi-v" id="kSinTrans" style="color:var(--red)">0</div><div class="kpi-l">Sin transporte</div></div>
+    <div class="kpi" style="border-top:2px solid var(--green)"><div class="kpi-v" id="kCargado" style="color:var(--green)">0</div><div class="kpi-l">Cargado</div></div>
     <div class="kpi" style="border-top:2px solid var(--cyan)"><div class="kpi-v" id="kVerificados" style="color:var(--cyan)">0</div><div class="kpi-l">Verificados</div></div>
     <div class="kpi kf"><div class="kpi-v" id="kF">0</div><div class="kpi-l">Fuera de tiempo</div></div>
     <div class="kpi" style="border-top:2px solid var(--purple)"><div class="kpi-v" id="kTarea" style="color:var(--purple)">0</div><div class="kpi-l">Tareas faltantes</div></div>
@@ -578,7 +579,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
         <option value="nv">Fletes nuevos</option>
         <option value="li">Marcados listos</option>
       </select>
-      <div id="fEstopWrap" style="position:relative;display:inline-block"><button id="fEstopBtn" onclick="dvToggleEstopDrop(event)" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;min-width:150px;text-align:left;display:flex;align-items:center;gap:6px;height:30px"><span id="fEstopLbl" style="flex:1">Todos los estatus op.</span><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M0 3l5 5 5-5z"/></svg></button><div id="fEstopDrop" style="display:none;position:absolute;top:100%;left:0;z-index:500;background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:6px;min-width:190px;box-shadow:0 4px 20px rgba(0,0,0,.4);margin-top:3px"><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px"><input type="checkbox" value="POR VERIFICAR" onchange="dvEstopChange()"> POR VERIFICAR</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px"><input type="checkbox" value="POR CARGAR" onchange="dvEstopChange()"> POR CARGAR</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px"><input type="checkbox" value="PENDIENTE" onchange="dvEstopChange()"> PENDIENTE</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px"><input type="checkbox" value="CARGADO" onchange="dvEstopChange()"> CARGADO</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px"><input type="checkbox" value="EN PROCESO" onchange="dvEstopChange()"> EN PROCESO</label><div style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px"><button onclick="dvEstopClear()" style="background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;padding:2px 6px">x Limpiar</button></div></div></div>
+      <div id="fEstopWrap" style="position:relative;display:inline-block"><button id="fEstopBtn" onclick="dvToggleEstopDrop(event)" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;height:30px;white-space:nowrap">Estatus OP<span id="fEstopBadge" style="display:none;background:var(--brand);color:#000;border-radius:10px;padding:0 5px;font-size:9px;font-weight:700;line-height:16px"></span><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M0 3l5 5 5-5z"/></svg></button><div id="fEstopDrop" style="display:none;position:absolute;top:100%;left:0;z-index:500;background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:4px;min-width:160px;box-shadow:0 4px 20px rgba(0,0,0,.4);margin-top:3px"><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="POR VERIFICAR" onchange="dvEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> POR VERIFICAR</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="POR CARGAR" onchange="dvEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> POR CARGAR</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="PENDIENTE" onchange="dvEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> PENDIENTE</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="CARGADO" onchange="dvEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> CARGADO</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="EN PROCESO" onchange="dvEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> EN PROCESO</label><div style="border-top:1px solid var(--border);margin-top:3px;padding-top:3px;padding-left:4px"><button onclick="dvEstopClear()" style="background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;padding:2px 4px">✕ Limpiar todo</button></div></div></div>
       <select id="fTrans" onchange="render()">
         <option value="">Con y sin transporte</option>
         <option value="con">Con cortina (Rampa asignada)</option>
@@ -652,11 +653,12 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
           <option value="con">Con cortina</option>
           <option value="sin">Sin cortina</option>
         </select>
+      <div id="fRsEstopWrap" style="position:relative;display:inline-block;margin-left:4px"><button id="fRsEstopBtn" onclick="rsToggleEstopDrop(event)" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;height:30px;white-space:nowrap">Estatus OP<span id="fRsEstopBadge" style="display:none;background:var(--brand);color:#000;border-radius:10px;padding:0 5px;font-size:9px;font-weight:700;line-height:16px"></span><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M0 3l5 5 5-5z"/></svg></button><div id="fRsEstopDrop" style="display:none;position:absolute;top:100%;left:0;z-index:500;background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:4px;min-width:160px;box-shadow:0 4px 20px rgba(0,0,0,.4);margin-top:3px"><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;font-weight:600" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" id="fRsEstopAll" onchange="rsEstopAllChange(this)" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> Todos</label><div style="border-top:1px solid var(--border);margin:2px 0"></div><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="POR VERIFICAR" onchange="rsEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> POR VERIFICAR</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="POR CARGAR" onchange="rsEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> POR CARGAR</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="PENDIENTE" onchange="rsEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> PENDIENTE</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="CARGADO" onchange="rsEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> CARGADO</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="EN PROCESO" onchange="rsEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> EN PROCESO</label><div style="border-top:1px solid var(--border);margin-top:3px;padding-top:3px;padding-left:4px"><button onclick="rsEstopClear()" style="background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;padding:2px 4px">✕ Limpiar todo</button></div></div></div>
         <button class="btn" id="fRsPrio" onclick="toggleFiltroPrio()" style="gap:6px">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           Solo prioridad
         </button>
-        <button class="btn" id="fRsCargado" onclick="toggleMostrarCargados()" style="gap:6px">
+        <button class="btn" id="fRsCargado" onclick="toggleMostrarCargados()" style="gap:6px;background:rgba(16,185,129,.2);border-color:var(--green);color:var(--green)">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
           Mostrar cargados
         </button>
@@ -678,8 +680,8 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
           <th style="width:80px">Cortina</th>
           <th style="width:120px;color:var(--cyan)">Precarga</th>
           <th style="width:140px;color:var(--cyan)">Estatus op.</th>
-          <th style="width:110px;color:var(--amber)">Pend. Picking</th>
           <th style="width:110px;color:var(--purple)">Pend. Tarea</th>
+          <th style="width:110px;color:var(--amber)">Pend. Picking</th>
           <th style="min-width:150px">Comentarios</th>
         </tr></thead>
         <tbody id="rsTb"></tbody>
@@ -893,7 +895,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     </select>
     <select id="incFiltPeriodo" onchange="incRender()" class="edt-sel" style="height:30px;min-width:140px">
       <option value="turno">Este turno</option>
-      <option value="dia">Hoy</option>
+      <option value="dia" selected>Hoy</option>
       <option value="semana">Esta semana</option>
       <option value="mes">Este mes</option>
       <option value="todos">Todos</option>
@@ -1465,7 +1467,7 @@ function patchDetPtr(){
       r.tr = fc(D,['T. Restos','T.Restos'])||r.tr;
       r.ar = fc(D,['A. Restos','A.Restos'])||r.ar;
       r.tra = fc(D,['Transportista','Unidad'])||r.tra;
-      r.con = fc(D,['Cortina','cortina'])||r.con;
+      r.con = getCortina(D)||r.con; // convert DI-N → 'Rampa N'
       r.contenedor = fc(D,['# Contenedor','Contenedor'])||r.contenedor;
     }
     const P = ptrMap[r.emb] || {};
@@ -1475,9 +1477,14 @@ function patchDetPtr(){
     }
     const ue = S.userEdits[r.emb]||{};
     // Restore operational fields — com always from DETALLE, not from userEdits
-    ['estop','monta','verif','precarga','prio','prioNum','con'].forEach(f=>{
+    ['estop','monta','verif','precarga','prio','prioNum'].forEach(f=>{
       if(ue[f] !== undefined) r[f] = ue[f];
     });
+    // con: convert raw DI-N values from userEdits to 'Rampa N'
+    if(ue.con !== undefined){
+      r.con = (typeof fmtCortina==='function') ? fmtCortina(ue.con) : ue.con;
+      if(r.con==='—') r.con='';
+    }
     // com is already set from fc(D,['Comentarios:',...]) above
   });
   // _rm removed: all fletes kept, 100% auto-sets estop=CARGADO
@@ -1579,11 +1586,11 @@ function build(){
     const ptrKey = _wmsMatch ? _wmsEmb : k;
     const P = ptrMap[ptrKey] || ptrMap[k] || {};
 
-    // Hide if flete not found in Detalle at all (no longer active)
-    if(!Object.keys(D).length) return;
+    // Semaforo defines the list — keep ALL fletes regardless of Detalle
+    // D may be empty (flete not in Detalle) — still push with defaults
 
     const pcVal = pct(fc(D,['% Carga','%Carga','carga']));
-    if(pcVal===100) return; // 100% executed → hide
+    // pc=100: keep visible, mark CARGADO automatically
 
     S.rows.push({
       emb: k,
@@ -1663,7 +1670,15 @@ function build(){
     // ALWAYS re-apply con from DETALLE — file wins over saved edits
     const _con = getCortina(D);
     S.rows[S.rows.length-1].con = _con; // '' if no DI in DETALLE
-    if(!S.rows[S.rows.length-1].estop) S.rows[S.rows.length-1].estop='PENDIENTE';
+    // After push: auto-set CARGADO if pc=100
+    const _pushed = S.rows[S.rows.length-1];
+    if(pcVal!==null && pcVal>=100){
+      _pushed.estop='CARGADO';
+      if(!S.userEdits[k]) S.userEdits[k]={};
+      S.userEdits[k].estop='CARGADO';
+    } else if(!_pushed.estop){
+      _pushed.estop='PENDIENTE';
+    }
   });
 
   // Clear file slots after successful build
@@ -1870,8 +1885,7 @@ function applyNew(){
     const ptrKey=wmsEmb||k;
     const P=S.ptrMap?.[ptrKey]||S.ptrMap?.[k]||{};
     const pcVal=pct(fc(D,['% Carga','%Carga','carga']));
-    if(pcVal===100) return;
-    if(!Object.keys(D).length) return; // not in detalle → already executed
+    // Keep all new semaforo fletes — semaforo defines the list
     const saved=S.userEdits[k]||{};
     S.rows.push({
       emb:k, nom:fc(r,['Nombre','nombre'])||'',
@@ -1890,21 +1904,28 @@ function applyNew(){
       com:saved.com||fc(D,['Comentarios:','Comentarios','comentarios','comentario'])||'',
       tu:turno, al:'', est:'NUEVO',
       precarga:saved.precarga||'', monta:saved.monta||'',
-      estop:saved.estop||'', // restore exactly as saved — no automatic changes
+      estop:(pcVal!==null&&pcVal>=100)?'CARGADO':(saved.estop||''), // auto CARGADO if 100%
       prio:saved.prio||false,
       _wmsMatch:!!wmsEmb, _wmsEmb:wmsEmb
     });
     nv++;
   });
 
-  // 3. Remove fletes not in new semaforo, or completed (100% carga)
+  // 3. Remove fletes not in new semaforo (keep ALL including 100% carga)
   const beforeCount=S.rows.length;
   S.rows=S.rows.filter(ex=>{
     if(!newMap[ex.emb] && ex.est!=='NUEVO') return false; // not in new semaforo
+    // 100% carga: keep visible, set CARGADO (handled in patchDetPtr)
     const D=S.detMap?.[ex.emb]||S.comMap?.[ex.emb]||{};
     const pc=pct(fc(D,['% Carga','%Carga','carga']));
-    if(pc===100) return false; // executed → hide
-    return true;
+    if(pc!==null && pc>=100){
+      if(ex.estop!=='CARGADO'){
+        ex.estop='CARGADO';
+        if(!S.userEdits[ex.emb]) S.userEdits[ex.emb]={};
+        S.userEdits[ex.emb].estop='CARGADO';
+      }
+    }
+    return true; // always keep — semaforo defines the list
   });
   drop=beforeCount-S.rows.length;
 
@@ -2264,9 +2285,20 @@ function render(){
           📷 ${r.evidencias&&r.evidencias.length?r.evidencias.length+' foto'+(r.evidencias.length>1?'s':''):'+'}
         </button>
       </td>
-      <td><select class="edt-sel" onchange="upd(${idx},'estop',this.value)">${
-        ['','POR VERIFICAR','POR CARGAR','PENDIENTE','CARGADO'].map(v=>`<option value="${v}"${(r.estop||'PENDIENTE')===v?' selected':''}>${v||'— estatus —'}</option>`).join('')
-      }</select></td>
+      <td style="min-width:110px">
+        <select class="edt-sel" onchange="upd(${idx},'estop',this.value)"
+          style="height:26px;font-size:10px;font-weight:600;border-radius:5px;cursor:pointer;
+          ${(()=>{
+            const _emap={'POR VERIFICAR':'background:rgba(6,182,212,.18);color:#67E8F9;border:1px solid rgba(6,182,212,.3)',
+              'POR CARGAR':'background:rgba(253,186,116,.18);color:#FCA5A5;border:1px solid rgba(245,158,11,.3)',
+              'PENDIENTE':'background:rgba(139,92,246,.18);color:#C4B5FD;border:1px solid rgba(139,92,246,.3)',
+              'CARGADO':'background:rgba(16,185,129,.18);color:#6EE7B7;border:1px solid rgba(16,185,129,.3)',
+              'EN PROCESO':'background:rgba(245,158,11,.18);color:#FCD34D;border:1px solid rgba(245,158,11,.3)'};
+            return _emap[r.estop||'PENDIENTE']||'background:var(--card);color:var(--text3)';
+          })()}">${
+          ['','POR VERIFICAR','POR CARGAR','PENDIENTE','CARGADO','EN PROCESO'].map(v=>`<option value="${v}"${(r.estop||'PENDIENTE')===v?' selected':''}>${v||'— estatus —'}</option>`).join('')
+        }</select>
+      </td>
       <td style="min-width:120px;font-size:10px">${stateHtml||''}</td>
     </tr>`;
   }).join('');
@@ -2499,10 +2531,15 @@ function kpi(){
   g('kT').textContent=r.length;
   g('kF').textContent=r.filter(x=>(x.sem||'').includes('Fuera')).length;
 
-  // Con / Sin transporte
-  const conTrans=r.filter(x=>hasTrans(x)).length;
+  // Cargados (fletes finalizados)
+  const cargados=r.filter(x=>x.estop==='CARGADO'||x.pc===100).length;
+  if(g('kCargado')) g('kCargado').textContent=cargados;
+  // Con / Sin transporte — only pending fletes (exclude CARGADO)
+  const pendientes=r.filter(x=>x.estop!=='CARGADO'&&x.pc!==100);
+  const conTrans=pendientes.filter(x=>hasTrans(x)).length;
+  const sinTrans=pendientes.filter(x=>!hasTrans(x)).length;
   if(g('kConTrans')) g('kConTrans').textContent=conTrans;
-  if(g('kSinTrans')) g('kSinTrans').textContent=r.length-conTrans;
+  if(g('kSinTrans')) g('kSinTrans').textContent=sinTrans;
 
   // Verificados = estatus POR CARGAR o POR VERIFICAR
   const verificados=r.filter(x=>x.estop==='POR CARGAR'||x.estop==='POR VERIFICAR').length;
@@ -4216,12 +4253,12 @@ function incEliminarRegistro(id){
 
 function incRender(){
   const tipo=g('incFiltTipo')?.value||'';
-  const periodo=g('incFiltPeriodo')?.value||'turno';
+  const periodo=g('incFiltPeriodo')?.value||'dia'; // default: show today's records
   const now=new Date();
 
   let regs=[...INC.registros].sort((a,b)=>b.ts-a.ts);
   if(tipo) regs=regs.filter(r=>r.tipo===tipo);
-  if(periodo==='turno') regs=regs.filter(r=>r.turno===S.sessionTurno&&r.sup===S.sessionSup);
+  if(periodo==='turno') regs=regs.filter(r=>r.turno===S.sessionTurno); // removed sup filter — show all incidences for this shift
   else if(periodo==='dia') regs=regs.filter(r=>new Date(r.ts).toDateString()===now.toDateString());
   else if(periodo==='semana'){
     const w=new Date(now); w.setDate(w.getDate()-7);
@@ -4418,6 +4455,7 @@ function incExportar(){
 // State: current turn registros + closed historial
 const DV = {
   turno:'', sup:'',
+  _supSetByUser:false,  // true when user manually chose supervisor
   registros:[],   // current open turn
   historial:[]    // closed turns (persisted)
 };
@@ -4444,11 +4482,13 @@ function dvSaveHistorial(){
 }
 
 function dvSaveRegistros(){
+  DV._lastSaveTs = Date.now(); // guard: protect from Firebase overwrite
   try{
     localStorage.setItem('trx_dv_registros',JSON.stringify({
       registros: DV.registros,
       turno: DV.turno,
-      sup: DV.sup
+      sup: DV.sup,
+      _supSetByUser: DV._supSetByUser||false
     }));
   }catch(e){}
 }
@@ -4550,6 +4590,26 @@ function dvAgregar(){
     const card = g('dvList')?.querySelector('[data-dvreg="0"]');
     if(card) card.querySelector('input,select')?.focus();
   }, 60);
+}
+
+function dvEliminarIncidencia(i){
+  if(!confirm('¿Eliminar la incidencia registrada para este embarque? El registro de descarga se conserva.')) return;
+  const r = DV.registros[i];
+  if(!r) return;
+  const folios = (r.incidencias||[]).map(inc=>inc.folio).filter(Boolean);
+  // Remove from INC.registros by folio
+  if(folios.length){
+    INC.registros = INC.registros.filter(inc=>!folios.includes(inc.folio));
+    INC._lastSaveTs = Date.now();
+    try{ localStorage.setItem('trx_incidencias',JSON.stringify(INC.registros)); }catch(e){}
+  }
+  // Remove incidencias from this DV registro (keep the registro)
+  DV.registros[i] = {...r, incidencias:[]};
+  DV._lastSaveTs = Date.now();
+  dvSaveRegistros();
+  if(typeof fbSave==='function') fbSave();
+  dvRender();
+  if(typeof incRender==='function') incRender();
 }
 
 function dvEliminar(i){
@@ -5303,7 +5363,7 @@ function dvRender(){
             const isManual = DV.sup && !SUPS[DV.sup];
             const selVal = isManual ? "__manual__" : (DV.sup||"");
             return `<select class="edt-sel" id="dvSupSel"
-              onchange="if(this.value==='__manual__'){document.getElementById('dvSupManual').style.display='';document.getElementById('dvSupManual').focus();}else{DV.sup=this.value;dvSaveRegistros();dvRender();}"
+              onchange="if(this.value==='__manual__'){document.getElementById('dvSupManual').style.display='';document.getElementById('dvSupManual').focus();}else{DV.sup=this.value;DV._supSetByUser=true;dvSaveRegistros();dvRender();}"
               style="height:32px;min-width:160px">
               ${supOpts}
               <option value="__manual__"${isManual?' selected':''}>✏ Otro (escribir)...</option>
@@ -5312,7 +5372,7 @@ function dvRender(){
               placeholder="Tu nombre..." value="${isManual?es(DV.sup):''}"
               style="${isManual?'display:block':'display:none'};height:32px;min-width:150px;font-size:11px"
               onchange="DV.sup=this.value;dvSaveRegistros()"
-              onblur="if(this.value.trim()){DV.sup=this.value.trim();dvSaveRegistros();}">` ;
+              onblur="if(this.value.trim()){DV.sup=this.value.trim();DV._supSetByUser=true;dvSaveRegistros();}">` ;
           })()}
         </div></div>
       <button class="btn primary" onclick="dvAgregar()" style="height:32px">
@@ -5339,7 +5399,8 @@ function dvRender(){
                 <span style="font-size:10px;color:var(--text3);font-weight:600">Descarga #${i+1} · ${r.hora||''}</span>
                 <div style="display:flex;gap:4px">
                   <button onclick="dvIncidencia(${i})" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);border-radius:5px;cursor:pointer;font-size:10px;padding:2px 8px;font-weight:600" title="Registrar incidencia">⚠ Incidencia${hasInc?' ('+r.incidencias.length+')':''}</button>
-                  <button onclick="dvEliminar(${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;opacity:.5;padding:2px" title="Eliminar">🗑</button>
+                  ${hasInc?`<button onclick="dvEliminarIncidencia(${i})" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);border-radius:5px;cursor:pointer;font-size:10px;padding:2px 8px" title="Eliminar incidencia registrada">✕ Borrar inc.</button>`:''}
+                  <button onclick="dvEliminar(${i})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;opacity:.5;padding:2px" title="Eliminar registro">🗑</button>
                 </div>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
@@ -5467,6 +5528,7 @@ function dvExportarDia(fecha){
 function dvBorrarTurnoHist(fecha, turno){
   if(!confirm('¿Borrar el historial del turno '+turno+' del día '+fecha+'? Esta acción no se puede deshacer.')) return;
   DV.historial = DV.historial.filter(b=>!(b._dayKey===fecha && b.turno===turno));
+  DV._histDeleteTs = Date.now(); // guard: prevent Firebase from restoring deleted record
   dvSaveHistorial();
   if(typeof fbSave==='function') fbSave();
   dvRenderDia(fecha);
@@ -5673,7 +5735,7 @@ function renderDescargas(){
 
 // ─── RESUMEN SEMAFORO ────────────────────────────────────────────────────────
 let filtroPrio = false;
-let mostrarCargados = false;
+let mostrarCargados = true; // show all fletes including 100% by default
 
 function dvToggleEstopDrop(e){
   e.stopPropagation();
@@ -5681,19 +5743,52 @@ function dvToggleEstopDrop(e){
 }
 function dvEstopChange(){
   var boxes=Array.from(document.querySelectorAll('#fEstopDrop input[type=checkbox]:checked'));
-  var lbl=g('fEstopLbl');
-  if(lbl) lbl.textContent=boxes.length?boxes.map(function(b){return b.value;}).join(', '):'Todos los estatus op.';
+  var badge=g('fEstopBadge');
+  if(badge){
+    if(boxes.length){ badge.textContent=boxes.length; badge.style.display='inline-block'; }
+    else { badge.textContent=''; badge.style.display='none'; }
+  }
   render();
 }
 function dvEstopClear(){
   document.querySelectorAll('#fEstopDrop input[type=checkbox]').forEach(function(b){b.checked=false;});
-  var lbl=g('fEstopLbl'); if(lbl) lbl.textContent='Todos los estatus op.';
+  var badge=g('fEstopBadge'); if(badge){badge.textContent='';badge.style.display='none';}
   var d=g('fEstopDrop'); if(d) d.style.display='none';
   render();
 }
 document.addEventListener('click',function(e){
   if(!e.target.closest('#fEstopWrap')){
     var d=g('fEstopDrop'); if(d) d.style.display='none';
+  }
+});
+
+function rsToggleEstopDrop(e){
+  e.stopPropagation();
+  const d=g('fRsEstopDrop'); if(d) d.style.display=d.style.display==='none'?'block':'none';
+}
+function rsEstopChange(){
+  const boxes=Array.from(document.querySelectorAll('#fRsEstopDrop input[type=checkbox][value]:checked'));
+  const badge=g('fRsEstopBadge');
+  if(badge){badge.textContent=boxes.length||'';badge.style.display=boxes.length?'inline-block':'none';}
+  // Update 'Todos' checkbox state
+  const allCb=g('fRsEstopAll');
+  const total=document.querySelectorAll('#fRsEstopDrop input[type=checkbox][value]').length;
+  if(allCb){ allCb.checked=boxes.length===total; allCb.indeterminate=boxes.length>0&&boxes.length<total; }
+  renderResumen();
+}
+function rsEstopAllChange(cb){
+  document.querySelectorAll('#fRsEstopDrop input[type=checkbox][value]').forEach(b=>b.checked=cb.checked);
+  rsEstopChange();
+}
+function rsEstopClear(){
+  document.querySelectorAll('#fRsEstopDrop input[type=checkbox]').forEach(b=>b.checked=false);
+  const badge=g('fRsEstopBadge'); if(badge){badge.textContent='';badge.style.display='none';}
+  const d=g('fRsEstopDrop'); if(d) d.style.display='none';
+  renderResumen();
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#fRsEstopWrap')){
+    const d=g('fRsEstopDrop'); if(d) d.style.display='none';
   }
 });
 
@@ -5740,6 +5835,9 @@ function renderResumen(){
     const frt=g('fRsTrans')?.value||'';
     if(frt==='con'&&!hasTrans(r)) return false;
     if(frt==='sin'&&hasTrans(r)) return false;
+    // Multi-select estop filter
+    const _rsEstopBoxes=Array.from(document.querySelectorAll('#fRsEstopDrop input[type=checkbox][value]:checked'));
+    if(_rsEstopBoxes.length && !_rsEstopBoxes.map(b=>b.value).includes(r.estop)) return false;
     // Ocultar cargados (pc=100 / estop=CARGADO) por defecto, mostrar solo si se activa el toggle
     if(!mostrarCargados && (r.estop==='CARGADO' || r.pc===100)) return false;
     return true;
@@ -5755,8 +5853,10 @@ function renderResumen(){
   const totEP=rows.filter(r=>r.estop==='EN PROCESO').length;
   const totPe=rows.filter(r=>r.estop==='PENDIENTE').length;
   const totCa=rows.filter(r=>r.estop==='CARGADO').length;
-  const totCon=rows.filter(r=>hasTrans(r)).length;
-  const totSin=rows.filter(r=>!hasTrans(r)).length;
+  // Con/Sin transporte: only pending fletes (exclude CARGADO)
+  const _rsPend=rows.filter(r=>r.estop!=='CARGADO'&&r.pc!==100);
+  const totCon=_rsPend.filter(r=>hasTrans(r)).length;
+  const totSin=_rsPend.filter(r=>!hasTrans(r)).length;
   g('rsKpi').innerHTML=[
     ['Total',rows.length,'var(--blue)'],
     ['⭐ Prioridad',totPrioM,'#FACC15'],
@@ -5846,11 +5946,20 @@ function renderResumen(){
           onchange="upd(${idx},'precarga',this.value);renderResumen()" title="Precarga">`;
       })()}</td>
       <td>${fbIsAdmin
-        ? `<select class="edt-sel" onchange="upd(${idx},'estop',this.value);renderResumen()">${opts}</select>`
+        ? `<select class="edt-sel" onchange="upd(${idx},'estop',this.value);renderResumen()"
+            style="height:26px;font-size:10px;font-weight:600;border-radius:5px;cursor:pointer;
+            ${(()=>{
+              const _em={'POR VERIFICAR':'background:rgba(6,182,212,.18);color:#67E8F9;border:1px solid rgba(6,182,212,.3)',
+                'POR CARGAR':'background:rgba(253,186,116,.18);color:#FCA5A5;border:1px solid rgba(245,158,11,.3)',
+                'PENDIENTE':'background:rgba(139,92,246,.18);color:#C4B5FD;border:1px solid rgba(139,92,246,.3)',
+                'CARGADO':'background:rgba(16,185,129,.18);color:#6EE7B7;border:1px solid rgba(16,185,129,.3)',
+                'EN PROCESO':'background:rgba(245,158,11,.18);color:#FCD34D;border:1px solid rgba(245,158,11,.3)'};
+              return _em[r.estop||'PENDIENTE']||'background:var(--card);color:var(--text3)';
+            })()}">${opts}</select>`
         : `<span class="b ${{'POR VERIFICAR':'bb','POR CARGAR':'bc','PENDIENTE':'bp','CARGADO':'bg','EN PROCESO':'ba'}[r.estop]||'bx'}" style="font-size:10px;white-space:nowrap">${es(r.estop||'PENDIENTE')}</span>`
       }</td>
-      <td style="text-align:center">${pendPickHtml}</td>
       <td style="text-align:center">${pendTareaHtml}</td>
+      <td style="text-align:center">${pendPickHtml}</td>
       <td><input class="edt" type="text" value="${es(r.com||'')}" placeholder="—"
           onchange="upd(${idx},'com',this.value)" title="Comentarios" style="min-width:130px"></td>
     </tr>`;
@@ -6233,7 +6342,29 @@ function generarReporte(){
   </div>`;
 
   // ── Simplified report: KPIs + Resumen por persona + Fletes ──
-  g('repContent').innerHTML = kpiHtml + customHtml + verifHtml + tareaHtml + descResHtml + fletesHtml;
+  // ── Condensed report: only numbers, no per-collaborator detail ──
+  const montasAsig = [...new Set(todasAsignaciones.filter(r=>r.monta).map(r=>r.monta))].length;
+  const verifAsig  = [...new Set(todasAsignaciones.filter(r=>r.verif).map(r=>r.verif))].length;
+  const preAsig    = todasAsignaciones.filter(r=>r.precarga).length;
+  const incTotal   = INC.registros.filter(r=>r.turno===S.sessionTurno).length;
+  const dvTotal    = DV.historial.flatMap(b=>b.registros||[]).length + DV.registros.length;
+
+  const resumenHtml = `<div class="rep-section">
+    <div class="rep-section-ttl">Resumen Operativo del Turno</div>
+    <div class="rep-kpis">
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--green)">${cargados}</div><div class="rep-kpi-l">Cargados</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--amber)">${enProceso}</div><div class="rep-kpi-l">En proceso</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--purple)">${pendientes}</div><div class="rep-kpi-l">Pendientes</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--cyan)">${montasAsig}</div><div class="rep-kpi-l">Montacarguistas asignados</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--cyan)">${verifAsig}</div><div class="rep-kpi-l">Verificadores asignados</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--cyan)">${preAsig}</div><div class="rep-kpi-l">Precargas asignadas</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--red)">${incTotal}</div><div class="rep-kpi-l">Incidencias registradas</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--blue)">${dvTotal}</div><div class="rep-kpi-l">Descargas registradas</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--green)">${totPallets.toLocaleString('es-MX')}</div><div class="rep-kpi-l">Total pallets</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--amber)">${totPicking.toLocaleString('es-MX')}</div><div class="rep-kpi-l">Picking pendiente</div></div>
+    </div>
+  </div>`;
+  g('repContent').innerHTML = kpiHtml + resumenHtml;
   g('modalReporte').classList.remove('hidden');
 }
 
@@ -6377,7 +6508,7 @@ function _restoreFromStorage(){
   try{
     const dv=localStorage.getItem('trx_dv_registros');
     if(dv){ const d=JSON.parse(dv);
-      if(d&&Array.isArray(d.registros)){DV.registros=d.registros;DV.turno=d.turno||'';DV.sup=d.sup||'';}
+      if(d&&Array.isArray(d.registros)){DV.registros=d.registros;DV.turno=d.turno||'';DV.sup=d.sup||'';if(d._supSetByUser)DV._supSetByUser=true;}
     }
   }catch(e){}
   try{
@@ -6620,12 +6751,44 @@ function fbSave(){
       const dot=document.getElementById('syncDot');
       if(dot) dot.style.background='var(--red)';
     }
-  }, 600);
+  }, 300);
 }
 
 function applyRemoteData(data){
   console.log('[DATA] applyRemoteData fbIsAdmin='+fbIsAdmin+' fbIsDoc='+fbIsDocumentador+' rows='+(data.rows?data.rows.length:0));
+  // Detect assignment changes from other devices BEFORE overwriting S.rows
+  if(data.rows && Array.isArray(data.rows) && S.rows && S.rows.length && data.device && data.device!==DEVICE_ID){
+    data.rows.forEach(function(nr){
+      const or = S.rows.find(function(r){return r.emb===nr.emb;});
+      if(!or) return;
+      if(nr.monta && nr.monta!==or.monta){
+        const nom=(typeof MONTACARGUISTAS!=='undefined'?(MONTACARGUISTAS.find(function(m){return m.id===nr.monta;})||{}).nombre||nr.monta:nr.monta);
+        if(typeof _notifyAssignment==='function') _notifyAssignment('Montacarguista',nom,nr.nom||nr.emb||'');
+      }
+      if(nr.verif && nr.verif!==or.verif){
+        const nom=(typeof VERIFICADORES!=='undefined'?(VERIFICADORES.find(function(v){return v.id===nr.verif;})||{}).nombre||nr.verif:nr.verif);
+        if(typeof _notifyAssignment==='function') _notifyAssignment('Verificador',nom,nr.nom||nr.emb||'');
+      }
+      if(nr.precarga && nr.precarga!==or.precarga){
+        if(typeof _notifyAssignment==='function') _notifyAssignment('Precarga',nr.precarga,nr.nom||nr.emb||'');
+      }
+    });
+  }
   if(data.rows)           S.rows           = data.rows;
+  // Normalize con values: 'DI-N' → 'Rampa N' for any stale Firebase values
+  if(S.rows && typeof fmtCortina==='function'){
+    S.rows.forEach(r=>{
+      if(r.con && !r.con.startsWith('Rampa')){
+        const fc2=fmtCortina(r.con); r.con=fc2==='—'?'':fc2;
+      }
+    });
+  }
+  // Remove alerts for embs no longer in S.rows (prevent stale notifications)
+  if(typeof alertedEmbs!=='undefined'){
+    alertedEmbs.forEach(emb=>{
+      if(!S.rows.find(r=>r.emb===emb)) alertedEmbs.delete(emb);
+    });
+  }
   if(data.userEdits)      S.userEdits       = data.userEdits;
   if(data.turnoHistorial) S.turnoHistorial  = data.turnoHistorial;
   if(data.posAlerts)      S.posAlerts       = data.posAlerts;
@@ -6636,19 +6799,22 @@ function applyRemoteData(data){
   if(data.dvRegistros && Array.isArray(data.dvRegistros)){
     const _msSinceSave = Date.now()-(DV._lastSaveTs||0);
     const _sameDevice = data.device && data.device===DEVICE_ID;
-    if(!_sameDevice || _msSinceSave > 30000 || DV.registros.length===0){
+    if(!_sameDevice || _msSinceSave > 60000){
       DV.registros = data.dvRegistros;
     }
   }
   if(data.dvHistorial !== undefined && Array.isArray(data.dvHistorial)){
-    if(data.dvHistorial.length > 0){
+    const _msHistDel = Date.now()-(DV._histDeleteTs||0);
+    const _histSameDevice = data.device && data.device===DEVICE_ID;
+    // Don't overwrite if this device just deleted (60s guard) — but allow cross-device
+    if(data.dvHistorial.length > 0 && (!_histSameDevice || _msHistDel > 60000)){
       DV.historial = data.dvHistorial;
       try{ localStorage.setItem('trx_dv_historial',JSON.stringify(DV.historial)); }catch(e){}
     }
   }
   if(data.dvTurno)        DV.turno          = data.dvTurno;
-  // Only restore dvSup from Firebase if local is empty
-  if(data.dvSup && !DV.sup) DV.sup = data.dvSup;
+  // Only restore dvSup from Firebase if user hasn't set it manually this session
+  if(data.dvSup && !DV._supSetByUser && !DV.sup) DV.sup = data.dvSup;
   // Guard: don't overwrite INC.registros within 15s of local delete
   if(data.incRegistros && Array.isArray(data.incRegistros)){
     const _msIncSave = Date.now()-(INC._lastSaveTs||0);
@@ -6670,6 +6836,15 @@ function applyRemoteData(data){
     kpi(); badge();
     requestAnimationFrame(()=>{
       if(typeof renderResumen==='function') renderResumen();
+    });
+    return;
+  }
+  if(fbIsDocumentador){
+    // DOCUMENTADOR: gets DV + INC updates in real time
+    requestAnimationFrame(()=>{
+      const _dv=g('view-desc'); if(_dv&&!_dv.classList.contains('hidden')) dvRender();
+      const _iv=g('view-inc'); if(_iv&&!_iv.classList.contains('hidden')) incRender();
+      const _hv=g('view-hist'); if(_hv&&!_hv.classList.contains('hidden')) renderHist();
     });
     return;
   }
@@ -6714,12 +6889,16 @@ function startSync(){
       applyRemoteData(data);
       return;
     }
-    // Admin: apply first snapshot or changes from other devices
+    // Admin: apply on first snap, other devices, or newer data
     const fromOtherDevice = !data.device || data.device !== DEVICE_ID;
     const isNewer = data.ts > lastSavedTs;
     if(_firstSnap || fromOtherDevice || isNewer){
       _firstSnap = false;
       applyRemoteData(data);
+    } else {
+      // Even for own saves: refresh DV/INC panels (other users may have changed)
+      const _iv=g('view-inc'); if(_iv&&!_iv.classList.contains('hidden')) incRender();
+      const _dv=g('view-desc'); if(_dv&&!_dv.classList.contains('hidden')) dvRender();
     }
   }, (err)=>{
     console.error('Firestore listener error', err);
