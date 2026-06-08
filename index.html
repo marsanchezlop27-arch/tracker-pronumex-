@@ -280,6 +280,98 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    PC / ESCRITORIO  ≥1280px
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* ── SCROLL UNIVERSAL — every content area ───────────────── */
+/* Tracker + Resumen: .ts already has calc(100vh - 220px)    */
+
+/* Module panels: always fill remaining height with scroll    */
+#view-desc,#view-inc,#view-hist{
+  max-height:calc(100vh - 155px);
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+
+/* Incidencias: ranking + list */
+#incColabRank{
+  max-height:45vh;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding-right:2px;
+}
+#incLista{
+  max-height:35vh;
+  overflow-y:auto;
+}
+
+/* Ranking detail body */
+.rank-body{
+  max-height:320px;
+  overflow-y:auto;
+  overflow-x:auto;
+}
+
+/* Historial descargas content */
+#histContent,#hpan-desc{
+  max-height:50vh;
+  overflow-y:auto;
+}
+
+/* DV supervisor panel */
+#dvSupPanel{
+  max-height:40vh;
+  overflow-y:auto;
+}
+
+/* Reporte modal */
+.rep-box{
+  max-height:88vh;
+  overflow-y:auto;
+}
+#repContent{
+  max-height:none;
+}
+
+/* Always show scrollbar on webkit so user knows it scrolls */
+#view-desc::-webkit-scrollbar,
+#view-inc::-webkit-scrollbar,
+#view-hist::-webkit-scrollbar,
+#incColabRank::-webkit-scrollbar,
+#incLista::-webkit-scrollbar,
+.rank-body::-webkit-scrollbar,
+#histContent::-webkit-scrollbar,
+#dvSupPanel::-webkit-scrollbar,
+.rep-box::-webkit-scrollbar,
+.ts::-webkit-scrollbar{
+  width:5px;
+  height:5px;
+}
+#view-desc::-webkit-scrollbar-track,
+#view-inc::-webkit-scrollbar-track,
+#view-hist::-webkit-scrollbar-track,
+#incColabRank::-webkit-scrollbar-track,
+#incLista::-webkit-scrollbar-track,
+.rank-body::-webkit-scrollbar-track,
+#histContent::-webkit-scrollbar-track,
+#dvSupPanel::-webkit-scrollbar-track,
+.rep-box::-webkit-scrollbar-track,
+.ts::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.04);
+  border-radius:3px;
+}
+#view-desc::-webkit-scrollbar-thumb,
+#view-inc::-webkit-scrollbar-thumb,
+#view-hist::-webkit-scrollbar-thumb,
+#incColabRank::-webkit-scrollbar-thumb,
+#incLista::-webkit-scrollbar-thumb,
+.rank-body::-webkit-scrollbar-thumb,
+#histContent::-webkit-scrollbar-thumb,
+#dvSupPanel::-webkit-scrollbar-thumb,
+.rep-box::-webkit-scrollbar-thumb,
+.ts::-webkit-scrollbar-thumb{
+  background:rgba(208,223,0,.3);
+  border-radius:3px;
+}
+
 @media (min-width:1280px){
   body{font-size:13px}
   .shell{padding:10px 20px}
@@ -320,6 +412,12 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @media (max-width:768px){
   body{font-size:12px}
+  #view-desc,#view-inc,#view-hist{max-height:calc(100vh - 130px)}
+  #incColabRank{max-height:38vh}
+  #incLista{max-height:28vh}
+  .rank-body{max-height:220px}
+  #histContent,#hpan-desc{max-height:42vh}
+  #dvSupPanel{max-height:35vh}
   .topbar{padding:5px 10px;gap:5px;flex-wrap:wrap}
   .topbar .btn{font-size:10px;padding:3px 7px}
   .logo{font-size:10.5px}
@@ -2385,7 +2483,8 @@ function render(){
     (na?`<span style="color:var(--amber)">⚠ ${na} con alerta</span>`:'')+
     (nn?`<span style="color:var(--cyan)">● ${nn} nuevos</span>`:'')+
     `<span style="color:var(--cyan)">🏭 ${nCon} con cortina</span>`+
-    `<span style="color:var(--text3)">○ ${nSin} sin cortina</span>`;
+    `<span style="color:var(--text3)">○ ${nSin} sin cortina</span>`+
+    '';
 }
 
 function upd(idx,field,val){
@@ -4369,31 +4468,61 @@ function incRender(){
   const byCo={};
   INC.registros.forEach(r=>{
     const k=r.colabInc||r.colab||'Sin asignar';
-    if(!byCo[k]) byCo[k]={count:0,totalCajas:0,detalles:[]};
+    if(!byCo[k]) byCo[k]={count:0,totalCajas:0,registros:[]};
     byCo[k].count++;
     byCo[k].totalCajas += parseFloat(r.cantidad)||0;
-    byCo[k].detalles.push({tipo:r.tipo,sku:r.sku||'—',cantidad:r.cantidad||'—',unidad:r.unidad||'',emb:r.emb,hora:r.hora});
+    byCo[k].registros.push(r);
   });
   const colabRanking=Object.entries(byCo).sort((a,b)=>b[1].count-a[1].count).slice(0,10);
   const rankEl=document.getElementById('incColabRank');
   if(rankEl){
-    rankEl.innerHTML=colabRanking.length?colabRanking.map(([nom,d],i)=>`
-      <div style="background:var(--navy2);border-radius:8px;margin-bottom:8px;overflow:hidden;border:1px solid var(--border)">
-        <div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1px solid var(--border)">
-          <span style="font-size:12px;font-weight:700;color:${i===0?'var(--red)':i<3?'var(--amber)':'var(--text3)'};min-width:18px">${i+1}</span>
-          <span style="flex:1;font-size:12px;font-weight:600">${es(nom)}</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:${i===0?'var(--red)':i<3?'var(--amber)':'var(--text)'}">${d.count} inc.</span>
-          <span style="font-size:10px;color:var(--text3);background:var(--card);padding:2px 7px;border-radius:4px;white-space:nowrap">${d.totalCajas} cajas</span>
-          <button onclick="incEliminarColab('${es(nom)}')" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);border-radius:5px;cursor:pointer;font-size:10px;padding:2px 8px;font-weight:600" title="Eliminar todos los registros de ${es(nom)}">🗑 Eliminar</button>
+    rankEl.innerHTML=colabRanking.length?colabRanking.map(([nom,d],ri)=>`
+      <div class="rank-card" style="background:var(--navy2);border-radius:8px;margin-bottom:10px;overflow:hidden;border:1px solid var(--border)">
+        <!-- Card header -->
+        <div onclick="var bd=this.nextElementSibling;var c=bd.style.display==='none';bd.style.display=c?'block':'none';this.querySelector('.rk-arrow').textContent=c?'▼':'▶';"
+          style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border)">
+          <span style="font-size:13px;font-weight:800;color:${ri===0?'var(--red)':ri<3?'var(--amber)':'var(--text3)'};min-width:20px">${ri+1}</span>
+          <span style="flex:1;font-size:12px;font-weight:700">${es(nom)}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:${ri===0?'var(--red)':ri<3?'var(--amber)':'var(--text)'}">${d.count} inc.</span>
+          <span style="font-size:10px;color:var(--text3);background:var(--card);padding:2px 8px;border-radius:4px">${d.totalCajas} cajas</span>
+          <span class="rk-arrow" style="font-size:11px;color:var(--brand);font-weight:700;flex-shrink:0">▼</span>
+          <button onclick="event.stopPropagation();incEliminarColab('${es(nom)}')"
+            style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);border-radius:5px;cursor:pointer;font-size:10px;padding:2px 8px;font-weight:600">🗑</button>
         </div>
-        <div style="padding:5px 10px">
-          ${d.detalles.map(x=>`<div style="display:grid;grid-template-columns:auto 1fr 1fr auto;gap:5px;align-items:center;padding:3px 0;border-bottom:1px solid var(--border);font-size:10.5px">
-            <span style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700;white-space:nowrap">${es(x.tipo)}</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);overflow:hidden;text-overflow:ellipsis">SKU:${es(x.sku)}</span>
-            <span style="font-weight:600;text-align:right">${es(x.cantidad)} ${es(x.unidad)}</span>
-            <span style="font-size:9px;color:var(--text3);white-space:nowrap">${es(x.hora)}</span>
-            <button onclick="incEliminarRegistro(${x.id})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:11px;opacity:.6;padding:0 2px" title="Eliminar este registro">🗑</button>
-          </div>`).join('')}
+        <!-- Detail table -->
+        <div class="rank-body" style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:10.5px">
+            <thead>
+              <tr style="background:rgba(255,255,255,.03);border-bottom:1px solid var(--border)">
+                <th style="padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap"># Incidencia</th>
+                <th style="padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap">Colaborador</th>
+                <th style="padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap">Flete — Cliente</th>
+                <th style="padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap">Quién reportó</th>
+                <th style="padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap">Tipo evento</th>
+                <th style="padding:5px 8px;text-align:right;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap">Cajas</th>
+                <th style="padding:5px 8px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${d.registros.map(x=>`
+              <tr style="border-bottom:1px solid rgba(30,58,95,.4)" onmouseover="this.style.background='rgba(255,255,255,.025)'" onmouseout="this.style.background=''">
+                <td style="padding:5px 8px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--brand);white-space:nowrap">${String(x.id||'').slice(-6)}</td>
+                <td style="padding:5px 8px;font-weight:600;white-space:nowrap">${es(x.colabInc||x.colab||'—')}</td>
+                <td style="padding:5px 8px">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber)">${es(x.emb||'—')}</div>
+                  <div style="font-size:9.5px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">${es(x.nom||'—')}</div>
+                </td>
+                <td style="padding:5px 8px;font-size:10px;color:var(--text2);white-space:nowrap">${es(x.colab||x.sup||'—')}</td>
+                <td style="padding:5px 8px">
+                  <span style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:3px;padding:1px 6px;font-size:9px;font-weight:700;white-space:nowrap">${es(x.tipo||'—')}</span>
+                </td>
+                <td style="padding:5px 8px;text-align:right;font-weight:700;white-space:nowrap">${es(x.cantidad||'—')} <span style="font-size:9px;color:var(--text3)">${es(x.unidad||'')}</span></td>
+                <td style="padding:5px 8px;text-align:center">
+                  <button onclick="incEliminarRegistro(${x.id})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:11px;opacity:.6;padding:0 3px" title="Eliminar">🗑</button>
+                </td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
         </div>
       </div>`).join(''):'<div style="font-size:11px;color:var(--text3);padding:8px 0">Sin datos</div>';
   }
@@ -4422,9 +4551,9 @@ function incRender(){
 
 function incExportarGerencial(){
   // One row per incidencia detail
-  const rows=[['Colaborador','Embarque','Tipo Incidencia','SKU','Cantidad','Unidad','Hora','Reportado por']];
+  const rows=[['Colaborador','Embarque','Cliente','Tipo Incidencia','SKU','Cantidad','Unidad','Hora','Reportado por']];
   INC.registros.forEach(r=>{
-    rows.push([r.colabInc||r.colab||'Sin asignar', r.emb||'', r.tipo||'', r.sku||'', r.cantidad||'', r.unidad||'', r.hora||'', r.colab||'']);
+    rows.push([r.colabInc||r.colab||'Sin asignar', r.emb||'', r.nom||'', r.tipo||'', r.sku||'', r.cantidad||'', r.unidad||'', r.hora||'', r.colab||'']);
   });
   const csv='﻿'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');
   const a=document.createElement('a');
@@ -5646,15 +5775,16 @@ function dvRenderDia(fecha){
   turnos.sort((a,b)=>+(a.turno||9)-(+(b.turno||9))).forEach(b=>{
     const rB=b.registros||[];
     out+=`<div style="border-top:1px solid var(--border)">
-      <div style="padding:8px 14px;background:rgba(255,255,255,.02);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div onclick="var bd=this.nextElementSibling;var collapsed=bd.style.display==='none';bd.style.display=collapsed?'block':'none';this.querySelector('.dh-toggle').textContent=collapsed?'▼ ocultar':'▶ ver detalles';" style="padding:8px 14px;background:rgba(255,255,255,.02);display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer">
         <span style="background:rgba(208,223,0,.12);color:var(--brand,#D0DF00);border:1px solid rgba(208,223,0,.2);border-radius:4px;padding:2px 10px;font-size:10px;font-weight:700">${tNom[b.turno]||'Turno '+b.turno}</span>
         <span style="font-size:12px;font-weight:600">${es(b.supNombre||SUPS[b.sup]||b.sup||'—')}</span>
         <span style="font-family:monospace;font-weight:800;font-size:15px;color:var(--cyan)">${rB.length}</span>
         <span style="font-size:10px;color:var(--text3)">descargas</span>
         <span style="font-size:10px;color:var(--text3);margin-left:auto">${b.fecha||''}</span>
+        <span class="dh-toggle" style="font-size:10px;color:var(--brand);font-weight:600;flex-shrink:0">▼ ocultar</span>
         ${fbIsAdmin?`<button onclick="dvBorrarTurnoHist('${fecha}','${b.turno}')" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);border-radius:5px;cursor:pointer;font-size:10px;padding:2px 8px;margin-left:8px" title="Borrar este turno del historial">🗑 Borrar</button>`:''}
       </div>
-      ${rB.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:10.5px">
+      ${rB.length?`<div class="dh-body"><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:10.5px">
         <thead><tr style="background:rgba(255,255,255,.03)">
           <th style="padding:5px 12px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Cortina</th>
           <th style="padding:5px 12px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Montacarguista</th>
@@ -6053,7 +6183,6 @@ function renderResumen(){
   }).join('');
 
   const nPrio=rows.filter(r=>r.prio).length;
-  const nCargadosTotal=S.rows.filter(r=>r.estop==='CARGADO'||r.pc===100).length;
   g('rsTf').innerHTML=`<span>Mostrando <strong>${rows.length}</strong> fletes</span>`+
     (nPrio?`<span style="color:#FACC15">⭐ ${nPrio} marcados como prioridad</span>`:'')+
     `<span style="color:var(--green);cursor:pointer" onclick="toggleMostrarCargados()">✓ ${nCargadosTotal} ya cargados al 100% ${mostrarCargados?'(ocultar)':'(mostrar)'}</span>`;
@@ -6438,17 +6567,11 @@ function generarReporte(){
 
   const resumenHtml = `<div class="rep-section">
     <div class="rep-section-ttl">Resumen Operativo del Turno</div>
-    <div class="rep-kpis">
+    <div class="rep-kpis" style="grid-template-columns:repeat(4,1fr)!important">
       <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--green)">${cargados}</div><div class="rep-kpi-l">Cargados</div></div>
-      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--amber)">${enProceso}</div><div class="rep-kpi-l">En proceso</div></div>
-      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--purple)">${pendientes}</div><div class="rep-kpi-l">Pendientes</div></div>
-      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--cyan)">${montasAsig}</div><div class="rep-kpi-l">Montacarguistas asignados</div></div>
-      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--cyan)">${verifAsig}</div><div class="rep-kpi-l">Verificadores asignados</div></div>
-      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--cyan)">${preAsig}</div><div class="rep-kpi-l">Precargas asignadas</div></div>
-      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--red)">${incTotal}</div><div class="rep-kpi-l">Incidencias registradas</div></div>
-      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--blue)">${dvTotal}</div><div class="rep-kpi-l">Descargas registradas</div></div>
-      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--green)">${totPallets.toLocaleString('es-MX')}</div><div class="rep-kpi-l">Total pallets</div></div>
       <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--amber)">${totPicking.toLocaleString('es-MX')}</div><div class="rep-kpi-l">Picking pendiente</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--blue)">${dvTotal}</div><div class="rep-kpi-l">Descargas registradas</div></div>
+      <div class="rep-kpi"><div class="rep-kpi-v" style="color:var(--red)">${incTotal}</div><div class="rep-kpi-l">Incidencias registradas</div></div>
     </div>
   </div>`;
   g('repContent').innerHTML = kpiHtml + resumenHtml;
@@ -6908,6 +7031,10 @@ function applyRemoteData(data){
     const _incSameDevice = data.device && data.device===DEVICE_ID;
     if(!_incSameDevice || _msIncSave > 15000){
       INC.registros = data.incRegistros;
+      // Always refresh badge and panel regardless of role
+      if(typeof badge==='function') badge();
+      const _iv=g('view-inc');
+      if(_iv&&!_iv.classList.contains('hidden')) incRender();
     }
   }
   if(!S.rows || !S.rows.length) return;
@@ -7016,7 +7143,9 @@ window.upd = function(idx,field,val){
       : field==='verif'
       ? (VERIFICADORES.find(v=>v.id===val)?.nombre||val)
       : val;
-    _notifyAssignment(labels[field], who, r.nom||r.emb||'');
+    const _fleNum = String(r.emb||'');
+    const _fleNom = (r.nom||'').substring(0,45);
+    _notifyAssignment(labels[field], who, _fleNum+(_fleNom?' — '+_fleNom:''));
   }
 };
 
@@ -7025,7 +7154,7 @@ function _notifyAssignment(tipo, quien, flete){
   if(window.Notification && Notification.permission==='granted'){
     try{
       new Notification('MACRO TOLUCA - '+tipo+' asignado',{
-        body: quien+' -> '+flete
+        body: 'Flete '+flete+'\nOperador: '+quien
       });
       return;
     }catch(e){}
@@ -7042,7 +7171,7 @@ function _notifyAssignment(tipo, quien, flete){
 function _notifyToast(tipo, quien, flete){
   var t=document.createElement('div');
   t.style.cssText='position:fixed;bottom:20px;right:20px;background:var(--card,#1e293b);color:var(--text,#fff);border:1px solid var(--brand,#D0DF00);border-radius:10px;padding:10px 16px;font-size:12px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.4);max-width:280px;cursor:pointer';
-  t.innerHTML='<div style="font-size:10px;color:var(--brand,#D0DF00);font-weight:700;margin-bottom:3px">'+tipo.toUpperCase()+' ASIGNADO</div><div style="font-weight:600">'+quien+'</div><div style="font-size:10px;color:var(--text3,#94a3b8);margin-top:2px">Flete: '+flete+'</div>';
+  t.innerHTML='<div style="font-size:10px;color:var(--brand,#D0DF00);font-weight:700;margin-bottom:3px">'+tipo.toUpperCase()+' ASIGNADO</div><div style="font-weight:600">'+quien+'</div><div style="font-size:10px;color:var(--text3,#94a3b8);margin-top:2px">'+flete+'</div>';
   t.onclick=function(){t.remove();};
   document.body.appendChild(t);
   setTimeout(function(){
