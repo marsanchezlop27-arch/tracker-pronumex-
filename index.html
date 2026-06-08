@@ -578,10 +578,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
         <option value="nv">Fletes nuevos</option>
         <option value="li">Marcados listos</option>
       </select>
-      <select id="fEstop" onchange="render()">
-        <option value="">Todos los estatus op.</option>
-        <option>POR VERIFICAR</option><option>POR CARGAR</option><option>PENDIENTE</option><option>CARGADO</option>
-      </select>
+      <div id="fEstopWrap" style="position:relative;display:inline-block"><button id="fEstopBtn" onclick="dvToggleEstopDrop(event)" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;min-width:150px;text-align:left;display:flex;align-items:center;gap:6px;height:30px"><span id="fEstopLbl" style="flex:1">Todos los estatus op.</span><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M0 3l5 5 5-5z"/></svg></button><div id="fEstopDrop" style="display:none;position:absolute;top:100%;left:0;z-index:500;background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:6px;min-width:190px;box-shadow:0 4px 20px rgba(0,0,0,.4);margin-top:3px"><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px"><input type="checkbox" value="POR VERIFICAR" onchange="dvEstopChange()"> POR VERIFICAR</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px"><input type="checkbox" value="POR CARGAR" onchange="dvEstopChange()"> POR CARGAR</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px"><input type="checkbox" value="PENDIENTE" onchange="dvEstopChange()"> PENDIENTE</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px"><input type="checkbox" value="CARGADO" onchange="dvEstopChange()"> CARGADO</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px"><input type="checkbox" value="EN PROCESO" onchange="dvEstopChange()"> EN PROCESO</label><div style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px"><button onclick="dvEstopClear()" style="background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;padding:2px 6px">x Limpiar</button></div></div></div>
       <select id="fTrans" onchange="render()">
         <option value="">Con y sin transporte</option>
         <option value="con">Con cortina (Rampa asignada)</option>
@@ -1455,10 +1452,16 @@ function patchDetPtr(){
     const D = detMap[r.emb] || comMap[r.emb] || {};
     if(Object.keys(D).length){
       const pc = pct(fc(D,['% Carga','%Carga','carga']));
-      if(pc >= 100){ r._rm = true; return; }
       r.pt = pct(fc(D,['% Tareas','%Tareas','tareas']));
       r.pr = pct(fc(D,['% Restos','%Restos','restos']));
       r.pc = pc;
+      if(pc !== null && pc >= 100){
+        if(r.estop !== 'CARGADO'){
+          r.estop = 'CARGADO';
+          if(!S.userEdits[r.emb]) S.userEdits[r.emb]={};
+          S.userEdits[r.emb].estop = 'CARGADO';
+        }
+      }
       r.tr = fc(D,['T. Restos','T.Restos'])||r.tr;
       r.ar = fc(D,['A. Restos','A.Restos'])||r.ar;
       r.tra = fc(D,['Transportista','Unidad'])||r.tra;
@@ -1477,7 +1480,7 @@ function patchDetPtr(){
     });
     // com is already set from fc(D,['Comentarios:',...]) above
   });
-  S.rows = S.rows.filter(r => !r._rm);
+  // _rm removed: all fletes kept, 100% auto-sets estop=CARGADO
   kpi(); render(); alerts(); badge();
   if(typeof kpiVerif==='function') kpiVerif();
   ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
@@ -1490,6 +1493,9 @@ function patchDetPtr(){
 
 // ─── BUILD ────────────────────────────────────────────────────────────────────
 function build(){
+  // Reset alert tracking so new semaforo fires fresh notifications
+  alertedEmbs.clear();
+  dismissedAt = 0;
   const isFirstLoad = S.rows.length === 0;
   if(isFirstLoad){
     // Primera carga: los 3 archivos son obligatorios
@@ -1704,6 +1710,9 @@ function build(){
 
 // ─── APPLY NEW SEMAFORO — el nuevo semáforo se convierte en la base ───────────
 function applyNew(){
+  // Reset alert tracking on new semaforo
+  alertedEmbs.clear();
+  dismissedAt = 0;
   // If no new sem but rows exist → just apply det2/ptr2
   if(!S.buf.new && S.rows.length){
     if(S.buf.det2||S.buf.ptr2){
@@ -2088,7 +2097,10 @@ function render(){
   const ft=g('fTur')?.value||'';
   const fe=g('fEst')?.value||'';
   const ftr=g('fTrans')?.value||'';
-  const festop=g('fEstop')?.value||'';
+  const festop=(function(){
+    var boxes=document.querySelectorAll('#fEstopDrop input[type=checkbox]:checked');
+    return boxes.length?Array.from(boxes).map(function(b){return b.value;}):[];
+  })();
 
   let rows=S.rows.filter(r=>{
     if(q&&!r.emb.toLowerCase().includes(q)&&!r.nom.toLowerCase().includes(q)) return false;
@@ -2099,7 +2111,7 @@ function render(){
     if(fe==='li'&&r.est!=='LISTO') return false;
     if(ftr==='con'&&!hasTrans(r)) return false;
     if(ftr==='sin'&&hasTrans(r)) return false;
-    if(festop&&r.estop!==festop) return false;
+    if(festop.length && !festop.includes(r.estop)) return false;
     return true;
   });
 
@@ -5663,6 +5675,28 @@ function renderDescargas(){
 let filtroPrio = false;
 let mostrarCargados = false;
 
+function dvToggleEstopDrop(e){
+  e.stopPropagation();
+  var d=g('fEstopDrop'); if(d) d.style.display=d.style.display==='none'?'block':'none';
+}
+function dvEstopChange(){
+  var boxes=Array.from(document.querySelectorAll('#fEstopDrop input[type=checkbox]:checked'));
+  var lbl=g('fEstopLbl');
+  if(lbl) lbl.textContent=boxes.length?boxes.map(function(b){return b.value;}).join(', '):'Todos los estatus op.';
+  render();
+}
+function dvEstopClear(){
+  document.querySelectorAll('#fEstopDrop input[type=checkbox]').forEach(function(b){b.checked=false;});
+  var lbl=g('fEstopLbl'); if(lbl) lbl.textContent='Todos los estatus op.';
+  var d=g('fEstopDrop'); if(d) d.style.display='none';
+  render();
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#fEstopWrap')){
+    var d=g('fEstopDrop'); if(d) d.style.display='none';
+  }
+});
+
 function toggleFiltroPrio(){
   filtroPrio = !filtroPrio;
   const btn = g('fRsPrio');
@@ -6601,19 +6635,16 @@ function applyRemoteData(data){
   // Guard: never overwrite DV.registros within 30s of a local save
   if(data.dvRegistros && Array.isArray(data.dvRegistros)){
     const _msSinceSave = Date.now()-(DV._lastSaveTs||0);
-    if(_msSinceSave > 30000 || DV.registros.length===0){
+    const _sameDevice = data.device && data.device===DEVICE_ID;
+    if(!_sameDevice || _msSinceSave > 30000 || DV.registros.length===0){
       DV.registros = data.dvRegistros;
     }
   }
   if(data.dvHistorial !== undefined && Array.isArray(data.dvHistorial)){
-    // Merge: keep local entries not in remote (preserve local history)
     if(data.dvHistorial.length > 0){
       DV.historial = data.dvHistorial;
       try{ localStorage.setItem('trx_dv_historial',JSON.stringify(DV.historial)); }catch(e){}
-    } else if(DV.historial.length === 0){
-      DV.historial = data.dvHistorial; // accept empty only if local is also empty
     }
-    // If remote is empty but local has data → keep local (don't overwrite)
   }
   if(data.dvTurno)        DV.turno          = data.dvTurno;
   // Only restore dvSup from Firebase if local is empty
@@ -6621,7 +6652,8 @@ function applyRemoteData(data){
   // Guard: don't overwrite INC.registros within 15s of local delete
   if(data.incRegistros && Array.isArray(data.incRegistros)){
     const _msIncSave = Date.now()-(INC._lastSaveTs||0);
-    if(_msIncSave > 15000){
+    const _incSameDevice = data.device && data.device===DEVICE_ID;
+    if(!_incSameDevice || _msIncSave > 15000){
       INC.registros = data.incRegistros;
     }
   }
@@ -6654,6 +6686,12 @@ function applyRemoteData(data){
     else if(oc.includes("'cl'") && g('p-cl')&&!g('p-cl').classList.contains('hidden')){ if(typeof renderClientes==='function') renderClientes(); }
     else{ render(); }
   });
+
+  // Refresh visible DV/INC panels on any sync
+  const _incView=g('view-inc');
+  if(_incView&&!_incView.classList.contains('hidden')) incRender();
+  const _descView=g('view-desc');
+  if(_descView&&!_descView.classList.contains('hidden')) dvRender();
 }
 
 function startSync(){
@@ -6700,7 +6738,53 @@ setInterval(()=>{
 
 // ── Patch upd/listo/togglePrio/updCustom/updVerif to also save ──
 const _origUpd = upd;
-window.upd = function(idx,field,val){ _origUpd(idx,field,val); fbSave(); };
+window.upd = function(idx,field,val){
+  _origUpd(idx,field,val);
+  fbSave();
+  if(['monta','precarga','verif'].includes(field) && val){
+    const r = S.rows[idx];
+    if(!r) return;
+    const labels = {monta:'Montacarguista',precarga:'Precarga',verif:'Verificador'};
+    const who = field==='monta'
+      ? (MONTACARGUISTAS.find(m=>m.id===val)?.nombre||val)
+      : field==='verif'
+      ? (VERIFICADORES.find(v=>v.id===val)?.nombre||val)
+      : val;
+    _notifyAssignment(labels[field], who, r.nom||r.emb||'');
+  }
+};
+
+// Assignment notifications
+function _notifyAssignment(tipo, quien, flete){
+  if(window.Notification && Notification.permission==='granted'){
+    try{
+      new Notification('MACRO TOLUCA - '+tipo+' asignado',{
+        body: quien+' -> '+flete
+      });
+      return;
+    }catch(e){}
+  }
+  if(window.Notification && Notification.permission==='default'){
+    Notification.requestPermission().then(function(p){
+      if(p==='granted') _notifyAssignment(tipo,quien,flete);
+      else _notifyToast(tipo,quien,flete);
+    });
+    return;
+  }
+  _notifyToast(tipo,quien,flete);
+}
+function _notifyToast(tipo, quien, flete){
+  var t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:20px;right:20px;background:var(--card,#1e293b);color:var(--text,#fff);border:1px solid var(--brand,#D0DF00);border-radius:10px;padding:10px 16px;font-size:12px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.4);max-width:280px;cursor:pointer';
+  t.innerHTML='<div style="font-size:10px;color:var(--brand,#D0DF00);font-weight:700;margin-bottom:3px">'+tipo.toUpperCase()+' ASIGNADO</div><div style="font-weight:600">'+quien+'</div><div style="font-size:10px;color:var(--text3,#94a3b8);margin-top:2px">Flete: '+flete+'</div>';
+  t.onclick=function(){t.remove();};
+  document.body.appendChild(t);
+  setTimeout(function(){
+    t.style.transition='opacity .4s';
+    t.style.opacity='0';
+    setTimeout(function(){t.remove();},400);
+  },5000);
+}
 
 const _origListo = listo;
 window.listo = function(i){ _origListo(i); fbSave(); };
