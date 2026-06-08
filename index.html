@@ -578,7 +578,10 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
         <option value="nv">Fletes nuevos</option>
         <option value="li">Marcados listos</option>
       </select>
-      <div id="fEstopWrap" style="position:relative;display:inline-block"><button id="fEstopBtn" onclick="dvToggleEstopDrop(event)" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;min-width:160px;text-align:left;display:flex;align-items:center;gap:6px;height:32px"><span id="fEstopLbl" style="flex:1">Todos los estatus op.</span><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M0 3l5 5 5-5z"/></svg></button><div id="fEstopDrop" style="display:none;position:absolute;top:100%;left:0;z-index:500;background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:6px;min-width:190px;box-shadow:0 4px 20px rgba(0,0,0,.4);margin-top:3px"><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px;white-space:nowrap"><input type="checkbox" value="POR VERIFICAR" onchange="dvEstopChange()"> POR VERIFICAR</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px;white-space:nowrap"><input type="checkbox" value="POR CARGAR" onchange="dvEstopChange()"> POR CARGAR</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px;white-space:nowrap"><input type="checkbox" value="PENDIENTE" onchange="dvEstopChange()"> PENDIENTE</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px;white-space:nowrap"><input type="checkbox" value="CARGADO" onchange="dvEstopChange()"> CARGADO</label><label style="display:flex;align-items:center;gap:7px;padding:4px 6px;cursor:pointer;font-size:11px;border-radius:4px;white-space:nowrap"><input type="checkbox" value="EN PROCESO" onchange="dvEstopChange()"> EN PROCESO</label><div style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px"><button onclick="dvEstopClear()" style="background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;padding:2px 6px">✕ Limpiar</button></div></div></div>
+      <select id="fEstop" onchange="render()">
+        <option value="">Todos los estatus op.</option>
+        <option>POR VERIFICAR</option><option>POR CARGAR</option><option>PENDIENTE</option><option>CARGADO</option>
+      </select>
       <select id="fTrans" onchange="render()">
         <option value="">Con y sin transporte</option>
         <option value="con">Con cortina (Rampa asignada)</option>
@@ -1448,31 +1451,14 @@ function patchDetPtr(){
     const k = nk(fc(r,['No. Embarque','embarque','Embarque']));
     if(k) ptrMap[k] = r;
   });
-  // Trace log for emb 1570985
-  const _pre1570985 = S.rows.find(r=>String(r.emb)==='1570985');
-  console.log('[TRACE 1570985 BEFORE patchDetPtr]',_pre1570985?{emb:_pre1570985.emb,estop:_pre1570985.estop,pc:_pre1570985.pc}:'NOT IN S.rows');
   S.rows.forEach(r=>{
     const D = detMap[r.emb] || comMap[r.emb] || {};
     if(Object.keys(D).length){
       const pc = pct(fc(D,['% Carga','%Carga','carga']));
-      // pc=100: keep visible, set estop=CARGADO automatically
-      if(pc >= 100){
-        r.pc = 100;
-        r.pt = pct(fc(D,['% Tareas','%Tareas','tareas']));
-        r.pr = pct(fc(D,['% Restos','%Restos','restos']));
-        r.tra = fc(D,['Transportista','Unidad'])||r.tra;
-        r.con = fc(D,['Cortina','cortina'])||r.con;
-        if(r.estop !== 'CARGADO'){
-          r.estop = 'CARGADO';
-          if(!S.userEdits[r.emb]) S.userEdits[r.emb]={};
-          S.userEdits[r.emb].estop = 'CARGADO';
-        }
-        if(String(r.emb)==='1570985') console.log('[TRACE 1570985 pc=100] keeping visible, estop=CARGADO');
-      } else {
-        r.pt = pct(fc(D,['% Tareas','%Tareas','tareas']));
-        r.pr = pct(fc(D,['% Restos','%Restos','restos']));
-        r.pc = pc;
-      }
+      if(pc >= 100){ r._rm = true; return; }
+      r.pt = pct(fc(D,['% Tareas','%Tareas','tareas']));
+      r.pr = pct(fc(D,['% Restos','%Restos','restos']));
+      r.pc = pc;
       r.tr = fc(D,['T. Restos','T.Restos'])||r.tr;
       r.ar = fc(D,['A. Restos','A.Restos'])||r.ar;
       r.tra = fc(D,['Transportista','Unidad'])||r.tra;
@@ -1491,9 +1477,7 @@ function patchDetPtr(){
     });
     // com is already set from fc(D,['Comentarios:',...]) above
   });
-  // _rm filter removed — 100% fletes are kept visible with estop=CARGADO
-  const _post1570985 = S.rows.find(r=>String(r.emb)==='1570985');
-  console.log('[TRACE 1570985 AFTER patchDetPtr]',_post1570985?{emb:_post1570985.emb,estop:_post1570985.estop,pc:_post1570985.pc}:'NOT IN S.rows — DISAPPEARED HERE');
+  S.rows = S.rows.filter(r => !r._rm);
   kpi(); render(); alerts(); badge();
   if(typeof kpiVerif==='function') kpiVerif();
   ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
@@ -1667,19 +1651,6 @@ function build(){
       // estop is restored EXACTLY as saved — no automatic changes
       const {com:_savedCom, ...savedWithoutCom} = saved;
       Object.assign(S.rows[S.rows.length-1], savedWithoutCom);
-    }
-    // ESTOP TRACE LOG — shows exactly where CARGADO comes from
-    const _row = S.rows[S.rows.length-1];
-    const _hist = (S.turnoHistorial||[]).flatMap(h=>h.fletes||[]).find(f=>f.emb===k);
-    if(_row.estop==='CARGADO'||_row.estop==='POR CARGAR'){
-      console.log('[ESTOP TRACE]',{
-        emb:k,
-        savedEstop:saved?.estop,
-        histEstop:_hist?.estop,
-        finalEstop:_row.estop,
-        sourceIsUserEdits: !!saved?.estop,
-        sourceIsHist: !saved?.estop && !!_hist?.estop
-      });
     }
     // com (comentarios) ALWAYS comes from DETALLE file — never from userEdits
     // Already set from fc(D,['Comentarios:',...]) in S.rows.push above — no override needed
@@ -1923,16 +1894,8 @@ function applyNew(){
     if(!newMap[ex.emb] && ex.est!=='NUEVO') return false; // not in new semaforo
     const D=S.detMap?.[ex.emb]||S.comMap?.[ex.emb]||{};
     const pc=pct(fc(D,['% Carga','%Carga','carga']));
-    // When % Carga = 100 → mark as CARGADO but keep visible in tracker
-    if(pc===100){
-      ex.pc=100;
-      if(ex.estop!=='CARGADO'){
-        ex.estop='CARGADO';
-        if(!S.userEdits[ex.emb]) S.userEdits[ex.emb]={};
-        S.userEdits[ex.emb].estop='CARGADO';
-      }
-    }
-    return true; // always keep flete visible
+    if(pc===100) return false; // executed → hide
+    return true;
   });
   drop=beforeCount-S.rows.length;
 
@@ -2125,11 +2088,7 @@ function render(){
   const ft=g('fTur')?.value||'';
   const fe=g('fEst')?.value||'';
   const ftr=g('fTrans')?.value||'';
-  // Read multi-select estop checkboxes
-  const festop=(()=>{
-    const boxes=document.querySelectorAll('#fEstopDrop input[type=checkbox]:checked');
-    return boxes.length?[...boxes].map(b=>b.value):[];
-  })();
+  const festop=g('fEstop')?.value||'';
 
   let rows=S.rows.filter(r=>{
     if(q&&!r.emb.toLowerCase().includes(q)&&!r.nom.toLowerCase().includes(q)) return false;
@@ -2140,7 +2099,7 @@ function render(){
     if(fe==='li'&&r.est!=='LISTO') return false;
     if(ftr==='con'&&!hasTrans(r)) return false;
     if(ftr==='sin'&&hasTrans(r)) return false;
-    if(festop.length && !festop.includes(r.estop)) return false;
+    if(festop&&r.estop!==festop) return false;
     return true;
   });
 
@@ -5703,31 +5662,6 @@ function renderDescargas(){
 // ─── RESUMEN SEMAFORO ────────────────────────────────────────────────────────
 let filtroPrio = false;
 let mostrarCargados = false;
-
-// ── Multi-select Estop filter helpers ──────────────────────────
-function dvToggleEstopDrop(e){
-  e.stopPropagation();
-  const d=g('fEstopDrop');
-  d.style.display=d.style.display==='none'?'block':'none';
-}
-function dvEstopChange(){
-  const boxes=[...document.querySelectorAll('#fEstopDrop input[type=checkbox]:checked')];
-  const lbl=g('fEstopLbl');
-  if(lbl) lbl.textContent=boxes.length?boxes.map(b=>b.value).join(', '):'Todos los estatus op.';
-  render();
-}
-function dvEstopClear(){
-  document.querySelectorAll('#fEstopDrop input[type=checkbox]').forEach(b=>b.checked=false);
-  const lbl=g('fEstopLbl'); if(lbl) lbl.textContent='Todos los estatus op.';
-  g('fEstopDrop').style.display='none';
-  render();
-}
-// Close dropdown when clicking outside
-document.addEventListener('click',function(e){
-  if(!e.target.closest('#fEstopWrap')){
-    const d=g('fEstopDrop'); if(d) d.style.display='none';
-  }
-});
 
 function toggleFiltroPrio(){
   filtroPrio = !filtroPrio;
