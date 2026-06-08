@@ -311,7 +311,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 <style id="mobile-fix">
 /* ── Mobile responsive overrides ── */
 @media (max-width: 640px){
-  .dv-main-grid{grid-template-columns:1fr!important}
+  .dv-main-grid{grid-template-columns:1fr 1fr!important;gap:8px!important}
   .dv-reg-grid{grid-template-columns:1fr 1fr!important}
   /* Modal overlays — scrollable on mobile */
   div[style*="position:fixed"][style*="z-index:9999"],
@@ -2050,18 +2050,20 @@ function getHist(emb){
 
 // Sorted order used for position numbering (same as render sort)
 function sortedForPosition(arr){
-  const prioRows=arr.filter(r=>r.prio).sort((a,b)=>(a.prioNum||999)-(b.prioNum||999));
-  const normalRows=arr.filter(r=>!r.prio).sort((a,b)=>{
+  const isCarg=r=>r.estop==='CARGADO'||r.pc===100;
+  const prioRows=arr.filter(r=>r.prio&&!isCarg(r)).sort((a,b)=>(a.prioNum||999)-(b.prioNum||999));
+  const cargRows=arr.filter(r=>isCarg(r)).sort((a,b)=>(a.semOrder||0)-(b.semOrder||0));
+  const normalRows=arr.filter(r=>!r.prio&&!isCarg(r)).sort((a,b)=>{
     const pa=semPri(a),pb=semPri(b); if(pa!==pb) return pa-pb;
     if(pa===2&&pb===2){ const da=new Date(a.ci),db=new Date(b.ci); if(!isNaN(da)&&!isNaN(db)) return da-db; }
-    // Same priority group → respect original semaforo order
     return (a.semOrder||0)-(b.semOrder||0);
   });
   prioRows.forEach(pr=>{
     const pos=Math.max(1,Math.min(pr.prioNum||1,normalRows.length+1))-1;
     normalRows.splice(pos,0,pr);
   });
-  return normalRows;
+  // CARGADO always at the end
+  return [...normalRows,...cargRows];
 }
 
 // ─── SORT ─────────────────────────────────────────────────────────────────────
@@ -2142,9 +2144,10 @@ function render(){
   const prioRows = rows.filter(r=>r.prio).sort((a,b)=>(a.prioNum||999)-(b.prioNum||999));
   const normalRows = rows.filter(r=>!r.prio);
 
+  const isCargado=r=>r.estop==='CARGADO'||r.pc===100;
   if(S.sc){
-    // User explicitly sorted by a column — respect that
     normalRows.sort((a,b)=>{
+      if(isCargado(a)!==isCargado(b)) return isCargado(a)?1:-1;
       const c=S.sc;
       let av=a[c],bv=b[c];
       if(av===''||av===null) av=S.sa?'\uFFFF':'';
@@ -2154,8 +2157,10 @@ function render(){
       return S.sa?String(av).localeCompare(String(bv)):String(bv).localeCompare(String(av));
     });
   } else {
-    // No column selected — preserve original file order (semOrder)
-    normalRows.sort((a,b)=>(a.semOrder||0)-(b.semOrder||0));
+    normalRows.sort((a,b)=>{
+      if(isCargado(a)!==isCargado(b)) return isCargado(a)?1:-1;
+      return (a.semOrder||0)-(b.semOrder||0);
+    });
   }
 
 
