@@ -2582,12 +2582,35 @@ function render(){
 }
 
 function upd(idx,field,val){
-  if(!fbIsAdmin && !fbIsDocumentador)return; // guests read-only
+  if(!fbIsAdmin && !fbIsDocumentador)return;
   if(!S.rows[idx]) return;
+  const _oldVal=S.rows[idx][field]||'';
   S.rows[idx][field]=val;
   const emb=S.rows[idx].emb;
   if(!S.userEdits[emb]) S.userEdits[emb]={};
   S.userEdits[emb][field]=val;
+
+  // When clearing a field — remove from historial
+  if(val==='' || val===null){
+    const embStr=String(emb);
+    // Remove from turnoHistorial snaps
+    if(['verif','verif2','monta','monta2'].includes(field)){
+      S.turnoHistorial.forEach(function(h){
+        (h.fletes||[]).forEach(function(f){
+          if(String(f.emb)===embStr) f[field]='';
+        });
+      });
+      hSave();
+    }
+    // Remove from CUST.historial when clearing customBy/customBy2
+    if(['customBy','customBy2'].includes(field)){
+      const oldVal=_oldVal||'';
+      CUST.historial=CUST.historial.filter(function(h){
+        return !(String(h.emb)===embStr && h.customBy===oldVal);
+      });
+      try{localStorage.setItem('trx_cust_hist',JSON.stringify(CUST.historial));}catch(e){}
+    }
+  }
 }
 // ─── CARGAR DESDE GUARDADO ────────────────────────────────────────────────────
 // Renders the tracker using whatever is already in S.rows (loaded from Firebase
