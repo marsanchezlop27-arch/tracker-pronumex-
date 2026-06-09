@@ -65,14 +65,14 @@ body.guest-mode #view-desc input:not([type=hidden]),body.guest-mode #view-desc s
 :root{
   --brand:#D0DF00;
 }
-[data-theme="light"]{
+:root[data-theme="light"]{
   --navy:#F0F4F8;--navy2:#E2E8F0;--card:#FFFFFF;
   --text:#1A202C;--text2:#4A5568;--text3:#718096;
   --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.15);
   --surface:rgba(0,0,0,0.04);--surface2:rgba(0,0,0,0.07);
   --brand:#0A7527;--brand-bg:rgba(10,117,39,.1);
 }
-[data-theme="dim"]{
+:root[data-theme="dim"]{
   --navy:#1B2333;--navy2:#242F42;--card:#1E2A3A;
   --text:#CBD5E0;--text2:#8896A5;--text3:#5A6B7A;
   --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.13);
@@ -530,61 +530,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 </style>
 </head>
 <body>
-<script>
-// ── Browser detection → apply color theme ──────────────────
-(function(){
-  const ua = navigator.userAgent;
-  const r  = document.documentElement;
-  // Detect browser
-  const isEdge    = /Edg\//.test(ua);
-  const isChrome  = /Chrome\//.test(ua) && !isEdge && !/OPR|Opera|Firefox|Safari\//.test(ua);
-  const isFirefox = /Firefox\//.test(ua);
-  const isSafari  = /Safari\//.test(ua) && !/Chrome\//.test(ua);
-  const isOpera   = /OPR|Opera/.test(ua);
-  const isMobile  = /Android|iPhone|iPad/.test(ua);
 
-  // Base: --navy (body), --navy2 (panels), --card (cards)
-  if(isEdge){
-    // Edge — azul profundo
-    r.style.setProperty("--navy",  "#071525");
-    r.style.setProperty("--navy2", "#0C1E38");
-    r.style.setProperty("--card",  "#0B1829");
-    r.style.setProperty("--brand", "#00B7EB");
-    r.style.setProperty("--brand-bg","rgba(0,183,235,.13)");
-  } else if(isFirefox){
-    // Firefox — naranja oscuro
-    r.style.setProperty("--navy",  "#1A0E00");
-    r.style.setProperty("--navy2", "#2A1800");
-    r.style.setProperty("--card",  "#221300");
-    r.style.setProperty("--brand", "#FF7139");
-    r.style.setProperty("--brand-bg","rgba(255,113,57,.13)");
-  } else if(isSafari){
-    // Safari — gris azulado
-    r.style.setProperty("--navy",  "#0D1117");
-    r.style.setProperty("--navy2", "#161B22");
-    r.style.setProperty("--card",  "#0D1117");
-    r.style.setProperty("--brand", "#58A6FF");
-    r.style.setProperty("--brand-bg","rgba(88,166,255,.13)");
-  } else if(isOpera){
-    // Opera — rojo oscuro
-    r.style.setProperty("--navy",  "#1A0008");
-    r.style.setProperty("--navy2", "#2A0010");
-    r.style.setProperty("--card",  "#1F000C");
-    r.style.setProperty("--brand", "#FF1B2D");
-    r.style.setProperty("--brand-bg","rgba(255,27,45,.13)");
-  } else {
-    // Chrome / default — verde amarillo original
-    r.style.setProperty("--navy",  "#0A1628");
-    r.style.setProperty("--navy2", "#0F1F3D");
-    r.style.setProperty("--card",  "#0D1A30");
-    r.style.setProperty("--brand", "#D0DF00");
-    r.style.setProperty("--brand-bg","rgba(208,223,0,.13)");
-  }
-  // Store for JS use
-  window._BROWSER = isEdge?"Edge":isFirefox?"Firefox":isSafari?"Safari":isOpera?"Opera":"Chrome";
-  window._IS_MOBILE = isMobile;
-})();
-</script>
 
 
 <!-- LOGIN MODAL -->
@@ -1925,6 +1871,7 @@ function build(){
       verif:    '',  // verificador
       custom:   false, // customizado
       customBy: '',  // quien customizó
+      monta2: '', verif2: '', customBy2: '',  // secondary operators
       prio:     false,
       prioNum:  0,
       semOrder: semIdx,
@@ -2190,7 +2137,7 @@ function applyNew(){
       con:fc(D,['Cortina','cortina','# Contenedor','Contenedor'])||fc(r,['CORTINA','cortina'])||'',
       com:saved.com||fc(D,['Comentarios:','Comentarios','comentarios','comentario'])||'',
       tu:turno, al:'', est:'NUEVO',
-      precarga:saved.precarga||'', monta:saved.monta||'',
+      precarga:saved.precarga||'', monta:saved.monta||'', monta2:saved.monta2||'', verif2:saved.verif2||'', customBy2:saved.customBy2||'',
       estop:(pcVal!==null&&pcVal>=100)?'CARGADO':(saved.estop||''), // auto CARGADO if 100%
       prio:saved.prio||false,
       _wmsMatch:!!wmsEmb, _wmsEmb:wmsEmb
@@ -2557,7 +2504,12 @@ function render(){
           <input class="edt-sel ac-monta-${idx}" type="text" placeholder="Monta..." style="width:100%;font-size:10px;${inputStyle}"
             oninput="acFilter(this,MONTACARGUISTAS,${idx},'monta')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-${idx}');if(d)d.remove()},200)">
         </div>`;
-      })()}</td>
+      })()}${r.monta
+         ? r.monta2
+           ? `<div style="display:flex;align-items:center;gap:3px;margin-top:2px"><span style="font-size:9px;color:var(--cyan);font-weight:500" title="${es(getMontaNombre(r.monta2))}">+${es(getMontaNombre(r.monta2)).split(' ')[0]}</span><button onclick="upd(${idx},'monta2','');render()" style="background:none;border:none;cursor:pointer;opacity:.5;color:var(--text3);font-size:9px;padding:0">✕</button></div>`
+           : `<div style="position:relative;margin-top:2px"><input class="edt-sel" type="text" placeholder="+2do..." style="width:100%;font-size:9px;height:20px" oninput="acFilter(this,MONTACARGUISTAS,${idx},'monta2')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-m2-${idx}');if(d)d.remove()},200)"></div>`
+         : ''}
+</td>
       <td>${(()=>{
         if(r.verif){
           const vn=getVerifNombre(r.verif);
@@ -2567,7 +2519,12 @@ function render(){
           <input class="edt-sel" type="text" placeholder="Verif..." style="width:100%;font-size:10px"
             oninput="acFilter(this,VERIFICADORES,${idx},'verif')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-v-${idx}');if(d)d.remove()},200)">
         </div>`;
-      })()}</td>
+      })()}${r.verif
+         ? r.verif2
+           ? `<div style="display:flex;align-items:center;gap:3px;margin-top:2px"><span style="font-size:9px;color:var(--cyan);font-weight:500" title="${es(getVerifNombre(r.verif2))}">+${es(getVerifNombreCompleto(r.verif2)).split(' ')[0]}</span><button onclick="upd(${idx},'verif2','');render()" style="background:none;border:none;cursor:pointer;opacity:.5;color:var(--text3);font-size:9px;padding:0">✕</button></div>`
+           : `<div style="position:relative;margin-top:2px"><input class="edt-sel" type="text" placeholder="+2do verif..." style="width:100%;font-size:9px;height:20px" oninput="acFilter(this,VERIFICADORES,${idx},'verif2')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-v2-${idx}');if(d)d.remove()},200)"></div>`
+         : ''}
+</td>
       <td style="text-align:center">
         <label style="display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;margin-bottom:4px">
           <input type="checkbox" ${r.custom?'checked':''} onchange="updCustom(${idx},this.checked)" style="width:14px;height:14px;accent-color:var(--green);cursor:pointer">
@@ -2577,6 +2534,11 @@ function render(){
           ? `<span style="font-size:9px;color:var(--purple);display:block;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${es(r.customBy)}">${es(r.customBy)}<button onclick="upd(${idx},'customBy','');render()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:9px;padding:0;margin-left:2px">✕</button></span>`
           : `<div style="position:relative"><input class="edt-sel" type="text" placeholder="¿Quién?" style="width:80px;font-size:9.5px;height:22px;padding:2px 5px" oninput="acFilter(this,ALL_PERSONAL,${idx},'customBy')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-c-${idx}');if(d)d.remove()},200)"></div>`
         }
+        ${r.customBy
+          ? r.customBy2
+            ? `<div style="display:flex;align-items:center;gap:3px;margin-top:2px"><span style="font-size:9px;color:var(--cyan);font-weight:500">+${es((r.customBy2||'').split(' ')[0])}</span><button onclick="upd(${idx},'customBy2','');render()" style="background:none;border:none;cursor:pointer;opacity:.5;color:var(--text3);font-size:9px;padding:0">✕</button></div>`
+            : `<div style="position:relative;margin-top:2px"><input class="edt-sel" type="text" placeholder="+2do custom..." style="width:80px;font-size:9px;height:20px;padding:2px 4px" oninput="acFilter(this,ALL_PERSONAL,${idx},'customBy2')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-c2-${idx}');if(d)d.remove()},200)"></div>`
+          : ''}
       </td>
       <td style="text-align:center">
         <button onclick="abrirEvidencias(${idx})" style="background:${(r.evidencias&&r.evidencias.length)?'rgba(16,185,129,.2)':'var(--navy2)'};border:1px solid ${(r.evidencias&&r.evidencias.length)?'var(--green)':'var(--border2)'};color:${(r.evidencias&&r.evidencias.length)?'var(--green)':'var(--text3)'};border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;white-space:nowrap">
@@ -2816,10 +2778,12 @@ function renderVerif(){
   // Detail table
   tb.innerHTML=sorted.map((r,i)=>{
     const vn=r.verif?getVerifNombreCompleto(r.verif):'—';
+    const vn2=r.verif2?getVerifNombreCompleto(r.verif2):'';
+    const mn2=r.monta2?getMontaNombre(r.monta2):'';
     return `<tr style="border-bottom:1px solid var(--border)">
       <td style="padding:5px 8px;color:var(--text3);font-size:10px">${i+1}</td>
       <td style="padding:5px 8px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600">${es(r.emb)}</td>
-      <td style="padding:5px 8px;font-size:10.5px">${es(vn)}</td>
+      <td style="padding:5px 8px;font-size:10.5px">${es(vn)}${vn2?`<br><span style="font-size:9px;color:var(--cyan)">+${es(vn2)}</span>`:''}</td>
       <td style="padding:5px 8px;text-align:center">
         ${r.custom?'<span class="b bg" style="font-size:9px">✓ Sí</span>':'<span class="b bx" style="font-size:9px">No</span>'}
       </td>
@@ -6411,16 +6375,19 @@ const _THEMES=['dark','dim','light','system'];
 const _THEME_ICONS={dark:'🌙',dim:'🌆',light:'☀️',system:'💻'};
 const _THEME_LABELS={dark:'Oscuro',dim:'Tenue',light:'Claro',system:'Sistema'};
 let _curTheme=localStorage.getItem('trx_theme')||'dark';
-(function applyTheme(t){
-  const el=document.documentElement;
+// Apply theme immediately
+(function(){
+  let t=_curTheme;
   if(t==='system') t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';
-  el.setAttribute('data-theme',t);
+  document.documentElement.setAttribute('data-theme',t);
+})();
+// Update button when DOM ready
+document.addEventListener('DOMContentLoaded',function(){
   const btn=g('themeBtn'); if(btn){
-    const stored=localStorage.getItem('trx_theme')||'dark';
-    btn.textContent=_THEME_ICONS[stored]||'🌙';
-    btn.title=_THEME_LABELS[stored]||'Tema';
+    btn.textContent=_THEME_ICONS[_curTheme]||'🌙';
+    btn.title=_THEME_LABELS[_curTheme]||'Tema';
   }
-})(_curTheme);
+});
 function cycleTheme(){
   const idx=_THEMES.indexOf(_curTheme);
   _curTheme=_THEMES[(idx+1)%_THEMES.length];
@@ -7210,6 +7177,7 @@ function applyGuestUI(){
   const _origSW = window.switchView;
   window.switchView = function(v){
     if(!fbIsAdmin && v === 'inc') return;
+    if(!fbIsAdmin && v === 'hist') return;
     _origSW(v);
   };
   // Rename vsw-emb button to 'Semáforo' for guests
@@ -7224,11 +7192,13 @@ function applyGuestUI(){
   });
   document.querySelectorAll('.vsw-btn').forEach(b=>b.classList.remove('active'));
   const vswEmb=g('vsw-emb'); if(vswEmb) vswEmb.classList.add('active');
-  // Inside emb: hide all panels except Resumen
-  ['tk','al','vf','dc','cl','vac'].forEach(x=>{
+  // Inside emb: hide all panels except Resumen and Clientes
+  ['tk','al','vf','dc','vac'].forEach(x=>{
     const el=g('p-'+x); if(el) el.classList.add('hidden');
   });
   const rsEl=g('p-rs'); if(rsEl) rsEl.classList.remove('hidden');
+  // Clientes panel: keep hidden until tab clicked, but allow access
+  const clEl=g('p-cl'); if(clEl) clEl.classList.add('hidden');
   // Activate Resumen tab
   document.querySelectorAll('.tab').forEach(t=>{
     t.classList.toggle('active',(t.getAttribute('onclick')||'').includes("'rs'"));
@@ -7290,6 +7260,11 @@ function applyDocumentadorUI(){
   ['htab-emb','htab-vf'].forEach(id=>{ const el=g(id); if(el) el.style.display='none'; });
   // Switch to Descargas view
   ['view-emb','view-inc','view-hist'].forEach(id=>{ const el=g(id); if(el) el.classList.add('hidden'); });
+  // Show dvHistPanel for documentador
+  const _dvh=g('dvHistPanel'); if(_dvh) _dvh.style.display='';
+  const _dvhs=g('dvHistSelector'); if(_dvhs) _dvhs.style.display='';
+  const _dvhd=g('dvHistDayPanel'); if(_dvhd) _dvhd.style.display='';
+
   const vDesc=g('view-desc'); if(vDesc) vDesc.classList.remove('hidden');
   document.querySelectorAll('.vsw-btn').forEach(b=>b.classList.remove('active'));
   const vswD=g('vsw-desc'); if(vswD) vswD.classList.add('active');
@@ -7397,6 +7372,8 @@ function fbSave(){
 }
 
 function applyRemoteData(data){
+  const _role=fbIsAdmin?'Admin':fbIsDocumentador?'Documentador':'Invitado';
+  console.log('[SYNC] applyRemoteData role='+_role+' rows='+(data.rows?.length||0)+' dvRegs='+(data.dvRegistros?.length||0)+' incRegs='+(data.incRegistros?.length||0));
   console.log('[DATA] applyRemoteData fbIsAdmin='+fbIsAdmin+' fbIsDoc='+fbIsDocumentador+' rows='+(data.rows?data.rows.length:0));
   // Detect assignment changes from other devices BEFORE overwriting S.rows
   if(data.rows && Array.isArray(data.rows) && S.rows && S.rows.length && data.device && data.device!==DEVICE_ID){
@@ -7479,7 +7456,7 @@ function applyRemoteData(data){
       try{localStorage.setItem('trx_cust_hist',JSON.stringify(CUST.historial));}catch(e){}
     }
   }
-  if(!S.rows || !S.rows.length) return;
+  if(!S.rows || !S.rows.length){ if(!fbIsAdmin && !fbIsDocumentador){ if(typeof renderResumen==='function') renderResumen(); if(typeof badge==='function') badge(); } return; }
 
   // Show UI chrome
   ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
@@ -7579,7 +7556,7 @@ window.upd = function(idx,field,val){
   if(['monta','precarga','verif'].includes(field) && val){
     const r = S.rows[idx];
     if(!r) return;
-    const labels = {monta:'Montacarguista',precarga:'Precarga',verif:'Verificador'};
+    const labels = {monta:'Montacarguista',monta2:'Montacarguista 2',precarga:'Precarga',verif:'Verificador',verif2:'Verificador 2',customBy:'Customizó',customBy2:'Customizó 2'};
     const who = field==='monta'
       ? (MONTACARGUISTAS.find(m=>m.id===val)?.nombre||val)
       : field==='verif'
