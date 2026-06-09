@@ -1163,7 +1163,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       <button class="btn" onclick="exportHistVfCSV()" style="font-size:11px;border-color:var(--green);color:var(--green)">⬇ Exportar CSV</button>
     </div>
     <div id="histVfKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px"></div>
-    <div id="histVfRanking" style="margin-bottom:12px"></div>
+    <div id="histVfRanking" style="margin-bottom:12px;max-height:35vh;overflow-y:auto"></div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
       <div style="flex:1;font-size:10px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.5px">📋 Detalle por fecha</div>
       <button onclick="vfToggleDetalle()" id="vfDetalleBtn"
@@ -1211,6 +1211,8 @@ function autoSaveVerifHistorial(){
     const snap = {
       emb:r.emb, nom:r.nom, sem:r.sem,
       verif:r.verif||'', monta:r.monta||'',
+      verif2:r.verif2||'', monta2:r.monta2||'',
+      customBy:r.customBy||'', customBy2:r.customBy2||'',
       precarga:r.precarga||'',
       estop:r.estop||'', pt:r.pt||'',
       fecha:hora, ts:now.getTime()
@@ -2580,7 +2582,8 @@ function render(){
 }
 
 function upd(idx,field,val){
-  if(!fbIsAdmin)return;
+  if(!fbIsAdmin && !fbIsDocumentador)return; // guests read-only
+  if(!S.rows[idx]) return;
   S.rows[idx][field]=val;
   const emb=S.rows[idx].emb;
   if(!S.userEdits[emb]) S.userEdits[emb]={};
@@ -3516,33 +3519,37 @@ function renderHistVf(){
   [...S.turnoHistorial].sort((a,b)=>(a.ts||0)-(b.ts||0)).forEach(h=>{
     const dayLabel = (h.hora||h.fecha||'').split(',')[0].trim() || '—';
     (h.fletes||[]).forEach(f=>{
-      if(!f.verif || !f.emb) return;
-      const key = f.emb+'|'+f.verif;
-      seen.set(key,{
-        emb   : f.emb,
-        nom   : f.nom||'',
-        verif : f.verif,
-        nombre: VERIFICADORES.find(v=>v.id===f.verif)?.nombre||f.verif,
-        fecha : dayLabel,
-        sem   : f.sem||''
-      });
+      if(!f.emb) return;
+      // Primary verif
+      if(f.verif){
+        const key=f.emb+'|'+f.verif;
+        seen.set(key,{emb:f.emb,nom:f.nom||'',verif:f.verif,
+          nombre:VERIFICADORES.find(v=>v.id===f.verif)?.nombre||f.verif,
+          fecha:dayLabel,sem:f.sem||''});
+      }
+      // Secondary verif2
+      if(f.verif2){
+        const key2=f.emb+'|'+f.verif2;
+        seen.set(key2,{emb:f.emb,nom:f.nom||'',verif:f.verif2,
+          nombre:VERIFICADORES.find(v=>v.id===f.verif2)?.nombre||f.verif2,
+          fecha:dayLabel,sem:f.sem||''});
+      }
     });
   });
 
   // Current turn — only add if NOT already in historial
   const todayKey = new Date().toLocaleDateString('es-MX');
-  S.rows.filter(r=>r.verif).forEach(r=>{
-    const key = (r.emb||'')+'|'+(r.verif||'');
-    if(!seen.has(key)){
-      seen.set(key,{
-        emb   : r.emb||'',
-        nom   : r.nom||'',
-        verif : r.verif,
-        nombre: VERIFICADORES.find(v=>v.id===r.verif)?.nombre||r.verif,
-        fecha : todayKey,
-        sem   : r.sem||''
-      });
-    }
+  S.rows.filter(r=>r.verif||r.verif2).forEach(r=>{
+    [r.verif,r.verif2].filter(Boolean).forEach(function(vid){
+      const key=(r.emb||'')+'|'+vid;
+      if(!seen.has(key)){
+        seen.set(key,{
+          emb:r.emb||'', nom:r.nom||'', verif:vid,
+          nombre:VERIFICADORES.find(v=>v.id===vid)?.nombre||vid,
+          fecha:'Turno activo', sem:r.sem||''
+        });
+      }
+    });
   });
 
   // Flat list
@@ -3911,27 +3918,26 @@ function _histDescBuildRows(rows){
 function _custSyncFromRows(){
   const seen=new Set(CUST.historial.map(r=>String(r.emb)+'|'+(r.customBy||'')));
   let changed=false;
-  // 1. From current S.rows
+  // 1. From current S.rows (customBy + customBy2)
   if(Array.isArray(S.rows)){
     S.rows.forEach(r=>{
-      if(!r.customBy || !r.customBy.trim()) return;
-      const key=String(r.emb)+'|'+r.customBy;
-      if(!seen.has(key)){
+      [r.customBy, r.customBy2].filter(cb=>cb&&cb.trim()).forEach(function(cb){
+        const key=String(r.emb)+'|'+cb;
+        if(seen.has(key)) return;
         seen.add(key);
-        // Resolve ID to name if needed
-        var _cb2=r.customBy||'';
-        if(_cb2 && /^\d{6,10}$/.test(_cb2.trim())){
-          var _p2=ALL_PERSONAL.find(function(p){return p.id===_cb2.trim();});
-          _cb2=_p2?_p2.nombre:_cb2;
+        var _cb=cb;
+        if(/^\d{6,10}$/.test(_cb.trim())){
+          var _p=ALL_PERSONAL.find(function(p){return p.id===_cb.trim();});
+          _cb=_p?_p.nombre:_cb;
         }
         CUST.historial.push({
-          ts: r.ts||Date.now(), emb: String(r.emb||''),
-          nom: r.nom||'', customBy: _cb2,
-          fecha: new Date().toLocaleDateString('es-MX'),
-          turno: r.turno||S.sessionTurno||''
+          ts:r.ts||Date.now(), emb:String(r.emb||''),
+          nom:r.nom||'', customBy:_cb,
+          fecha:new Date().toLocaleDateString('es-MX'),
+          turno:r.turno||S.sessionTurno||''
         });
         changed=true;
-      }
+      });
     });
   }
   // 2. From S.turnoHistorial (older records)
@@ -7270,6 +7276,14 @@ function applyDocumentadorUI(){
   const vswD=g('vsw-desc'); if(vswD) vswD.classList.add('active');
   // Render immediately — don't wait for Firebase
   dvRender();
+  // Ensure main DV grid is visible
+  document.querySelectorAll('.dv-main-grid').forEach(function(el){el.style.display='';});
+
+  // Also ensure current registros list is visible
+  const _dvList=g('dvList'); if(_dvList) _dvList.style.display='';
+  const _dvMain=g('dv-main') || document.querySelector('.dv-main-grid');
+  if(_dvMain) _dvMain.style.display='';
+
   // Also ensure historial sub-tab restriction
   const htabEmb2=g('htab-emb'); if(htabEmb2) htabEmb2.style.display='none';
   const htabVf2=g('htab-vf');   if(htabVf2)  htabVf2.style.display='none';
@@ -7456,7 +7470,9 @@ function applyRemoteData(data){
       try{localStorage.setItem('trx_cust_hist',JSON.stringify(CUST.historial));}catch(e){}
     }
   }
-  if(!S.rows || !S.rows.length){ if(!fbIsAdmin && !fbIsDocumentador){ if(typeof renderResumen==='function') renderResumen(); if(typeof badge==='function') badge(); } return; }
+  if(!S.rows || !S.rows.length){ if(!fbIsAdmin && !fbIsDocumentador){ // Show guest UI chrome so tabs/panels appear
+  ['kRow','tabs'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('hidden'); });
+  if(typeof renderResumen==='function') renderResumen(); if(typeof badge==='function') badge(); } return; }
 
   // Show UI chrome
   ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
@@ -7465,11 +7481,10 @@ function applyRemoteData(data){
   if(typeof updateTopbarSup==='function') updateTopbarSup();
 
   if(!fbIsAdmin && !fbIsDocumentador){
-    // GUEST only: update resumen data
+    // GUEST: show UI chrome + render resumen
+    ['kRow','tabs'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('hidden'); });
     kpi(); badge();
-    requestAnimationFrame(()=>{
-      if(typeof renderResumen==='function') renderResumen();
-    });
+    requestAnimationFrame(function(){ if(typeof renderResumen==='function') renderResumen(); });
     return;
   }
   if(fbIsDocumentador){
