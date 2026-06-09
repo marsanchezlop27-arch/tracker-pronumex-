@@ -63,6 +63,21 @@ body.guest-mode #view-desc input:not([type=hidden]),body.guest-mode #view-desc s
 @keyframes pulse-sync{0%,100%{opacity:1}50%{opacity:.4}}
 
 :root{
+  --brand:#D0DF00;
+}
+[data-theme="light"]{
+  --navy:#F0F4F8;--navy2:#E2E8F0;--card:#FFFFFF;
+  --text:#1A202C;--text2:#4A5568;--text3:#718096;
+  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.15);
+  --surface:rgba(0,0,0,0.04);--surface2:rgba(0,0,0,0.07);
+  --brand:#0A7527;--brand-bg:rgba(10,117,39,.1);
+}
+[data-theme="dim"]{
+  --navy:#1B2333;--navy2:#242F42;--card:#1E2A3A;
+  --text:#CBD5E0;--text2:#8896A5;--text3:#5A6B7A;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.13);
+}
+:root{
   --brand:#D0DF00;--brand-dark:#8a9400;--brand-bg:rgba(208,223,0,.13);
   --navy:#0A1628;--navy2:#0F1F3D;--blue:#1A56DB;--cyan:#06B6D4;
   --green:#10B981;--amber:#F59E0B;--red:#EF4444;--purple:#8B5CF6;
@@ -605,6 +620,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <span id="topbarSup" style="font-size:11px;color:var(--cyan);font-weight:500;white-space:nowrap"></span>
   <div class="sep"></div>
   <span class="clock" id="clk"></span>
+  <button id="themeBtn" onclick="cycleTheme()" style="background:none;border:1px solid var(--border2);color:var(--text2);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0" title="Oscuro">🌙</button>
   <div id="semanaCounter" style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap">
     <span style="font-size:9px;color:var(--text3);white-space:nowrap">Sem.</span>
     <span style="font-size:10px;white-space:nowrap" title="Fletes únicos / cargados"><span style="color:var(--cyan);font-weight:700" id="swFletes">0</span><span style="color:var(--text3);font-size:9px">/</span><span style="color:var(--green);font-weight:700" id="swFletesCarq">0</span><span style="color:var(--text3);font-size:9px"> fletes</span></span>
@@ -6391,6 +6407,33 @@ function updateSemanaCounter(){
   var paEl=g('swPickArm'); if(paEl) paEl.textContent=pickArmado.toLocaleString('es-MX');
 }
 
+const _THEMES=['dark','dim','light','system'];
+const _THEME_ICONS={dark:'🌙',dim:'🌆',light:'☀️',system:'💻'};
+const _THEME_LABELS={dark:'Oscuro',dim:'Tenue',light:'Claro',system:'Sistema'};
+let _curTheme=localStorage.getItem('trx_theme')||'dark';
+(function applyTheme(t){
+  const el=document.documentElement;
+  if(t==='system') t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';
+  el.setAttribute('data-theme',t);
+  const btn=g('themeBtn'); if(btn){
+    const stored=localStorage.getItem('trx_theme')||'dark';
+    btn.textContent=_THEME_ICONS[stored]||'🌙';
+    btn.title=_THEME_LABELS[stored]||'Tema';
+  }
+})(_curTheme);
+function cycleTheme(){
+  const idx=_THEMES.indexOf(_curTheme);
+  _curTheme=_THEMES[(idx+1)%_THEMES.length];
+  localStorage.setItem('trx_theme',_curTheme);
+  let t=_curTheme;
+  if(t==='system') t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';
+  document.documentElement.setAttribute('data-theme',t);
+  const btn=g('themeBtn'); if(btn){
+    btn.textContent=_THEME_ICONS[_curTheme];
+    btn.title=_THEME_LABELS[_curTheme];
+  }
+}
+
 function toggleFiltroPrio(){
   filtroPrio = !filtroPrio;
   const btn = g('fRsPrio');
@@ -7169,6 +7212,12 @@ function applyGuestUI(){
     if(!fbIsAdmin && v === 'inc') return;
     _origSW(v);
   };
+  // Rename vsw-emb button to 'Semáforo' for guests
+  const vswEmbBtn=g('vsw-emb');
+  if(vswEmbBtn){
+    vswEmbBtn.querySelector('span')||vswEmbBtn.appendChild(document.createElement('span'));
+    const sp=vswEmbBtn.querySelector('span'); if(sp) sp.textContent='Semáforo';
+  }
   // Show Embarques view (contains the tabs with Resumen)
   ['view-emb','view-desc','view-inc','view-hist'].forEach(id=>{
     const el=g(id); if(el) el.classList.toggle('hidden',id!=='view-emb');
@@ -7249,6 +7298,8 @@ function applyDocumentadorUI(){
   // Also ensure historial sub-tab restriction
   const htabEmb2=g('htab-emb'); if(htabEmb2) htabEmb2.style.display='none';
   const htabVf2=g('htab-vf');   if(htabVf2)  htabVf2.style.display='none';
+  // Set default historial tab to Descargas for documentador
+  if(typeof histSubTab==='function') histSubTab('desc');
 }
 
 let _authApplied = false;
