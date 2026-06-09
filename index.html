@@ -2674,6 +2674,10 @@ function updCustom(idx,checked){
   S.userEdits[emb].custom=checked;
   if(!checked){
     S.rows[idx].customBy=''; S.userEdits[emb].customBy='';
+    // Remove from CUST.historial
+    const _embStr=String(emb);
+    CUST.historial=CUST.historial.filter(h=>h.emb!==_embStr);
+    try{localStorage.setItem('trx_cust_hist',JSON.stringify(CUST.historial));}catch(e){}
   } else {
     // Record in CUST.historial
     const fecha=new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
@@ -3867,7 +3871,7 @@ function _custSyncFromRows(){
   // 1. From current S.rows
   if(Array.isArray(S.rows)){
     S.rows.forEach(r=>{
-      if(!r.customBy) return;
+      if(!r.customBy || !r.customBy.trim()) return;
       const key=String(r.emb)+'|'+r.customBy;
       if(!seen.has(key)){
         seen.add(key);
@@ -3925,7 +3929,8 @@ function renderHistCust(){
   const seen=new Set();
   const merged=[];
   CUST.historial.forEach(r=>{
-    const key=String(r.emb)+'|'+(r.customBy||'');
+    if(!r.customBy||!r.customBy.trim()) return; // skip no-collaborator entries
+    const key=String(r.emb)+'|'+r.customBy;
     if(!seen.has(key)){ seen.add(key); merged.push(r); }
   });
   merged.forEach(function(r){
@@ -3939,7 +3944,8 @@ function renderHistCust(){
   // Ranking
   const byColab={};
   hist.forEach(r=>{
-    const k=r.customBy||'Sin asignar';
+    const k=r.customBy||'';
+    if(!k) return; // skip entries with no collaborator
     if(!byColab[k]) byColab[k]={count:0};
     byColab[k].count++;
   });
@@ -6355,12 +6361,10 @@ function toggleMostrarCargados(){
 function renderResumen(){
   const q=(g('qRs')?.value||'').toLowerCase();
   const fs=g('fRsSem')?.value||'';
-  const fe=g('fRsEst')?.value||'';
 
   let rows=S.rows.filter(r=>{
     if(q&&!r.emb.toLowerCase().includes(q)&&!r.nom.toLowerCase().includes(q)) return false;
     if(fs&&!r.sem.includes(fs)) return false;
-    if(fe&&r.estop!==fe) return false;
     if(filtroPrio&&!r.prio) return false;
     const frt=g('fRsTrans')?.value||'';
     if(frt==='con'&&!hasTrans(r)) return false;
