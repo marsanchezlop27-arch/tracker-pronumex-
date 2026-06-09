@@ -1634,9 +1634,6 @@ function removeDupCols(aoa){
 
 // Actualiza Detalle/PTR sin recargar el semáforo
 function patchDetPtr(){
-  // ── CORTINA TRACE ──
-  var _ct_before=(S.rows||[]).find(function(r){return String(r.emb)==='1571432';});
-  if(_ct_before) console.log('%c[CORTINA BEFORE patchDetPtr]','color:#f90;font-weight:bold','emb=1571432 con='+JSON.stringify(_ct_before.con)+' contenedor='+JSON.stringify(_ct_before.contenedor));
 
   const detRows = S.buf.det ? toObjects(parseSlot(S.buf.det)) : [];
   const ptrRows = S.buf.ptr ? toObjects(parseSlot(S.buf.ptr)) : [];
@@ -1697,17 +1694,11 @@ function patchDetPtr(){
   document.getElementById('st').textContent = 'Detalle/PTR actualizados — semáforo sin cambios.';
   fbSave();
 
-  // ── CORTINA AFTER ──
-  var _ct_after=(S.rows||[]).find(function(r){return String(r.emb)==='1571432';});
-  if(_ct_after) console.log('%c[CORTINA AFTER patchDetPtr]','color:#'+((_ct_after.con&&_ct_after.con.startsWith('Rampa'))?'0f0':'f00')+';font-weight:bold','emb=1571432 con='+JSON.stringify(_ct_after.con)+(_ct_after.con!==(_ct_before&&_ct_before.con)?'  ← CHANGED!':''));
 }
 
 
 // ─── BUILD ────────────────────────────────────────────────────────────────────
 function build(){
-  // ── CORTINA TRACE ──
-  var _ct_before=(S.rows||[]).find(function(r){return String(r.emb)==='1571432';});
-  if(_ct_before) console.log('%c[CORTINA BEFORE build]','color:#f90;font-weight:bold','emb=1571432 con='+JSON.stringify(_ct_before.con)+' contenedor='+JSON.stringify(_ct_before.contenedor));
 
   // Reset alert tracking so new semaforo fires fresh notifications
   alertedEmbs.clear();
@@ -1943,16 +1934,10 @@ function build(){
     });
   }
 
-  // ── CORTINA AFTER ──
-  var _ct_after=(S.rows||[]).find(function(r){return String(r.emb)==='1571432';});
-  if(_ct_after) console.log('%c[CORTINA AFTER build]','color:#'+((_ct_after.con&&_ct_after.con.startsWith('Rampa'))?'0f0':'f00')+';font-weight:bold','emb=1571432 con='+JSON.stringify(_ct_after.con)+(_ct_after.con!==(_ct_before&&_ct_before.con)?'  ← CHANGED!':''));
 }
 
 // ─── APPLY NEW SEMAFORO — el nuevo semáforo se convierte en la base ───────────
 function applyNew(){
-  // ── CORTINA TRACE ──
-  var _ct_before=(S.rows||[]).find(function(r){return String(r.emb)==='1571432';});
-  if(_ct_before) console.log('%c[CORTINA BEFORE applyNew]','color:#f90;font-weight:bold','emb=1571432 con='+JSON.stringify(_ct_before.con)+' contenedor='+JSON.stringify(_ct_before.contenedor));
 
   // Reset alert tracking on new semaforo
   alertedEmbs.clear();
@@ -2183,9 +2168,6 @@ function applyNew(){
     'Actualizados: <strong>'+up+'</strong> · Nuevos: <strong>'+nv+'</strong> · '+
     'Alertas de hora: <strong>'+al+'</strong> · Retirados: <strong>'+drop+'</strong>');
 
-  // ── CORTINA AFTER ──
-  var _ct_after=(S.rows||[]).find(function(r){return String(r.emb)==='1571432';});
-  if(_ct_after) console.log('%c[CORTINA AFTER applyNew]','color:#'+((_ct_after.con&&_ct_after.con.startsWith('Rampa'))?'0f0':'f00')+';font-weight:bold','emb=1571432 con='+JSON.stringify(_ct_after.con)+(_ct_after.con!==(_ct_before&&_ct_before.con)?'  ← CHANGED!':''));
 }
 
 function showRes(t,h){
@@ -2355,9 +2337,6 @@ function initResizableCols(){
 }
 
 function render(){
-  // ── CORTINA TRACE ──
-  var _ct_before=(S.rows||[]).find(function(r){return String(r.emb)==='1571432';});
-  if(_ct_before) console.log('%c[CORTINA BEFORE render]','color:#f90;font-weight:bold','emb=1571432 con='+JSON.stringify(_ct_before.con)+' contenedor='+JSON.stringify(_ct_before.contenedor));
 
   const q=(g('qry')?.value||'').toLowerCase();
   const fs=g('fSem')?.value||'';
@@ -2567,9 +2546,6 @@ function render(){
     `<span style="color:var(--text3)">○ ${nSin} sin cortina</span>`+
     '';
 
-  // ── CORTINA AFTER ──
-  var _ct_after=(S.rows||[]).find(function(r){return String(r.emb)==='1571432';});
-  if(_ct_after) console.log('%c[CORTINA AFTER render]','color:#'+((_ct_after.con&&_ct_after.con.startsWith('Rampa'))?'0f0':'f00')+';font-weight:bold','emb=1571432 con='+JSON.stringify(_ct_after.con)+(_ct_after.con!==(_ct_before&&_ct_before.con)?'  ← CHANGED!':''));
 }
 
 function upd(idx,field,val){
@@ -7335,8 +7311,6 @@ function fbSave(){
         payload.incRegistros=(INC.registros||[]).slice(-50);
         payload.custHistorial=(CUST.historial||[]).slice(-100);
       }
-      var _fb_row=payload.rows.find(function(r){return String(r.emb)==='1571432';});
-      if(_fb_row) console.log('%c[FBSAVE PAYLOAD]','color:#ff0;font-weight:bold','emb=1571432 con='+JSON.stringify(_fb_row.con),'contenedor='+JSON.stringify(_fb_row.contenedor));
 
       autoSaveVerifHistorial(); // persist verif assignments
       try{ localStorage.setItem('trx_state', JSON.stringify({rows:payload.rows,userEdits:payload.userEdits,sessionTurno:payload.sessionTurno,sessionSup:payload.sessionSup,turnoHistorial:payload.turnoHistorial})); }catch(e){}
@@ -7354,11 +7328,7 @@ function fbSave(){
 }
 
 function applyRemoteData(data){
-  // ── CORTINA TRACE ──
-  var _ct_before=(S.rows||[]).find(function(r){return String(r.emb)==='1571432';});
-  if(_ct_before) console.log('%c[CORTINA BEFORE applyRemoteData]','color:#f90;font-weight:bold','emb=1571432 con='+JSON.stringify(_ct_before.con)+' contenedor='+JSON.stringify(_ct_before.contenedor));
 
-  console.log('[DATA] applyRemoteData fbIsAdmin='+fbIsAdmin+' fbIsDoc='+fbIsDocumentador+' rows='+(data.rows?data.rows.length:0));
   // Detect assignment changes from other devices BEFORE overwriting S.rows
   if(data.rows && Array.isArray(data.rows) && S.rows && S.rows.length && data.device && data.device!==DEVICE_ID){
     data.rows.forEach(function(nr){
@@ -7377,17 +7347,18 @@ function applyRemoteData(data){
       }
     });
   }
-  if(data.rows)           S.rows           = data.rows;
-  var _ar_row2=(S.rows||[]).find(function(r){return String(r.emb)==='1571432';});
-  if(_ar_row2) console.log('%c[applyRemoteData: after S.rows=data.rows]','color:#0ff','con='+JSON.stringify(_ar_row2.con),'(from Firebase device='+data.device+')');
+  // Don't overwrite S.rows if build() just ran (guard 8 seconds)
+  const _msSinceBuild = Date.now()-(S._lastBuildTs||0);
+  if(data.rows && _msSinceBuild > 8000) S.rows = data.rows;
+  else if(data.rows && _msSinceBuild <= 8000){
+    console.log('[SYNC] S.rows restore SKIPPED — build ran '+Math.round(_msSinceBuild/1000)+'s ago');
+  }
 
   // Sync customBy from restored rows into CUST.historial
   if(typeof _custSyncFromRows==='function') _custSyncFromRows();
   // Normalize con values: 'DI-N' → 'Rampa N' for any stale Firebase values
-  // ── CORTINA NORMALIZE LOG ──
   if(S.rows){
     S.rows.forEach(function(r){
-      if(String(r.emb)==='1571432') console.log('%c[applyRemoteData: normalize BEFORE]','color:#fa0','con='+JSON.stringify(r.con));
       if(!r.con || r.con.startsWith('Rampa')) return;
       var _s=String(r.con).trim();
       var _m1=_s.match(/^[Dd][Ii][\s\-.]*(\d+)$/);
@@ -7396,7 +7367,6 @@ function applyRemoteData(data){
       if(_m2){var _n=parseInt(_m2[1]);if(_n>0&&_n<=99){r.con='Rampa '+_n;return;}}
       var _m3=_s.match(/^[Rr]ampa\s*(\d+)$/);
       if(_m3){r.con='Rampa '+parseInt(_m3[1]);return;}
-      // No borrar — mantener valor si no se puede parsear
     });
   }
   // Remove alerts for embs no longer in S.rows (prevent stale notifications)
@@ -7405,7 +7375,7 @@ function applyRemoteData(data){
       if(!S.rows.find(r=>r.emb===emb)) alertedEmbs.delete(emb);
     });
   }
-  if(data.userEdits)      S.userEdits       = data.userEdits;
+  if(data.userEdits && _msSinceBuild > 8000) S.userEdits = data.userEdits;
   if(data.turnoHistorial) S.turnoHistorial  = data.turnoHistorial;
   if(data.posAlerts)      S.posAlerts       = data.posAlerts;
   if(data.sessionTurno)   S.sessionTurno    = data.sessionTurno;
@@ -7496,9 +7466,6 @@ function applyRemoteData(data){
   const _descView=g('view-desc');
   if(_descView&&!_descView.classList.contains('hidden')) dvRender();
 
-  // ── CORTINA AFTER ──
-  var _ct_after=(S.rows||[]).find(function(r){return String(r.emb)==='1571432';});
-  if(_ct_after) console.log('%c[CORTINA AFTER applyRemoteData]','color:#'+((_ct_after.con&&_ct_after.con.startsWith('Rampa'))?'0f0':'f00')+';font-weight:bold','emb=1571432 con='+JSON.stringify(_ct_after.con)+(_ct_after.con!==(_ct_before&&_ct_before.con)?'  ← CHANGED!':''));
 }
 
 function startSync(){
@@ -7512,9 +7479,6 @@ function startSync(){
   let _firstSnap = true;
   fbUnsubscribe = FB.onSnapshot(ref, (snap)=>{
     fbReady = true;
-    var _snap_data=snap.data();
-    var _snap_row=(_snap_data&&_snap_data.rows||[]).find(function(r){return String(r.emb)==='1571432';});
-    if(_snap_row) console.log('%c[FIREBASE→ snap received]','color:#0ff;font-weight:bold','emb=1571432 con='+JSON.stringify(_snap_row.con),'device='+(_snap_data&&_snap_data.device||'?'));
     if(dot){ dot.style.background='var(--green)'; dot.title='Sincronizado'; }
     if(!snap.exists()) return;
     const data = snap.data();
@@ -7634,7 +7598,11 @@ window.updVerif = function(idx,val){ _origUpdVerif(idx,val); fbSave(); };
 
 // Also save after build() and applyNew()
 const _origBuild = build;
-window.build = function(){ _origBuild(); fbSave(); };
+window.build = function(){
+  S._lastBuildTs = Date.now(); // guard: don't restore rows from Firebase right after build
+  _origBuild();
+  fbSave();
+};
 
 const _origApplyNew = applyNew;
 window.applyNew = function(){ _origApplyNew(); fbSave(); };
