@@ -7501,7 +7501,10 @@ function applyRemoteData(data){
   }
   // Restore CUST.historial from Firebase
   if(data.custHistorial && Array.isArray(data.custHistorial)){
-    if(data.custHistorial.length >= CUST.historial.length){
+    // Allow any size — deletions reduce length
+    const _custSameDevice=data.device&&data.device===DEVICE_ID;
+    const _msCustClear=Date.now()-(S._lastClearTs||0);
+    if(!_custSameDevice || _msCustClear>5000){
       CUST.historial = data.custHistorial;
       try{localStorage.setItem('trx_cust_hist',JSON.stringify(CUST.historial));}catch(e){}
     }
@@ -7513,12 +7516,7 @@ function applyRemoteData(data){
   if(typeof badge==='function') badge();
 } return; }
 
-  // Show UI chrome
-  ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.classList.remove('hidden');
-  });
-  if(typeof updateTopbarSup==='function') updateTopbarSup();
-
+  // GUEST: render and return before admin UI
   if(!fbIsAdmin && !fbIsDocumentador){
     ['kRow','tabs'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('hidden'); });
     var _prs=g('p-rs'); if(_prs) _prs.classList.remove('hidden');
@@ -7528,6 +7526,14 @@ function applyRemoteData(data){
     requestAnimationFrame(function(){ if(typeof renderResumen==='function') renderResumen(); });
     return;
   }
+  // Guest handled above already — only continue for Admin/Documentador
+  // Show UI chrome (admin/documentador only)
+  ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.classList.remove('hidden');
+  });
+  if(typeof updateTopbarSup==='function') updateTopbarSup();
+
+  
   if(fbIsDocumentador){
     // DOCUMENTADOR: gets DV + INC updates in real time
     requestAnimationFrame(()=>{
