@@ -1637,7 +1637,7 @@ function patchDetPtr(){
     const k = nk(fc(r,['No. Embarque','embarque','Embarque','Folio','folio']));
     if(k) detMap[k] = r;
     const com = String(fc(r,['Comentarios:','Comentarios','comentarios'])||'');
-    (com.match(/\d{6,10}/g)||[]).forEach(n=>{ comMap[nk(n)] = r; });
+    (com.match(/\d{5,}/g)||[]).forEach(n=>{ comMap[nk(n)] = r; });
   });
   ptrRows.forEach(r=>{
     const k = nk(fc(r,['No. Embarque','embarque','Embarque']));
@@ -1753,7 +1753,7 @@ function build(){
       detMap[k]=r;
       // Index by any number found in Comentarios field (SAP/WMS cross-reference)
       const com=fc(r,['Comentarios:','Comentarios','comentarios','comentario'])||'';
-      const nums=String(com).match(/\d{7,}/g)||[];
+      const nums=String(com).match(/\d{5,}/g)||[];
       nums.forEach(n=>{ const nk2=nk(n); if(nk2) comMap[nk2]=r; });
     }
   });
