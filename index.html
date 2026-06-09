@@ -846,14 +846,18 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
         <thead><tr>
           <th style="width:44px;text-align:center">Prio.</th>
           <th style="width:108px">No. Embarque</th>
-          <th style="min-width:160px">Cliente</th>
-          <th style="width:180px">Semáforo</th>
+          <th style="min-width:140px">Cliente</th>
+          <th style="width:160px">Semáforo</th>
           <th style="width:80px">Cortina</th>
-          <th style="width:120px;color:var(--cyan)">Precarga</th>
-          <th style="width:140px;color:var(--cyan)">Estatus op.</th>
-          <th style="width:110px;color:var(--purple)">Pend. Tarea</th>
-          <th style="width:110px;color:var(--amber)">Pend. Picking</th>
-          <th style="min-width:150px">Comentarios</th>
+          <th style="width:110px;color:var(--cyan)">Precarga</th>
+          <th style="width:120px;color:var(--green)">Monta.</th>
+          <th style="width:120px;color:var(--purple)">Verif.</th>
+          <th style="width:120px;color:var(--purple)">Custom.</th>
+          <th style="width:120px;color:var(--cyan)">Estatus op.</th>
+          <th style="width:70px;text-align:right;color:var(--cyan)">Pallets</th>
+          <th style="width:80px;color:var(--purple)">Pend. Tarea</th>
+          <th style="width:90px;color:var(--amber)">Pend. Pick.</th>
+          <th style="min-width:130px">Comentarios</th>
         </tr></thead>
         <tbody id="rsTb"></tbody>
       </table>
@@ -6436,7 +6440,7 @@ function renderResumen(){
   const tb=g('rsTb');
   if(!tb) return;
   if(!rows.length){
-    tb.innerHTML=`<tr><td colspan="11" style="text-align:center;padding:36px;color:var(--text3)">Sin resultados</td></tr>`;
+    tb.innerHTML=`<tr><td colspan="14" style="text-align:center;padding:36px;color:var(--text3)">Sin resultados</td></tr>`;
     g('rsTf').textContent=''; return;
   }
 
@@ -6505,6 +6509,19 @@ function renderResumen(){
           style="${inputStyle}"
           onchange="upd(${idx},'precarga',this.value);renderResumen()" title="Precarga">`;
       })()}</td>
+
+      <td style="font-size:10px;color:var(--green)">${(()=>{
+        const mn=r.monta?(MONTACARGUISTAS.find(m=>m.id===r.monta)||{}).nombre||r.monta:'';
+        return mn?`<span style="font-size:10px;font-weight:600;color:var(--green)">${es(mn.split(' ')[0])}</span>`:'<span style="color:var(--text3);font-size:10px">—</span>';
+      })()}</td>
+      <td style="font-size:10px;color:var(--purple)">${(()=>{
+        const vn=r.verif?(VERIFICADORES.find(v=>v.id===r.verif)||{}).nombre||r.verif:'';
+        return vn?`<span style="font-size:10px;font-weight:600;color:var(--purple)">${es(vn.split(' ')[0])}</span>`:'<span style="color:var(--text3);font-size:10px">—</span>';
+      })()}</td>
+      <td style="font-size:10px;color:var(--purple)">${(()=>{
+        const cb=r.customBy||'';
+        return cb?`<span style="font-size:10px;font-weight:600;color:var(--purple)">${es(cb.split(' ')[0])}</span>`:'<span style="color:var(--text3);font-size:10px">—</span>';
+      })()}</td>
       <td>${fbIsAdmin
         ? `<select class="edt-sel" onchange="upd(${idx},'estop',this.value);renderResumen()"
             style="height:26px;font-size:10px;font-weight:600;border-radius:5px;cursor:pointer;
@@ -6518,6 +6535,7 @@ function renderResumen(){
             })()}">${opts}</select>`
         : `<span class="b ${{'POR VERIFICAR':'bb','POR CARGAR':'bc','PENDIENTE':'bp','CARGADO':'bg','EN PROCESO':'ba'}[r.estop]||'bx'}" style="font-size:10px;white-space:nowrap">${es(r.estop||'PENDIENTE')}</span>`
       }</td>
+      <td style="text-align:right;font-size:11px">${r.pal!==''&&r.pal!==null&&r.pal!==undefined?r.pal:'<span style="color:var(--text3);font-size:10px">N/A</span>'}</td>
       <td style="text-align:center">${pendTareaHtml}</td>
       <td style="text-align:center">${pendPickHtml}</td>
       <td><input class="edt" type="text" value="${es(r.com||'')}" placeholder="—"
