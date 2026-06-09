@@ -3928,7 +3928,6 @@ function renderHistCust(){
     const key=String(r.emb)+'|'+(r.customBy||'');
     if(!seen.has(key)){ seen.add(key); merged.push(r); }
   });
-  // Resolve IDs to names
   merged.forEach(function(r){
     if(r.customBy && /^\d{6,10}$/.test(r.customBy.trim())){
       var _p=ALL_PERSONAL.find(function(p){return p.id===r.customBy.trim();});
@@ -3947,41 +3946,57 @@ function renderHistCust(){
   const ranking=Object.entries(byColab).sort((a,b)=>b[1].count-a[1].count);
 
   el.innerHTML=`
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start">
-
-    <!-- LEFT: Historial -->
-    <div style="min-width:0">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-        <div style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;flex:1">⚙ Historial</div>
-        <button onclick="custToggleDetalle()" id="custDetalleBtn"
-          style="background:none;border:1px solid var(--border2);color:var(--brand);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer">
-          ▼ Ver detalle</button>
-        <button onclick="custExportar()"
-          style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer">
-          ⬇ CSV</button>
+  <!-- TOP: KPIs summary + Ranking -->
+  <div style="margin-bottom:14px">
+    <!-- KPIs row -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+      <div class="kpi" style="border-top:2px solid var(--purple);padding:8px 10px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:var(--purple)">${hist.length}</div>
+        <div style="font-size:9px;color:var(--text3)">Total customizados</div>
       </div>
-
-      <!-- Summary (always visible) -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">
-        <div class="kpi" style="border-top:2px solid var(--purple);padding:6px 8px;text-align:center">
-          <div style="font-size:18px;font-weight:700;color:var(--purple)">${hist.length}</div>
-          <div style="font-size:9px;color:var(--text3)">Total fletes</div>
-        </div>
-        <div class="kpi" style="border-top:2px solid var(--cyan);padding:6px 8px;text-align:center">
-          <div style="font-size:18px;font-weight:700;color:var(--cyan)">${ranking.length}</div>
-          <div style="font-size:9px;color:var(--text3)">Colaboradores</div>
-        </div>
-        <div class="kpi" style="border-top:2px solid var(--green);padding:6px 8px;text-align:center">
-          <div style="font-size:18px;font-weight:700;color:var(--green)">${ranking[0]?ranking[0][0].split(' ')[0]:'—'}</div>
-          <div style="font-size:9px;color:var(--text3)">Top custom.</div>
-        </div>
+      <div class="kpi" style="border-top:2px solid var(--cyan);padding:8px 10px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:var(--cyan)">${ranking.length}</div>
+        <div style="font-size:9px;color:var(--text3)">Colaboradores</div>
       </div>
+      <div class="kpi" style="border-top:2px solid var(--green);padding:8px 10px;text-align:center">
+        <div style="font-size:16px;font-weight:700;color:var(--green);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ranking[0]?ranking[0][0].split(' ')[0]:'—'}</div>
+        <div style="font-size:9px;color:var(--text3)">Top customizador</div>
+      </div>
+    </div>
 
-      <!-- Detail table (hidden by default) -->
-      <div id="custDetallePanel" style="display:none;overflow-x:auto;overflow-y:auto;max-height:52vh;border-radius:8px;border:1px solid var(--border)">
-        ${hist.length===0
-          ?'<div style="font-size:11px;color:var(--text3);padding:12px">Sin registros.</div>'
-          :`<table style="width:100%;border-collapse:collapse;font-size:10.5px">
+    <!-- Ranking grid -->
+    <div style="font-size:10px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏆 Ranking Customizadores</div>
+    ${ranking.length===0
+      ?'<div style="font-size:11px;color:var(--text3);padding:8px">Sin datos.</div>'
+      :`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px">
+        ${ranking.map(([nom,d],ri)=>`
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 11px;display:flex;align-items:center;gap:8px;min-width:0">
+          <span style="font-size:13px;font-weight:800;color:${ri===0?'var(--amber)':ri===1?'var(--text3)':ri===2?'#CD7F32':'var(--text3)'};min-width:20px;flex-shrink:0">${ri+1}</span>
+          <span style="flex:1;font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${es(nom)}">${es(nom)}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:var(--purple);flex-shrink:0">${d.count}</span>
+          <span style="font-size:9px;color:var(--text3);flex-shrink:0">fletes</span>
+        </div>`).join('')}
+      </div>`
+    }
+  </div>
+
+  <!-- BOTTOM: Historial with toggle -->
+  <div style="border-top:1px solid var(--border);padding-top:12px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+      <div style="font-size:10px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;flex:1">⚙ Historial de Customizados</div>
+      <button onclick="custToggleDetalle()" id="custDetalleBtn"
+        style="background:none;border:1px solid var(--border2);color:var(--brand);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer">
+        ▼ Ver detalle</button>
+      <button onclick="custExportar()"
+        style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer">
+        ⬇ CSV</button>
+    </div>
+
+    <div id="custDetallePanel" style="display:none">
+      ${hist.length===0
+        ?'<div style="font-size:11px;color:var(--text3);padding:12px">Sin registros.</div>'
+        :`<div style="overflow-x:auto;overflow-y:auto;max-height:45vh;border-radius:8px;border:1px solid var(--border)">
+          <table style="width:100%;border-collapse:collapse;font-size:10.5px">
             <thead>
               <tr style="background:var(--navy2)">
                 <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--border)">Fecha</th>
@@ -3995,36 +4010,27 @@ function renderHistCust(){
               ${hist.map(r=>`
               <tr style="border-bottom:1px solid rgba(30,58,95,.4)" onmouseover="this.style.background='rgba(255,255,255,.025)'" onmouseout="this.style.background=''">
                 <td style="padding:4px 8px;font-size:9px;color:var(--text3);white-space:nowrap">${es(r.fecha)}</td>
-                <td style="padding:4px 8px;font-weight:600;color:var(--purple);white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis">${es(r.customBy||'—')}</td>
+                <td style="padding:4px 8px;font-weight:600;color:var(--purple);white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis">${es(r.customBy||'—')}</td>
                 <td style="padding:4px 8px;font-family:'IBM Plex Mono',monospace;color:var(--amber);font-size:9.5px;white-space:nowrap">${es(r.emb)}</td>
-                <td style="padding:4px 8px;font-size:10px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${es(r.nom||'—')}</td>
+                <td style="padding:4px 8px;font-size:10px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${es(r.nom||'—')}</td>
                 <td style="padding:4px 8px;text-align:center"><span style="font-size:9px;background:var(--navy2);padding:1px 5px;border-radius:4px">${es(r.turno||'—')}</span></td>
               </tr>`).join('')}
             </tbody>
-          </table>`
-        }
-      </div>
-    </div>
-
-    <!-- RIGHT: Ranking -->
-    <div style="min-width:0">
-      <div style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏆 Ranking</div>
-      ${ranking.length===0
-        ?'<div style="font-size:11px;color:var(--text3);padding:12px">Sin datos.</div>'
-        :`<div style="display:flex;flex-direction:column;gap:5px;overflow-y:auto;max-height:55vh">
-          ${ranking.map(([nom,d],ri)=>`
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;min-width:0">
-            <span style="font-size:13px;font-weight:800;color:${ri===0?'var(--amber)':ri===1?'var(--text3)':ri===2?'#CD7F32':'var(--text3)'};min-width:22px;flex-shrink:0">${ri+1}</span>
-            <span style="flex:1;font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${es(nom)}">${es(nom)}</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:var(--purple);flex-shrink:0">${d.count}</span>
-            <span style="font-size:9px;color:var(--text3);flex-shrink:0">fletes</span>
-          </div>`).join('')}
+          </table>
         </div>`
       }
     </div>
-
   </div>
   `;
+}
+
+function custToggleDetalle(){
+  const panel=g('custDetallePanel');
+  const btn=g('custDetalleBtn');
+  if(!panel||!btn) return;
+  const open=panel.style.display==='none'||panel.style.display==='';
+  panel.style.display=open?'block':'none';
+  btn.textContent=open?'▲ Ocultar detalle':'▼ Ver detalle';
 }
 
 function custToggleDetalle(){
