@@ -4382,7 +4382,7 @@ function makeAC(inputEl, lista, onSelect){
   });
 }
 
-const INC = { registros:[] };
+const INC = { registros:[] , _lastSaveTs: 0};
 
 // Customizadores — historial persistente
 const CUST = { historial: [] };
@@ -4532,7 +4532,9 @@ window.addEventListener('load', ()=>{
 })();
 
 function incSave(){
+  INC._lastSaveTs = Date.now(); // guard against remote overwrite
   try{ localStorage.setItem('trx_incidencias',JSON.stringify(INC.registros)); }catch(e){}
+  if(typeof fbSave==='function') fbSave(); // persist to Firebase immediately
 }
 
 function incTipoChange(){
@@ -4947,6 +4949,7 @@ function dvSaveRegistros(){
       _supSetByUser: DV._supSetByUser||false
     }));
   }catch(e){}
+  if(typeof fbSave==='function') clearTimeout(window._dvRegFbT), window._dvRegFbT=setTimeout(fbSave,400);
 }
 
 const CORTINAS_LIST = Array.from({length:54},(_,i)=>i+1);
