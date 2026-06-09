@@ -515,6 +515,61 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 </style>
 </head>
 <body>
+<script>
+// ── Browser detection → apply color theme ──────────────────
+(function(){
+  const ua = navigator.userAgent;
+  const r  = document.documentElement;
+  // Detect browser
+  const isEdge    = /Edg\//.test(ua);
+  const isChrome  = /Chrome\//.test(ua) && !isEdge && !/OPR|Opera|Firefox|Safari\//.test(ua);
+  const isFirefox = /Firefox\//.test(ua);
+  const isSafari  = /Safari\//.test(ua) && !/Chrome\//.test(ua);
+  const isOpera   = /OPR|Opera/.test(ua);
+  const isMobile  = /Android|iPhone|iPad/.test(ua);
+
+  // Base: --navy (body), --navy2 (panels), --card (cards)
+  if(isEdge){
+    // Edge — azul profundo
+    r.style.setProperty("--navy",  "#071525");
+    r.style.setProperty("--navy2", "#0C1E38");
+    r.style.setProperty("--card",  "#0B1829");
+    r.style.setProperty("--brand", "#00B7EB");
+    r.style.setProperty("--brand-bg","rgba(0,183,235,.13)");
+  } else if(isFirefox){
+    // Firefox — naranja oscuro
+    r.style.setProperty("--navy",  "#1A0E00");
+    r.style.setProperty("--navy2", "#2A1800");
+    r.style.setProperty("--card",  "#221300");
+    r.style.setProperty("--brand", "#FF7139");
+    r.style.setProperty("--brand-bg","rgba(255,113,57,.13)");
+  } else if(isSafari){
+    // Safari — gris azulado
+    r.style.setProperty("--navy",  "#0D1117");
+    r.style.setProperty("--navy2", "#161B22");
+    r.style.setProperty("--card",  "#0D1117");
+    r.style.setProperty("--brand", "#58A6FF");
+    r.style.setProperty("--brand-bg","rgba(88,166,255,.13)");
+  } else if(isOpera){
+    // Opera — rojo oscuro
+    r.style.setProperty("--navy",  "#1A0008");
+    r.style.setProperty("--navy2", "#2A0010");
+    r.style.setProperty("--card",  "#1F000C");
+    r.style.setProperty("--brand", "#FF1B2D");
+    r.style.setProperty("--brand-bg","rgba(255,27,45,.13)");
+  } else {
+    // Chrome / default — verde amarillo original
+    r.style.setProperty("--navy",  "#0A1628");
+    r.style.setProperty("--navy2", "#0F1F3D");
+    r.style.setProperty("--card",  "#0D1A30");
+    r.style.setProperty("--brand", "#D0DF00");
+    r.style.setProperty("--brand-bg","rgba(208,223,0,.13)");
+  }
+  // Store for JS use
+  window._BROWSER = isEdge?"Edge":isFirefox?"Firefox":isSafari?"Safari":isOpera?"Opera":"Chrome";
+  window._IS_MOBILE = isMobile;
+})();
+</script>
 
 
 <!-- LOGIN MODAL -->
