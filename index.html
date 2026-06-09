@@ -1922,6 +1922,9 @@ function applyNew(){
   // Reset alert tracking on new semaforo
   alertedEmbs.clear();
   dismissedAt = 0;
+  S.posAlerts = []; // clear previous displacement alerts
+  S.initialSemEmbs = []; // reset so new semaforo captures fresh
+  S.initialSemArBase = {}; // reset base ar for new turno
   // If no new sem but rows exist → just apply det2/ptr2
   if(!S.buf.new && S.rows.length){
     if(S.buf.det2||S.buf.ptr2){
@@ -2011,8 +2014,10 @@ function applyNew(){
     if(k) newMap[k]=r;
   });
 
-  // 1. Update semaforo data on existing rows
+  // 1. Update semaforo data on existing rows — reset NUEVO/alert status
   S.rows.forEach(ex=>{
+    ex.est=''; // clear NUEVO from previous semaforo
+    ex.posAlert=''; ex._posDesplazado=false; // clear displacement markers
     const nr=newMap[ex.emb];
     if(!nr) return;
     const nc=fc(nr,['FECHA Y HORA CITA','fecha cita','cita']);
@@ -3916,15 +3921,14 @@ function renderHistCust(){
   const el=g('custPanelContent');
   if(!el) return;
 
-  // Use CUST.historial directly (already synced by _custSyncFromRows)
-  // Deduplicate by emb+customBy key
+  // Deduplicate
   const seen=new Set();
   const merged=[];
   CUST.historial.forEach(r=>{
     const key=String(r.emb)+'|'+(r.customBy||'');
     if(!seen.has(key)){ seen.add(key); merged.push(r); }
   });
-    // Final pass: resolve any remaining ID-format customBy to names
+  // Resolve IDs to names
   merged.forEach(function(r){
     if(r.customBy && /^\d{6,10}$/.test(r.customBy.trim())){
       var _p=ALL_PERSONAL.find(function(p){return p.id===r.customBy.trim();});
@@ -3933,66 +3937,87 @@ function renderHistCust(){
   });
   const hist=merged.sort((a,b)=>(b.ts||0)-(a.ts||0));
 
-  // ── Ranking by collaborator ──
+  // Ranking
   const byColab={};
   hist.forEach(r=>{
     const k=r.customBy||'Sin asignar';
-    if(!byColab[k]) byColab[k]={count:0,fletes:[]};
+    if(!byColab[k]) byColab[k]={count:0};
     byColab[k].count++;
-    byColab[k].fletes.push(r.emb);
   });
   const ranking=Object.entries(byColab).sort((a,b)=>b[1].count-a[1].count);
 
-  // ── Build two-column layout ──
   el.innerHTML=`
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start">
 
-    <!-- LEFT: Historial completo -->
-    <div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.5px">⚙ Historial de Customizados</div>
-        <button onclick="custExportar()" style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer">⬇ Exportar CSV</button>
+    <!-- LEFT: Historial -->
+    <div style="min-width:0">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        <div style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;flex:1">⚙ Historial</div>
+        <button onclick="custToggleDetalle()" id="custDetalleBtn"
+          style="background:none;border:1px solid var(--border2);color:var(--brand);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer">
+          ▼ Ver detalle</button>
+        <button onclick="custExportar()"
+          style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer">
+          ⬇ CSV</button>
       </div>
-      ${hist.length===0
-        ?'<div style="font-size:11px;color:var(--text3);padding:12px">Sin registros aún.</div>'
-        :`<div style="overflow-y:auto;max-height:60vh">
-          <table style="width:100%;border-collapse:collapse;font-size:11px">
-            <thead><tr style="background:var(--navy2);border-bottom:1px solid var(--border)">
-              <th style="padding:6px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap">Fecha</th>
-              <th style="padding:6px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap">Colaborador</th>
-              <th style="padding:6px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap">Flete</th>
-              <th style="padding:6px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Cliente</th>
-              <th style="padding:6px 8px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase">Turno</th>
-            </tr></thead>
+
+      <!-- Summary (always visible) -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">
+        <div class="kpi" style="border-top:2px solid var(--purple);padding:6px 8px;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:var(--purple)">${hist.length}</div>
+          <div style="font-size:9px;color:var(--text3)">Total fletes</div>
+        </div>
+        <div class="kpi" style="border-top:2px solid var(--cyan);padding:6px 8px;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:var(--cyan)">${ranking.length}</div>
+          <div style="font-size:9px;color:var(--text3)">Colaboradores</div>
+        </div>
+        <div class="kpi" style="border-top:2px solid var(--green);padding:6px 8px;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:var(--green)">${ranking[0]?ranking[0][0].split(' ')[0]:'—'}</div>
+          <div style="font-size:9px;color:var(--text3)">Top custom.</div>
+        </div>
+      </div>
+
+      <!-- Detail table (hidden by default) -->
+      <div id="custDetallePanel" style="display:none;overflow-x:auto;overflow-y:auto;max-height:52vh;border-radius:8px;border:1px solid var(--border)">
+        ${hist.length===0
+          ?'<div style="font-size:11px;color:var(--text3);padding:12px">Sin registros.</div>'
+          :`<table style="width:100%;border-collapse:collapse;font-size:10.5px">
+            <thead>
+              <tr style="background:var(--navy2)">
+                <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--border)">Fecha</th>
+                <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--border)">Colaborador</th>
+                <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--border)">Flete</th>
+                <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Cliente</th>
+                <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Turno</th>
+              </tr>
+            </thead>
             <tbody>
               ${hist.map(r=>`
               <tr style="border-bottom:1px solid rgba(30,58,95,.4)" onmouseover="this.style.background='rgba(255,255,255,.025)'" onmouseout="this.style.background=''">
-                <td style="padding:5px 8px;font-size:9.5px;color:var(--text3);white-space:nowrap">${es(r.fecha)}</td>
-                <td style="padding:5px 8px;font-weight:600;color:var(--purple)">${es(r.customBy||'—')}</td>
-                <td style="padding:5px 8px;font-family:'IBM Plex Mono',monospace;color:var(--amber);font-size:10px">${es(r.emb)}</td>
-                <td style="padding:5px 8px;font-size:10.5px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${es(r.nom||'—')}</td>
-                <td style="padding:5px 8px;text-align:center">
-                  <span style="font-size:9px;background:var(--navy2);padding:1px 6px;border-radius:4px">${es(r.turno||'—')}</span>
-                </td>
+                <td style="padding:4px 8px;font-size:9px;color:var(--text3);white-space:nowrap">${es(r.fecha)}</td>
+                <td style="padding:4px 8px;font-weight:600;color:var(--purple);white-space:nowrap;max-width:130px;overflow:hidden;text-overflow:ellipsis">${es(r.customBy||'—')}</td>
+                <td style="padding:4px 8px;font-family:'IBM Plex Mono',monospace;color:var(--amber);font-size:9.5px;white-space:nowrap">${es(r.emb)}</td>
+                <td style="padding:4px 8px;font-size:10px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${es(r.nom||'—')}</td>
+                <td style="padding:4px 8px;text-align:center"><span style="font-size:9px;background:var(--navy2);padding:1px 5px;border-radius:4px">${es(r.turno||'—')}</span></td>
               </tr>`).join('')}
             </tbody>
-          </table>
-        </div>`
-      }
+          </table>`
+        }
+      </div>
     </div>
 
     <!-- RIGHT: Ranking -->
-    <div>
-      <div style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">🏆 Ranking Customizadores</div>
+    <div style="min-width:0">
+      <div style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏆 Ranking</div>
       ${ranking.length===0
         ?'<div style="font-size:11px;color:var(--text3);padding:12px">Sin datos.</div>'
-        :`<div style="display:flex;flex-direction:column;gap:6px">
+        :`<div style="display:flex;flex-direction:column;gap:5px;overflow-y:auto;max-height:55vh">
           ${ranking.map(([nom,d],ri)=>`
-          <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px">
-            <span style="font-size:14px;font-weight:800;color:${ri===0?'var(--amber)':ri===1?'var(--text3)':ri===2?'#CD7F32':'var(--text3)'};min-width:24px">${ri+1}</span>
-            <span style="flex:1;font-size:12px;font-weight:600">${es(nom)}</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14px;color:var(--purple)">${d.count}</span>
-            <span style="font-size:10px;color:var(--text3)">fletes</span>
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;min-width:0">
+            <span style="font-size:13px;font-weight:800;color:${ri===0?'var(--amber)':ri===1?'var(--text3)':ri===2?'#CD7F32':'var(--text3)'};min-width:22px;flex-shrink:0">${ri+1}</span>
+            <span style="flex:1;font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${es(nom)}">${es(nom)}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:var(--purple);flex-shrink:0">${d.count}</span>
+            <span style="font-size:9px;color:var(--text3);flex-shrink:0">fletes</span>
           </div>`).join('')}
         </div>`
       }
@@ -4000,6 +4025,15 @@ function renderHistCust(){
 
   </div>
   `;
+}
+
+function custToggleDetalle(){
+  const panel=g('custDetallePanel');
+  const btn=g('custDetalleBtn');
+  if(!panel||!btn) return;
+  const open=panel.style.display==='none'||panel.style.display==='';
+  panel.style.display=open?'block':'none';
+  btn.textContent=open?'▲ Ocultar detalle':'▼ Ver detalle';
 }
 
 function custExportar(){
