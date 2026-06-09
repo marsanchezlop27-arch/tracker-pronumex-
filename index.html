@@ -63,21 +63,6 @@ body.guest-mode #view-desc input:not([type=hidden]),body.guest-mode #view-desc s
 @keyframes pulse-sync{0%,100%{opacity:1}50%{opacity:.4}}
 
 :root{
-  --brand:#D0DF00;
-}
-:root[data-theme="light"]{
-  --navy:#F0F4F8;--navy2:#E2E8F0;--card:#FFFFFF;
-  --text:#1A202C;--text2:#4A5568;--text3:#718096;
-  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.15);
-  --surface:rgba(0,0,0,0.04);--surface2:rgba(0,0,0,0.07);
-  --brand:#0A7527;--brand-bg:rgba(10,117,39,.1);
-}
-:root[data-theme="dim"]{
-  --navy:#1B2333;--navy2:#242F42;--card:#1E2A3A;
-  --text:#CBD5E0;--text2:#8896A5;--text3:#5A6B7A;
-  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.13);
-}
-:root{
   --brand:#D0DF00;--brand-dark:#8a9400;--brand-bg:rgba(208,223,0,.13);
   --navy:#0A1628;--navy2:#0F1F3D;--blue:#1A56DB;--cyan:#06B6D4;
   --green:#10B981;--amber:#F59E0B;--red:#EF4444;--purple:#8B5CF6;
@@ -532,7 +517,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 <body>
 
 
-
 <!-- LOGIN MODAL -->
 <div id="loginModal">
   <div class="lm-box">
@@ -566,7 +550,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <span id="topbarSup" style="font-size:11px;color:var(--cyan);font-weight:500;white-space:nowrap"></span>
   <div class="sep"></div>
   <span class="clock" id="clk"></span>
-  <button id="themeBtn" onclick="cycleTheme()" style="background:none;border:1px solid var(--border2);color:var(--text2);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer;flex-shrink:0" title="Oscuro">🌙</button>
   <div id="semanaCounter" style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap">
     <span style="font-size:9px;color:var(--text3);white-space:nowrap">Sem.</span>
     <span style="font-size:10px;white-space:nowrap" title="Fletes únicos / cargados"><span style="color:var(--cyan);font-weight:700" id="swFletes">0</span><span style="color:var(--text3);font-size:9px">/</span><span style="color:var(--green);font-weight:700" id="swFletesCarq">0</span><span style="color:var(--text3);font-size:9px"> fletes</span></span>
@@ -1163,7 +1146,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       <button class="btn" onclick="exportHistVfCSV()" style="font-size:11px;border-color:var(--green);color:var(--green)">⬇ Exportar CSV</button>
     </div>
     <div id="histVfKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px"></div>
-    <div id="histVfRanking" style="margin-bottom:12px;max-height:35vh;overflow-y:auto"></div>
+    <div id="histVfRanking" style="margin-bottom:12px"></div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
       <div style="flex:1;font-size:10px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.5px">📋 Detalle por fecha</div>
       <button onclick="vfToggleDetalle()" id="vfDetalleBtn"
@@ -1180,7 +1163,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
-const S = { rows:[], buf:{}, sc:'', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[], initialSemEmbs:[], initialSemArBase:{}, _clearLog:{} };
+const S = { rows:[], buf:{}, sc:'', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[], initialSemEmbs:[], initialSemArBase:{} };
 
 // ─── HISTORIAL PERSISTENTE (localStorage) ────────────────────────────────────
 
@@ -1211,19 +1194,10 @@ function autoSaveVerifHistorial(){
     const snap = {
       emb:r.emb, nom:r.nom, sem:r.sem,
       verif:r.verif||'', monta:r.monta||'',
-      verif2:r.verif2||'', monta2:r.monta2||'',
-      customBy:r.customBy||'', customBy2:r.customBy2||'',
       precarga:r.precarga||'',
       estop:r.estop||'', pt:r.pt||'',
       fecha:hora, ts:now.getTime()
     };
-    // Apply clearLog before saving snap
-    if(S._clearLog && typeof S._clearLog==='object'){
-      Object.entries(S._clearLog).forEach(function(e2){
-        var parts=e2[0].split('|'), cEmb=parts[0], cField=parts[1];
-        if(String(snap.emb)===cEmb && cField in snap) snap[cField]='';
-      });
-    }
     if(existing>=0) entry.fletes[existing]=snap;
     else entry.fletes.push(snap);
   });
@@ -1663,14 +1637,11 @@ function patchDetPtr(){
     const k = nk(fc(r,['No. Embarque','embarque','Embarque','Folio','folio']));
     if(k) detMap[k] = r;
     const com = String(fc(r,['Comentarios:','Comentarios','comentarios'])||'');
-    (com.match(/\d{5,}/g)||[]).forEach(n=>{ comMap[nk(n)] = r; });
+    (com.match(/\d{6,10}/g)||[]).forEach(n=>{ comMap[nk(n)] = r; });
   });
   ptrRows.forEach(r=>{
     const k = nk(fc(r,['No. Embarque','embarque','Embarque']));
-    if(!k || !/^\d+$/.test(k)) return; // skip TOTALES and non-numeric
-    ptrMap[k] = r;
-    const pCom=fc(r,['Comentarios:','Comentarios','comentarios'])||'';
-    (String(pCom).match(/\d{5,}/g)||[]).forEach(n=>{const nk2=nk(n);if(nk2&&!ptrMap[nk2]) ptrMap[nk2]=r;});
+    if(k) ptrMap[k] = r;
   });
   S.rows.forEach(r=>{
     const D = detMap[r.emb] || comMap[r.emb] || {};
@@ -1699,8 +1670,7 @@ function patchDetPtr(){
     }
     const ue = S.userEdits[r.emb]||{};
     // Restore operational fields — com always from DETALLE, not from userEdits
-    ['estop','monta','verif','precarga','prio','prioNum',
-     'monta2','verif2','customBy','customBy2'].forEach(f=>{
+    ['estop','monta','verif','precarga','prio','prioNum'].forEach(f=>{
       if(ue[f] !== undefined) r[f] = ue[f];
     });
     // con: only restore from userEdits if it has a real Rampa value
@@ -1783,7 +1753,7 @@ function build(){
       detMap[k]=r;
       // Index by any number found in Comentarios field (SAP/WMS cross-reference)
       const com=fc(r,['Comentarios:','Comentarios','comentarios','comentario'])||'';
-      const nums=String(com).match(/\d{5,}/g)||[];
+      const nums=String(com).match(/\d{7,}/g)||[];
       nums.forEach(n=>{ const nk2=nk(n); if(nk2) comMap[nk2]=r; });
     }
   });
@@ -1791,10 +1761,7 @@ function build(){
   const ptrMap={};
   ptrRows.forEach(r=>{
     const k=nk(fc(r,['No. Embarque','embarque']));
-    if(!k || !/^\d+$/.test(k)) return;
-    ptrMap[k]=r;
-    const pCom2=fc(r,['Comentarios:','Comentarios','comentarios'])||'';
-    (String(pCom2).match(/\d{5,}/g)||[]).forEach(n=>{const nk2=nk(n);if(nk2&&!ptrMap[nk2]) ptrMap[nk2]=r;});
+    if(k) ptrMap[k]=r;
   });
 
   // Debug samples
@@ -1881,7 +1848,6 @@ function build(){
       verif:    '',  // verificador
       custom:   false, // customizado
       customBy: '',  // quien customizó
-      monta2: '', verif2: '', customBy2: '',  // secondary operators
       prio:     false,
       prioNum:  0,
       semOrder: semIdx,
@@ -2004,13 +1970,12 @@ function applyNew(){
     .filter(r=>r.monta||r.precarga||r.estop||r.verif)  // include verif-only rows
     .map(r=>({
       emb:r.emb, nom:r.nom, sem:r.sem,
-      monta:r.monta||'', monta2:r.monta2||'',
-      precarga:r.precarga||'', estop:r.estop||'',
-      verif:r.verif||'', verif2:r.verif2||'',
-      customBy:r.customBy||'', customBy2:r.customBy2||'',
+      monta:r.monta, precarga:r.precarga, estop:r.estop,
+      verif:r.verif||'',   // ← always include verif
       pt:r.pt, pr:r.pr, pal:r.pal, tr:r.tr, ar:r.ar, ci:r.ci, prio:r.prio,
       turno:S.sessionTurno, sup:S.sessionSup,
-      fecha:_snapFecha, ts:_snapNow.getTime()
+      fecha:_snapFecha,    // ← full date+time
+      ts:_snapNow.getTime()
     }));
   if(snapshot.length){
     S.turnoHistorial.push({
@@ -2148,7 +2113,7 @@ function applyNew(){
       con:fc(D,['Cortina','cortina','# Contenedor','Contenedor'])||fc(r,['CORTINA','cortina'])||'',
       com:saved.com||fc(D,['Comentarios:','Comentarios','comentarios','comentario'])||'',
       tu:turno, al:'', est:'NUEVO',
-      precarga:saved.precarga||'', monta:saved.monta||'', monta2:saved.monta2||'', verif2:saved.verif2||'', customBy2:saved.customBy2||'',
+      precarga:saved.precarga||'', monta:saved.monta||'',
       estop:(pcVal!==null&&pcVal>=100)?'CARGADO':(saved.estop||''), // auto CARGADO if 100%
       prio:saved.prio||false,
       _wmsMatch:!!wmsEmb, _wmsEmb:wmsEmb
@@ -2467,10 +2432,8 @@ function render(){
     return `<tr class="${rc}" style="border-left:3px solid ${leftClr}">
       <td style="text-align:center;padding:3px 5px"><span class="pos-num${isDesplazado?'" style="color:var(--purple)':''}">${posNum}</span></td>
       <td class="m" style="font-weight:700;font-size:10px;padding:3px 4px;color:${r.prio?'#FACC15':'var(--text)'}">
-        ${r._wmsMatch
-          ?`<div style="font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--text2)">SAP: ${es(r.emb)}</div><div style="font-size:9px;color:var(--amber);font-family:'IBM Plex Mono',monospace;margin-top:1px">WMS: ${r._wmsEmb}</div>`
-          :`<span style="font-family:'IBM Plex Mono',monospace">${es(r.emb)}</span>`
-        }
+        ${es(r.emb)}
+        ${r._wmsMatch?`<div style="font-size:9px;color:var(--amber);font-family:'IBM Plex Mono',monospace;margin-top:2px">WMS:${r._wmsEmb}</div>`:''}
       </td>
       <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;font-size:11px" title="${es(r.nom)}">${es(r.nom)}</td>
       <td>${(()=>{
@@ -2484,7 +2447,7 @@ function render(){
         if(r.con){ const _cf=fmtCortina(r.con); if(_cf!=='—') return `<span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--cyan);font-weight:600;display:inline-flex;align-items:center;gap:4px">${_cf}<button onclick="upd(${idx},'con','');render()" style="background:none;border:none;cursor:pointer;opacity:.5;color:inherit;font-size:10px;padding:0" title="Editar">✎</button></span>`; }
         return `<input class="edt" type="text" value="" placeholder="— cortina —" onchange="upd(${idx},'con',this.value);render()" style="min-width:65px">`;
       })()}</td>
-      <td class="m" style="text-align:right;font-size:11px">${r.pal!==''&&r.pal!==null&&r.pal!==undefined?r.pal:'<span style="color:var(--text3);font-size:10px">N/A</span>'}</td>
+      <td class="m" style="text-align:right;font-size:11px">${r.pal||'—'}</td>
       <td>${bar(r.pt)}</td>
       <td>${bar(r.pr)}</td>
       <td>${restHtml}</td>
@@ -2515,12 +2478,7 @@ function render(){
           <input class="edt-sel ac-monta-${idx}" type="text" placeholder="Monta..." style="width:100%;font-size:10px;${inputStyle}"
             oninput="acFilter(this,MONTACARGUISTAS,${idx},'monta')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-${idx}');if(d)d.remove()},200)">
         </div>`;
-      })()}${r.monta
-         ? r.monta2
-           ? `<div style="display:flex;align-items:center;gap:3px;margin-top:2px"><span style="font-size:9px;color:var(--cyan);font-weight:500" title="${es(getMontaNombre(r.monta2))}">+${es(getMontaNombre(r.monta2)).split(' ')[0]}</span><button onclick="upd(${idx},'monta2','');render()" style="background:none;border:none;cursor:pointer;opacity:.5;color:var(--text3);font-size:9px;padding:0">✕</button></div>`
-           : `<div style="position:relative;margin-top:2px"><input class="edt-sel" type="text" placeholder="+2do..." style="width:100%;font-size:9px;height:20px" oninput="acFilter(this,MONTACARGUISTAS,${idx},'monta2')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-m2-${idx}');if(d)d.remove()},200)"></div>`
-         : ''}
-</td>
+      })()}</td>
       <td>${(()=>{
         if(r.verif){
           const vn=getVerifNombre(r.verif);
@@ -2530,12 +2488,7 @@ function render(){
           <input class="edt-sel" type="text" placeholder="Verif..." style="width:100%;font-size:10px"
             oninput="acFilter(this,VERIFICADORES,${idx},'verif')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-v-${idx}');if(d)d.remove()},200)">
         </div>`;
-      })()}${r.verif
-         ? r.verif2
-           ? `<div style="display:flex;align-items:center;gap:3px;margin-top:2px"><span style="font-size:9px;color:var(--cyan);font-weight:500" title="${es(getVerifNombre(r.verif2))}">+${es(getVerifNombreCompleto(r.verif2)).split(' ')[0]}</span><button onclick="upd(${idx},'verif2','');render()" style="background:none;border:none;cursor:pointer;opacity:.5;color:var(--text3);font-size:9px;padding:0">✕</button></div>`
-           : `<div style="position:relative;margin-top:2px"><input class="edt-sel" type="text" placeholder="+2do verif..." style="width:100%;font-size:9px;height:20px" oninput="acFilter(this,VERIFICADORES,${idx},'verif2')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-v2-${idx}');if(d)d.remove()},200)"></div>`
-         : ''}
-</td>
+      })()}</td>
       <td style="text-align:center">
         <label style="display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer;margin-bottom:4px">
           <input type="checkbox" ${r.custom?'checked':''} onchange="updCustom(${idx},this.checked)" style="width:14px;height:14px;accent-color:var(--green);cursor:pointer">
@@ -2545,11 +2498,6 @@ function render(){
           ? `<span style="font-size:9px;color:var(--purple);display:block;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${es(r.customBy)}">${es(r.customBy)}<button onclick="upd(${idx},'customBy','');render()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:9px;padding:0;margin-left:2px">✕</button></span>`
           : `<div style="position:relative"><input class="edt-sel" type="text" placeholder="¿Quién?" style="width:80px;font-size:9.5px;height:22px;padding:2px 5px" oninput="acFilter(this,ALL_PERSONAL,${idx},'customBy')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-c-${idx}');if(d)d.remove()},200)"></div>`
         }
-        ${r.customBy
-          ? r.customBy2
-            ? `<div style="display:flex;align-items:center;gap:3px;margin-top:2px"><span style="font-size:9px;color:var(--cyan);font-weight:500">+${es((r.customBy2||'').split(' ')[0])}</span><button onclick="upd(${idx},'customBy2','');render()" style="background:none;border:none;cursor:pointer;opacity:.5;color:var(--text3);font-size:9px;padding:0">✕</button></div>`
-            : `<div style="position:relative;margin-top:2px"><input class="edt-sel" type="text" placeholder="+2do custom..." style="width:80px;font-size:9px;height:20px;padding:2px 4px" oninput="acFilter(this,ALL_PERSONAL,${idx},'customBy2')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-c2-${idx}');if(d)d.remove()},200)"></div>`
-          : ''}
       </td>
       <td style="text-align:center">
         <button onclick="abrirEvidencias(${idx})" style="background:${(r.evidencias&&r.evidencias.length)?'rgba(16,185,129,.2)':'var(--navy2)'};border:1px solid ${(r.evidencias&&r.evidencias.length)?'var(--green)':'var(--border2)'};color:${(r.evidencias&&r.evidencias.length)?'var(--green)':'var(--text3)'};border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;white-space:nowrap">
@@ -2591,48 +2539,11 @@ function render(){
 }
 
 function upd(idx,field,val){
-  if(!fbIsAdmin && !fbIsDocumentador)return;
-  if(!S.rows[idx]) return;
-  const _oldVal=S.rows[idx][field]||'';
+  if(!fbIsAdmin)return;
   S.rows[idx][field]=val;
   const emb=S.rows[idx].emb;
   if(!S.userEdits[emb]) S.userEdits[emb]={};
   S.userEdits[emb][field]=val;
-
-  // When clearing a field — remove from historial
-  if(val==='' || val===null){
-    S._lastClearTs = Date.now();
-    const _clearKey=String(emb)+'|'+field;
-    S._clearLog[_clearKey]=S._lastClearTs;
-    console.log('[CLEAR] field='+field+' emb='+emb+' clearLog updated');
-    const embStr=String(emb);
-    // Remove from turnoHistorial snaps
-    if(['verif','verif2','monta','monta2'].includes(field)){
-      S.turnoHistorial.forEach(function(h){
-        (h.fletes||[]).forEach(function(f){
-          if(String(f.emb)===embStr) f[field]='';
-        });
-      });
-      hSave();
-    }
-    // Remove from CUST.historial when clearing customBy/customBy2
-    if(['customBy','customBy2'].includes(field)){
-      const oldVal=_oldVal||'';
-      CUST.historial=CUST.historial.filter(function(h){
-        return !(String(h.emb)===embStr && h.customBy===oldVal);
-      });
-      try{localStorage.setItem('trx_cust_hist',JSON.stringify(CUST.historial));}catch(e){}
-      S.turnoHistorial.forEach(function(h){
-        (h.fletes||[]).forEach(function(f){
-          if(String(f.emb)===embStr){
-            if(field==='customBy') f.customBy='';
-            if(field==='customBy2') f.customBy2='';
-          }
-        });
-      });
-      hSave();
-    }
-  }
 }
 // ─── CARGAR DESDE GUARDADO ────────────────────────────────────────────────────
 // Renders the tracker using whatever is already in S.rows (loaded from Firebase
@@ -2763,10 +2674,6 @@ function updCustom(idx,checked){
   S.userEdits[emb].custom=checked;
   if(!checked){
     S.rows[idx].customBy=''; S.userEdits[emb].customBy='';
-    // Remove from CUST.historial
-    const _embStr=String(emb);
-    CUST.historial=CUST.historial.filter(h=>h.emb!==_embStr);
-    try{localStorage.setItem('trx_cust_hist',JSON.stringify(CUST.historial));}catch(e){}
   } else {
     // Record in CUST.historial
     const fecha=new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
@@ -2826,12 +2733,10 @@ function renderVerif(){
   // Detail table
   tb.innerHTML=sorted.map((r,i)=>{
     const vn=r.verif?getVerifNombreCompleto(r.verif):'—';
-    const vn2=r.verif2?getVerifNombreCompleto(r.verif2):'';
-    const mn2=r.monta2?getMontaNombre(r.monta2):'';
     return `<tr style="border-bottom:1px solid var(--border)">
       <td style="padding:5px 8px;color:var(--text3);font-size:10px">${i+1}</td>
       <td style="padding:5px 8px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600">${es(r.emb)}</td>
-      <td style="padding:5px 8px;font-size:10.5px">${es(vn)}${vn2?`<br><span style="font-size:9px;color:var(--cyan)">+${es(vn2)}</span>`:''}</td>
+      <td style="padding:5px 8px;font-size:10.5px">${es(vn)}</td>
       <td style="padding:5px 8px;text-align:center">
         ${r.custom?'<span class="b bg" style="font-size:9px">✓ Sí</span>':'<span class="b bx" style="font-size:9px">No</span>'}
       </td>
@@ -3564,37 +3469,33 @@ function renderHistVf(){
   [...S.turnoHistorial].sort((a,b)=>(a.ts||0)-(b.ts||0)).forEach(h=>{
     const dayLabel = (h.hora||h.fecha||'').split(',')[0].trim() || '—';
     (h.fletes||[]).forEach(f=>{
-      if(!f.emb) return;
-      // Primary verif
-      if(f.verif){
-        const key=f.emb+'|'+f.verif;
-        seen.set(key,{emb:f.emb,nom:f.nom||'',verif:f.verif,
-          nombre:VERIFICADORES.find(v=>v.id===f.verif)?.nombre||f.verif,
-          fecha:dayLabel,sem:f.sem||''});
-      }
-      // Secondary verif2
-      if(f.verif2){
-        const key2=f.emb+'|'+f.verif2;
-        seen.set(key2,{emb:f.emb,nom:f.nom||'',verif:f.verif2,
-          nombre:VERIFICADORES.find(v=>v.id===f.verif2)?.nombre||f.verif2,
-          fecha:dayLabel,sem:f.sem||''});
-      }
+      if(!f.verif || !f.emb) return;
+      const key = f.emb+'|'+f.verif;
+      seen.set(key,{
+        emb   : f.emb,
+        nom   : f.nom||'',
+        verif : f.verif,
+        nombre: VERIFICADORES.find(v=>v.id===f.verif)?.nombre||f.verif,
+        fecha : dayLabel,
+        sem   : f.sem||''
+      });
     });
   });
 
   // Current turn — only add if NOT already in historial
   const todayKey = new Date().toLocaleDateString('es-MX');
-  S.rows.filter(r=>r.verif||r.verif2).forEach(r=>{
-    [r.verif,r.verif2].filter(Boolean).forEach(function(vid){
-      const key=(r.emb||'')+'|'+vid;
-      if(!seen.has(key)){
-        seen.set(key,{
-          emb:r.emb||'', nom:r.nom||'', verif:vid,
-          nombre:VERIFICADORES.find(v=>v.id===vid)?.nombre||vid,
-          fecha:'Turno activo', sem:r.sem||''
-        });
-      }
-    });
+  S.rows.filter(r=>r.verif).forEach(r=>{
+    const key = (r.emb||'')+'|'+(r.verif||'');
+    if(!seen.has(key)){
+      seen.set(key,{
+        emb   : r.emb||'',
+        nom   : r.nom||'',
+        verif : r.verif,
+        nombre: VERIFICADORES.find(v=>v.id===r.verif)?.nombre||r.verif,
+        fecha : todayKey,
+        sem   : r.sem||''
+      });
+    }
   });
 
   // Flat list
@@ -3963,29 +3864,27 @@ function _histDescBuildRows(rows){
 function _custSyncFromRows(){
   const seen=new Set(CUST.historial.map(r=>String(r.emb)+'|'+(r.customBy||'')));
   let changed=false;
-  // 1. From current S.rows (customBy + customBy2)
+  // 1. From current S.rows
   if(Array.isArray(S.rows)){
     S.rows.forEach(r=>{
-      [r.customBy, r.customBy2].filter(cb=>cb&&cb.trim()).forEach(function(cb){
-        const key=String(r.emb)+'|'+cb;
-        if(seen.has(key)) return;
+      if(!r.customBy) return;
+      const key=String(r.emb)+'|'+r.customBy;
+      if(!seen.has(key)){
         seen.add(key);
-        var _cb=cb;
-        if(/^\d{6,10}$/.test(_cb.trim())){
-          var _p=ALL_PERSONAL.find(function(p){return p.id===_cb.trim();});
-          _cb=_p?_p.nombre:_cb;
+        // Resolve ID to name if needed
+        var _cb2=r.customBy||'';
+        if(_cb2 && /^\d{6,10}$/.test(_cb2.trim())){
+          var _p2=ALL_PERSONAL.find(function(p){return p.id===_cb2.trim();});
+          _cb2=_p2?_p2.nombre:_cb2;
         }
-        // Check clearLog before adding
-        var _ck=String(r.emb)+'|'+(cb===r.customBy?'customBy':'customBy2');
-        if(S._clearLog&&S._clearLog[_ck]) return; // skip cleared entries
         CUST.historial.push({
-          ts:r.ts||Date.now(), emb:String(r.emb||''),
-          nom:r.nom||'', customBy:_cb,
-          fecha:new Date().toLocaleDateString('es-MX'),
-          turno:r.turno||S.sessionTurno||''
+          ts: r.ts||Date.now(), emb: String(r.emb||''),
+          nom: r.nom||'', customBy: _cb2,
+          fecha: new Date().toLocaleDateString('es-MX'),
+          turno: r.turno||S.sessionTurno||''
         });
         changed=true;
-      });
+      }
     });
   }
   // 2. From S.turnoHistorial (older records)
@@ -4026,8 +3925,7 @@ function renderHistCust(){
   const seen=new Set();
   const merged=[];
   CUST.historial.forEach(r=>{
-    if(!r.customBy||!r.customBy.trim()) return; // skip no-collaborator entries
-    const key=String(r.emb)+'|'+r.customBy;
+    const key=String(r.emb)+'|'+(r.customBy||'');
     if(!seen.has(key)){ seen.add(key); merged.push(r); }
   });
   merged.forEach(function(r){
@@ -4041,8 +3939,7 @@ function renderHistCust(){
   // Ranking
   const byColab={};
   hist.forEach(r=>{
-    const k=r.customBy||'';
-    if(!k) return; // skip entries with no collaborator
+    const k=r.customBy||'Sin asignar';
     if(!byColab[k]) byColab[k]={count:0};
     byColab[k].count++;
   });
@@ -6425,36 +6322,6 @@ function updateSemanaCounter(){
   var paEl=g('swPickArm'); if(paEl) paEl.textContent=pickArmado.toLocaleString('es-MX');
 }
 
-const _THEMES=['dark','dim','light','system'];
-const _THEME_ICONS={dark:'🌙',dim:'🌆',light:'☀️',system:'💻'};
-const _THEME_LABELS={dark:'Oscuro',dim:'Tenue',light:'Claro',system:'Sistema'};
-let _curTheme=localStorage.getItem('trx_theme')||'dark';
-// Apply theme immediately
-(function(){
-  let t=_curTheme;
-  if(t==='system') t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';
-  document.documentElement.setAttribute('data-theme',t);
-})();
-// Update button when DOM ready
-document.addEventListener('DOMContentLoaded',function(){
-  const btn=g('themeBtn'); if(btn){
-    btn.textContent=_THEME_ICONS[_curTheme]||'🌙';
-    btn.title=_THEME_LABELS[_curTheme]||'Tema';
-  }
-});
-function cycleTheme(){
-  const idx=_THEMES.indexOf(_curTheme);
-  _curTheme=_THEMES[(idx+1)%_THEMES.length];
-  localStorage.setItem('trx_theme',_curTheme);
-  let t=_curTheme;
-  if(t==='system') t=window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';
-  document.documentElement.setAttribute('data-theme',t);
-  const btn=g('themeBtn'); if(btn){
-    btn.textContent=_THEME_ICONS[_curTheme];
-    btn.title=_THEME_LABELS[_curTheme];
-  }
-}
-
 function toggleFiltroPrio(){
   filtroPrio = !filtroPrio;
   const btn = g('fRsPrio');
@@ -6488,10 +6355,12 @@ function toggleMostrarCargados(){
 function renderResumen(){
   const q=(g('qRs')?.value||'').toLowerCase();
   const fs=g('fRsSem')?.value||'';
+  const fe=g('fRsEst')?.value||'';
 
   let rows=S.rows.filter(r=>{
     if(q&&!r.emb.toLowerCase().includes(q)&&!r.nom.toLowerCase().includes(q)) return false;
     if(fs&&!r.sem.includes(fs)) return false;
+    if(fe&&r.estop!==fe) return false;
     if(filtroPrio&&!r.prio) return false;
     const frt=g('fRsTrans')?.value||'';
     if(frt==='con'&&!hasTrans(r)) return false;
@@ -7231,28 +7100,19 @@ function applyGuestUI(){
   const _origSW = window.switchView;
   window.switchView = function(v){
     if(!fbIsAdmin && v === 'inc') return;
-    if(!fbIsAdmin && v === 'hist') return;
     _origSW(v);
   };
-  // Rename vsw-emb button to 'Semáforo' for guests
-  const vswEmbBtn=g('vsw-emb');
-  if(vswEmbBtn){
-    vswEmbBtn.querySelector('span')||vswEmbBtn.appendChild(document.createElement('span'));
-    const sp=vswEmbBtn.querySelector('span'); if(sp) sp.textContent='Semáforo';
-  }
   // Show Embarques view (contains the tabs with Resumen)
   ['view-emb','view-desc','view-inc','view-hist'].forEach(id=>{
     const el=g(id); if(el) el.classList.toggle('hidden',id!=='view-emb');
   });
   document.querySelectorAll('.vsw-btn').forEach(b=>b.classList.remove('active'));
   const vswEmb=g('vsw-emb'); if(vswEmb) vswEmb.classList.add('active');
-  // Inside emb: hide all panels except Resumen and Clientes
-  ['tk','al','vf','dc','vac'].forEach(x=>{
+  // Inside emb: hide all panels except Resumen
+  ['tk','al','vf','dc','cl','vac'].forEach(x=>{
     const el=g('p-'+x); if(el) el.classList.add('hidden');
   });
   const rsEl=g('p-rs'); if(rsEl) rsEl.classList.remove('hidden');
-  // Clientes panel: keep hidden until tab clicked, but allow access
-  const clEl=g('p-cl'); if(clEl) clEl.classList.add('hidden');
   // Activate Resumen tab
   document.querySelectorAll('.tab').forEach(t=>{
     t.classList.toggle('active',(t.getAttribute('onclick')||'').includes("'rs'"));
@@ -7314,29 +7174,14 @@ function applyDocumentadorUI(){
   ['htab-emb','htab-vf'].forEach(id=>{ const el=g(id); if(el) el.style.display='none'; });
   // Switch to Descargas view
   ['view-emb','view-inc','view-hist'].forEach(id=>{ const el=g(id); if(el) el.classList.add('hidden'); });
-  // Show dvHistPanel for documentador
-  const _dvh=g('dvHistPanel'); if(_dvh) _dvh.style.display='';
-  const _dvhs=g('dvHistSelector'); if(_dvhs) _dvhs.style.display='';
-  const _dvhd=g('dvHistDayPanel'); if(_dvhd) _dvhd.style.display='';
-
   const vDesc=g('view-desc'); if(vDesc) vDesc.classList.remove('hidden');
   document.querySelectorAll('.vsw-btn').forEach(b=>b.classList.remove('active'));
   const vswD=g('vsw-desc'); if(vswD) vswD.classList.add('active');
   // Render immediately — don't wait for Firebase
   dvRender();
-  // Ensure main DV grid is visible
-  document.querySelectorAll('.dv-main-grid').forEach(function(el){el.style.display='';});
-
-  // Also ensure current registros list is visible
-  const _dvList=g('dvList'); if(_dvList) _dvList.style.display='';
-  const _dvMain=g('dv-main') || document.querySelector('.dv-main-grid');
-  if(_dvMain) _dvMain.style.display='';
-
   // Also ensure historial sub-tab restriction
   const htabEmb2=g('htab-emb'); if(htabEmb2) htabEmb2.style.display='none';
   const htabVf2=g('htab-vf');   if(htabVf2)  htabVf2.style.display='none';
-  // Set default historial tab to Descargas for documentador
-  if(typeof histSubTab==='function') histSubTab('desc');
 }
 
 let _authApplied = false;
@@ -7416,7 +7261,6 @@ function fbSave(){
         // INC data
         incRegistros: INC.registros,
         custHistorial: CUST.historial,
-        clearLog: S._clearLog,
         ts, device: DEVICE_ID
       };
       autoSaveVerifHistorial(); // persist verif assignments
@@ -7435,174 +7279,131 @@ function fbSave(){
 }
 
 function applyRemoteData(data){
-  // VERSION CHECK
-  if(!window._arVersion){ window._arVersion=2; console.log('[VERSION] applyRemoteData v2 loaded'); }
-  const _role=fbIsAdmin?'Admin':fbIsDocumentador?'Documentador':'Invitado';
-  const _sameDevice=data.device&&data.device===DEVICE_ID;
-  const _msClear=Date.now()-(S._lastClearTs||0);
-  console.log('[SYNC] role='+_role+' rows='+(data.rows?.length||0)+' sameDevice='+_sameDevice+' clearAgo='+Math.round(_msClear/1000)+'s');
-
-  // ── 1. Merge clearLog (take latest timestamp per field) ──
-  if(data.clearLog && typeof data.clearLog==='object'){
-    Object.entries(data.clearLog).forEach(function(entry){
-      var key=entry[0], ts=entry[1];
-      if(!S._clearLog[key] || ts > S._clearLog[key]) S._clearLog[key]=ts;
-    });
-  }
-
-  // Helper: apply clearLog to an object (row or snap)
-  function _applyClearLog(obj){
-    if(!obj||!obj.emb) return obj;
-    var embStr=String(obj.emb);
-    Object.entries(S._clearLog).forEach(function(entry){
-      var parts=entry[0].split('|'), emb=parts[0], field=parts[1];
-      if(emb===embStr && field in obj) obj[field]='';
-    });
-    return obj;
-  }
-
-  // ── 2. Detect assignment changes BEFORE overwriting S.rows ──
-  if(data.rows&&Array.isArray(data.rows)&&S.rows&&S.rows.length&&!_sameDevice){
+  console.log('[DATA] applyRemoteData fbIsAdmin='+fbIsAdmin+' fbIsDoc='+fbIsDocumentador+' rows='+(data.rows?data.rows.length:0));
+  // Detect assignment changes from other devices BEFORE overwriting S.rows
+  if(data.rows && Array.isArray(data.rows) && S.rows && S.rows.length && data.device && data.device!==DEVICE_ID){
     data.rows.forEach(function(nr){
-      var or=S.rows.find(function(r){return r.emb===nr.emb;});
+      const or = S.rows.find(function(r){return r.emb===nr.emb;});
       if(!or) return;
-      if(nr.monta&&nr.monta!==or.monta){
-        var nom=(MONTACARGUISTAS.find(function(m){return m.id===nr.monta;})||{}).nombre||nr.monta;
+      if(nr.monta && nr.monta!==or.monta){
+        const nom=(typeof MONTACARGUISTAS!=='undefined'?(MONTACARGUISTAS.find(function(m){return m.id===nr.monta;})||{}).nombre||nr.monta:nr.monta);
         if(typeof _notifyAssignment==='function') _notifyAssignment('Montacarguista',nom,nr.nom||nr.emb||'');
       }
-      if(nr.verif&&nr.verif!==or.verif){
-        var nom2=(VERIFICADORES.find(function(v){return v.id===nr.verif;})||{}).nombre||nr.verif;
-        if(typeof _notifyAssignment==='function') _notifyAssignment('Verificador',nom2,nr.nom||nr.emb||'');
+      if(nr.verif && nr.verif!==or.verif){
+        const nom=(typeof VERIFICADORES!=='undefined'?(VERIFICADORES.find(function(v){return v.id===nr.verif;})||{}).nombre||nr.verif:nr.verif);
+        if(typeof _notifyAssignment==='function') _notifyAssignment('Verificador',nom,nr.nom||nr.emb||'');
+      }
+      if(nr.precarga && nr.precarga!==or.precarga){
+        if(typeof _notifyAssignment==='function') _notifyAssignment('Precarga',nr.precarga,nr.nom||nr.emb||'');
       }
     });
   }
-
-  // ── 3. Restore S.rows + apply clearLog ──
-  if(data.rows){
-    S.rows=data.rows.map(function(r){ return _applyClearLog({...r}); });
-  }
-
-  // ── 4. Restore userEdits ──
-  if(data.userEdits) S.userEdits=data.userEdits;
-
-  // ── 5. Restore turnoHistorial + apply clearLog to all snaps ──
-  if(data.turnoHistorial){
-    S.turnoHistorial=JSON.parse(JSON.stringify(data.turnoHistorial));
-    S.turnoHistorial.forEach(function(h){
-      (h.fletes||[]).forEach(function(f){ _applyClearLog(f); });
+  if(data.rows)           S.rows           = data.rows;
+  // Sync customBy from restored rows into CUST.historial
+  if(typeof _custSyncFromRows==='function') _custSyncFromRows();
+  // Normalize con values: 'DI-N' → 'Rampa N' for any stale Firebase values
+  if(S.rows && typeof fmtCortina==='function'){
+    S.rows.forEach(r=>{
+      if(r.con && !r.con.startsWith('Rampa')){
+        const fc2=fmtCortina(r.con); r.con=fc2==='—'?'':fc2;
+      }
     });
-    console.log('[SYNC] turnoHistorial restored n='+S.turnoHistorial.length+' (clearLog applied)');
   }
-
-  if(data.posAlerts)    S.posAlerts=data.posAlerts;
-  if(data.sessionTurno) S.sessionTurno=data.sessionTurno;
-  if(data.sessionSup)   S.sessionSup=data.sessionSup;
-
-  // ── 6. DV registros (60s same-device guard) ──
-  if(data.dvRegistros&&Array.isArray(data.dvRegistros)){
-    if(!_sameDevice||Date.now()-(DV._lastSaveTs||0)>60000) DV.registros=data.dvRegistros;
+  // Remove alerts for embs no longer in S.rows (prevent stale notifications)
+  if(typeof alertedEmbs!=='undefined'){
+    alertedEmbs.forEach(emb=>{
+      if(!S.rows.find(r=>r.emb===emb)) alertedEmbs.delete(emb);
+    });
   }
-  if(data.dvHistorial!==undefined&&Array.isArray(data.dvHistorial)){
-    var _msHistDel=Date.now()-(DV._histDeleteTs||0);
-    if(data.dvHistorial.length>0&&(!_sameDevice||_msHistDel>60000)){
-      DV.historial=data.dvHistorial;
-      try{localStorage.setItem('trx_dv_historial',JSON.stringify(DV.historial));}catch(e){}
+  if(data.userEdits)      S.userEdits       = data.userEdits;
+  if(data.turnoHistorial) S.turnoHistorial  = data.turnoHistorial;
+  if(data.posAlerts)      S.posAlerts       = data.posAlerts;
+  if(data.sessionTurno)   S.sessionTurno    = data.sessionTurno;
+  if(data.sessionSup)     S.sessionSup      = data.sessionSup;
+  // Sync DV and INC from other devices
+  // Guard: never overwrite DV.registros within 30s of a local save
+  if(data.dvRegistros && Array.isArray(data.dvRegistros)){
+    const _msSinceSave = Date.now()-(DV._lastSaveTs||0);
+    const _sameDevice = data.device && data.device===DEVICE_ID;
+    if(!_sameDevice || _msSinceSave > 60000){
+      DV.registros = data.dvRegistros;
     }
   }
-  if(data.dvTurno) DV.turno=data.dvTurno;
-  if(data.dvSup&&!DV._supSetByUser&&!DV.sup) DV.sup=data.dvSup;
-
-  // ── 7. INC (15s same-device guard) ──
-  if(data.incRegistros&&Array.isArray(data.incRegistros)){
-    if(!_sameDevice||Date.now()-(INC._lastSaveTs||0)>15000){
-      INC.registros=data.incRegistros;
+  if(data.dvHistorial !== undefined && Array.isArray(data.dvHistorial)){
+    const _msHistDel = Date.now()-(DV._histDeleteTs||0);
+    const _histSameDevice = data.device && data.device===DEVICE_ID;
+    // Don't overwrite if this device just deleted (60s guard) — but allow cross-device
+    if(data.dvHistorial.length > 0 && (!_histSameDevice || _msHistDel > 60000)){
+      DV.historial = data.dvHistorial;
+      try{ localStorage.setItem('trx_dv_historial',JSON.stringify(DV.historial)); }catch(e){}
+    }
+  }
+  if(data.dvTurno)        DV.turno          = data.dvTurno;
+  // Only restore dvSup from Firebase if user hasn't set it manually this session
+  if(data.dvSup && !DV._supSetByUser && !DV.sup) DV.sup = data.dvSup;
+  // Guard: don't overwrite INC.registros within 15s of local delete
+  if(data.incRegistros && Array.isArray(data.incRegistros)){
+    const _msIncSave = Date.now()-(INC._lastSaveTs||0);
+    const _incSameDevice = data.device && data.device===DEVICE_ID;
+    if(!_incSameDevice || _msIncSave > 15000){
+      INC.registros = data.incRegistros;
+      // Always refresh badge and panel regardless of role
       if(typeof badge==='function') badge();
-      if(typeof updateSemanaCounter==='function') updateSemanaCounter();
-      var _iv=g('view-inc');
+  if(typeof updateSemanaCounter==='function') updateSemanaCounter();
+      const _iv=g('view-inc');
       if(_iv&&!_iv.classList.contains('hidden')) incRender();
     }
   }
-
-  // ── 8. CUST historial — remove entries per clearLog ──
-  if(data.custHistorial&&Array.isArray(data.custHistorial)){
-    CUST.historial=data.custHistorial.filter(function(h){
-      // Remove if customBy or customBy2 was cleared for this emb
-      var k1=String(h.emb)+'|customBy', k2=String(h.emb)+'|customBy2';
-      var cleared1=S._clearLog[k1], cleared2=S._clearLog[k2];
-      // If this entry was added before a clear, filter it out
-      if(cleared1&&h.customBy&&h.ts&&h.ts<cleared1) return false;
-      if(cleared2&&h.customBy&&h.ts&&h.ts<cleared2) return false;
-      return true;
-    });
-    try{localStorage.setItem('trx_cust_hist',JSON.stringify(CUST.historial));}catch(e){}
-    console.log('[SYNC] custHistorial restored n='+CUST.historial.length+' (clearLog applied)');
+  // Restore CUST.historial from Firebase
+  if(data.custHistorial && Array.isArray(data.custHistorial)){
+    if(data.custHistorial.length >= CUST.historial.length){
+      CUST.historial = data.custHistorial;
+      try{localStorage.setItem('trx_cust_hist',JSON.stringify(CUST.historial));}catch(e){}
+    }
   }
+  if(!S.rows || !S.rows.length) return;
 
-  // ── 9. Normalize cortina values ──
-  if(S.rows&&typeof fmtCortina==='function'){
-    S.rows.forEach(r=>{
-      if(r.con&&!r.con.startsWith('Rampa')){var fc2=fmtCortina(r.con);r.con=fc2==='—'?'':fc2;}
-    });
-  }
-
-  // ── 10. Remove stale alert embs ──
-  if(typeof alertedEmbs!=='undefined'){
-    alertedEmbs.forEach(emb=>{if(!S.rows.find(r=>r.emb===emb)) alertedEmbs.delete(emb);});
-  }
-
-  // ── 11. custSyncFromRows (respects S.rows which already has clearLog applied) ──
-  if(typeof _custSyncFromRows==='function') _custSyncFromRows();
-
-  // ── 12. GUEST: render and return ──
-  if(!fbIsAdmin&&!fbIsDocumentador){
-    console.log('[SYNC] Guest render: rows='+S.rows.length);
-    ['kRow','tabs'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('hidden');});
-    var _vemb=g('view-emb');if(_vemb)_vemb.classList.remove('hidden');
-    ['view-desc','view-inc','view-hist'].forEach(function(id){var el=g(id);if(el)el.classList.add('hidden');});
-    var _prs=g('p-rs');if(_prs)_prs.classList.remove('hidden');
-    ['tk','al','vf','dc','vac'].forEach(function(x){var el=g('p-'+x);if(el)el.classList.add('hidden');});
-    document.querySelectorAll('.tab').forEach(function(t){
-      t.classList.toggle('active',(t.getAttribute('onclick')||'').includes("'rs'"));
-    });
-    if(typeof kpi==='function') kpi();
-    if(typeof badge==='function') badge();
-    if(typeof renderResumen==='function') renderResumen();
-    return;
-  }
-
-  // ── 13. Early exit if no rows ──
-  if(!S.rows||!S.rows.length) return;
-
-  // ── 14. Admin/Documentador UI chrome ──
+  // Show UI chrome
   ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
-    var el=document.getElementById(id);if(el)el.classList.remove('hidden');
+    const el=document.getElementById(id); if(el) el.classList.remove('hidden');
   });
   if(typeof updateTopbarSup==='function') updateTopbarSup();
 
-  // ── 15. DOCUMENTADOR ──
-  if(fbIsDocumentador){
+  if(!fbIsAdmin && !fbIsDocumentador){
+    // GUEST only: update resumen data
+    kpi(); badge();
     requestAnimationFrame(()=>{
-      var _dv=g('view-desc');if(_dv&&!_dv.classList.contains('hidden')) dvRender();
-      var _iv2=g('view-inc');if(_iv2&&!_iv2.classList.contains('hidden')) incRender();
-      var _hv=g('view-hist');if(_hv&&!_hv.classList.contains('hidden')) renderHist();
+      if(typeof renderResumen==='function') renderResumen();
+    });
+    return;
+  }
+  if(fbIsDocumentador){
+    // DOCUMENTADOR: gets DV + INC updates in real time
+    requestAnimationFrame(()=>{
+      const _dv=g('view-desc'); if(_dv&&!_dv.classList.contains('hidden')) dvRender();
+      const _iv=g('view-inc'); if(_iv&&!_iv.classList.contains('hidden')) incRender();
+      const _hv=g('view-hist'); if(_hv&&!_hv.classList.contains('hidden')) renderHist();
     });
     return;
   }
 
-  // ── 16. ADMIN render ──
+  // ADMIN: render current visible panel only — defer everything else
   kpi(); alerts(); badge();
+  // Only render the ACTIVE panel — avoids blocking the UI
   requestAnimationFrame(()=>{
-    var activeTab=document.querySelector('.tab.active');
-    var oc=activeTab?(activeTab.getAttribute('onclick')||''):'';
-    if(oc.includes("'tk'")||!activeTab) render();
-    else if(oc.includes("'rs'")&&g('p-rs')&&!g('p-rs').classList.contains('hidden')) renderResumen();
-    else if(oc.includes("'vf'")&&g('p-vf')&&!g('p-vf').classList.contains('hidden')){if(typeof kpiVerif==='function')kpiVerif();}
-    else if(oc.includes("'cl'")&&g('p-cl')&&!g('p-cl').classList.contains('hidden')){if(typeof renderClientes==='function')renderClientes();}
-    else render();
+    const activeTab = document.querySelector('.tab.active');
+    const oc = activeTab ? (activeTab.getAttribute('onclick')||'') : '';
+    if(oc.includes("'tk'") || !activeTab){ render(); }
+    else if(oc.includes("'rs'") && g('p-rs')&&!g('p-rs').classList.contains('hidden')){ renderResumen(); }
+    else if(oc.includes("'vf'") && g('p-vf')&&!g('p-vf').classList.contains('hidden')){ if(typeof kpiVerif==='function') kpiVerif(); }
+    else if(oc.includes("'cl'") && g('p-cl')&&!g('p-cl').classList.contains('hidden')){ if(typeof renderClientes==='function') renderClientes(); }
+    else{ render(); }
   });
-  var _incView=g('view-inc');
+
+  // Refresh visible DV/INC panels on any sync
+  const _incView=g('view-inc');
   if(_incView&&!_incView.classList.contains('hidden')) incRender();
-  var _descView=g('view-desc');
+  const _descView=g('view-desc');
   if(_descView&&!_descView.classList.contains('hidden')) dvRender();
 }
 
@@ -7656,12 +7457,11 @@ setInterval(()=>{
 const _origUpd = upd;
 window.upd = function(idx,field,val){
   _origUpd(idx,field,val);
-  // fbSave() called AFTER _origUpd so cleared fields are persisted
-  setTimeout(fbSave, 50);
+  fbSave();
   if(['monta','precarga','verif'].includes(field) && val){
     const r = S.rows[idx];
     if(!r) return;
-    const labels = {monta:'Montacarguista',monta2:'Montacarguista 2',precarga:'Precarga',verif:'Verificador',verif2:'Verificador 2',customBy:'Customizó',customBy2:'Customizó 2'};
+    const labels = {monta:'Montacarguista',precarga:'Precarga',verif:'Verificador'};
     const who = field==='monta'
       ? (MONTACARGUISTAS.find(m=>m.id===val)?.nombre||val)
       : field==='verif'
