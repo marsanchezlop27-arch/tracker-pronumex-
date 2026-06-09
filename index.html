@@ -1180,7 +1180,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
-const S = { rows:[], buf:{}, sc:'', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[], initialSemEmbs:[], initialSemArBase:{} };
+const S = { rows:[], buf:{}, sc:'', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[], initialSemEmbs:[], initialSemArBase:{}, _clearLog:{} };
 
 // ─── HISTORIAL PERSISTENTE (localStorage) ────────────────────────────────────
 
@@ -1217,6 +1217,13 @@ function autoSaveVerifHistorial(){
       estop:r.estop||'', pt:r.pt||'',
       fecha:hora, ts:now.getTime()
     };
+    // Apply clearLog before saving snap
+    if(S._clearLog && typeof S._clearLog==='object'){
+      Object.entries(S._clearLog).forEach(function(e2){
+        var parts=e2[0].split('|'), cEmb=parts[0], cField=parts[1];
+        if(String(snap.emb)===cEmb && cField in snap) snap[cField]='';
+      });
+    }
     if(existing>=0) entry.fletes[existing]=snap;
     else entry.fletes.push(snap);
   });
@@ -1692,7 +1699,8 @@ function patchDetPtr(){
     }
     const ue = S.userEdits[r.emb]||{};
     // Restore operational fields — com always from DETALLE, not from userEdits
-    ['estop','monta','verif','precarga','prio','prioNum'].forEach(f=>{
+    ['estop','monta','verif','precarga','prio','prioNum',
+     'monta2','verif2','customBy','customBy2'].forEach(f=>{
       if(ue[f] !== undefined) r[f] = ue[f];
     });
     // con: only restore from userEdits if it has a real Rampa value
@@ -1996,12 +2004,13 @@ function applyNew(){
     .filter(r=>r.monta||r.precarga||r.estop||r.verif)  // include verif-only rows
     .map(r=>({
       emb:r.emb, nom:r.nom, sem:r.sem,
-      monta:r.monta, precarga:r.precarga, estop:r.estop,
-      verif:r.verif||'',   // ← always include verif
+      monta:r.monta||'', monta2:r.monta2||'',
+      precarga:r.precarga||'', estop:r.estop||'',
+      verif:r.verif||'', verif2:r.verif2||'',
+      customBy:r.customBy||'', customBy2:r.customBy2||'',
       pt:r.pt, pr:r.pr, pal:r.pal, tr:r.tr, ar:r.ar, ci:r.ci, prio:r.prio,
       turno:S.sessionTurno, sup:S.sessionSup,
-      fecha:_snapFecha,    // ← full date+time
-      ts:_snapNow.getTime()
+      fecha:_snapFecha, ts:_snapNow.getTime()
     }));
   if(snapshot.length){
     S.turnoHistorial.push({
@@ -2592,7 +2601,10 @@ function upd(idx,field,val){
 
   // When clearing a field — remove from historial
   if(val==='' || val===null){
-    S._lastClearTs = Date.now(); // prevent turnoHistorial overwrite from sync
+    S._lastClearTs = Date.now();
+    const _clearKey=String(emb)+'|'+field;
+    S._clearLog[_clearKey]=S._lastClearTs;
+    console.log('[CLEAR] field='+field+' emb='+emb+' clearLog updated');
     const embStr=String(emb);
     // Remove from turnoHistorial snaps
     if(['verif','verif2','monta','monta2'].includes(field)){
@@ -3963,6 +3975,9 @@ function _custSyncFromRows(){
           var _p=ALL_PERSONAL.find(function(p){return p.id===_cb.trim();});
           _cb=_p?_p.nombre:_cb;
         }
+        // Check clearLog before adding
+        var _ck=String(r.emb)+'|'+(cb===r.customBy?'customBy':'customBy2');
+        if(S._clearLog&&S._clearLog[_ck]) return; // skip cleared entries
         CUST.historial.push({
           ts:r.ts||Date.now(), emb:String(r.emb||''),
           nom:r.nom||'', customBy:_cb,
@@ -7401,6 +7416,7 @@ function fbSave(){
         // INC data
         incRegistros: INC.registros,
         custHistorial: CUST.historial,
+        clearLog: S._clearLog,
         ts, device: DEVICE_ID
       };
       autoSaveVerifHistorial(); // persist verif assignments
@@ -7419,148 +7435,174 @@ function fbSave(){
 }
 
 function applyRemoteData(data){
+  // VERSION CHECK
+  if(!window._arVersion){ window._arVersion=2; console.log('[VERSION] applyRemoteData v2 loaded'); }
   const _role=fbIsAdmin?'Admin':fbIsDocumentador?'Documentador':'Invitado';
-  console.log('[SYNC] applyRemoteData role='+_role+' rows='+(data.rows?.length||0)+' dvRegs='+(data.dvRegistros?.length||0)+' incRegs='+(data.incRegistros?.length||0));
-  console.log('[DATA] applyRemoteData fbIsAdmin='+fbIsAdmin+' fbIsDoc='+fbIsDocumentador+' rows='+(data.rows?data.rows.length:0));
-  // Detect assignment changes from other devices BEFORE overwriting S.rows
-  if(data.rows && Array.isArray(data.rows) && S.rows && S.rows.length && data.device && data.device!==DEVICE_ID){
+  const _sameDevice=data.device&&data.device===DEVICE_ID;
+  const _msClear=Date.now()-(S._lastClearTs||0);
+  console.log('[SYNC] role='+_role+' rows='+(data.rows?.length||0)+' sameDevice='+_sameDevice+' clearAgo='+Math.round(_msClear/1000)+'s');
+
+  // ── 1. Merge clearLog (take latest timestamp per field) ──
+  if(data.clearLog && typeof data.clearLog==='object'){
+    Object.entries(data.clearLog).forEach(function(entry){
+      var key=entry[0], ts=entry[1];
+      if(!S._clearLog[key] || ts > S._clearLog[key]) S._clearLog[key]=ts;
+    });
+  }
+
+  // Helper: apply clearLog to an object (row or snap)
+  function _applyClearLog(obj){
+    if(!obj||!obj.emb) return obj;
+    var embStr=String(obj.emb);
+    Object.entries(S._clearLog).forEach(function(entry){
+      var parts=entry[0].split('|'), emb=parts[0], field=parts[1];
+      if(emb===embStr && field in obj) obj[field]='';
+    });
+    return obj;
+  }
+
+  // ── 2. Detect assignment changes BEFORE overwriting S.rows ──
+  if(data.rows&&Array.isArray(data.rows)&&S.rows&&S.rows.length&&!_sameDevice){
     data.rows.forEach(function(nr){
-      const or = S.rows.find(function(r){return r.emb===nr.emb;});
+      var or=S.rows.find(function(r){return r.emb===nr.emb;});
       if(!or) return;
-      if(nr.monta && nr.monta!==or.monta){
-        const nom=(typeof MONTACARGUISTAS!=='undefined'?(MONTACARGUISTAS.find(function(m){return m.id===nr.monta;})||{}).nombre||nr.monta:nr.monta);
+      if(nr.monta&&nr.monta!==or.monta){
+        var nom=(MONTACARGUISTAS.find(function(m){return m.id===nr.monta;})||{}).nombre||nr.monta;
         if(typeof _notifyAssignment==='function') _notifyAssignment('Montacarguista',nom,nr.nom||nr.emb||'');
       }
-      if(nr.verif && nr.verif!==or.verif){
-        const nom=(typeof VERIFICADORES!=='undefined'?(VERIFICADORES.find(function(v){return v.id===nr.verif;})||{}).nombre||nr.verif:nr.verif);
-        if(typeof _notifyAssignment==='function') _notifyAssignment('Verificador',nom,nr.nom||nr.emb||'');
-      }
-      if(nr.precarga && nr.precarga!==or.precarga){
-        if(typeof _notifyAssignment==='function') _notifyAssignment('Precarga',nr.precarga,nr.nom||nr.emb||'');
+      if(nr.verif&&nr.verif!==or.verif){
+        var nom2=(VERIFICADORES.find(function(v){return v.id===nr.verif;})||{}).nombre||nr.verif;
+        if(typeof _notifyAssignment==='function') _notifyAssignment('Verificador',nom2,nr.nom||nr.emb||'');
       }
     });
   }
-  if(data.rows)           S.rows           = data.rows;
-  // Sync customBy from restored rows into CUST.historial
-  if(typeof _custSyncFromRows==='function') _custSyncFromRows();
-  // Normalize con values: 'DI-N' → 'Rampa N' for any stale Firebase values
-  if(S.rows && typeof fmtCortina==='function'){
-    S.rows.forEach(r=>{
-      if(r.con && !r.con.startsWith('Rampa')){
-        const fc2=fmtCortina(r.con); r.con=fc2==='—'?'':fc2;
-      }
-    });
+
+  // ── 3. Restore S.rows + apply clearLog ──
+  if(data.rows){
+    S.rows=data.rows.map(function(r){ return _applyClearLog({...r}); });
   }
-  // Remove alerts for embs no longer in S.rows (prevent stale notifications)
-  if(typeof alertedEmbs!=='undefined'){
-    alertedEmbs.forEach(emb=>{
-      if(!S.rows.find(r=>r.emb===emb)) alertedEmbs.delete(emb);
+
+  // ── 4. Restore userEdits ──
+  if(data.userEdits) S.userEdits=data.userEdits;
+
+  // ── 5. Restore turnoHistorial + apply clearLog to all snaps ──
+  if(data.turnoHistorial){
+    S.turnoHistorial=JSON.parse(JSON.stringify(data.turnoHistorial));
+    S.turnoHistorial.forEach(function(h){
+      (h.fletes||[]).forEach(function(f){ _applyClearLog(f); });
     });
+    console.log('[SYNC] turnoHistorial restored n='+S.turnoHistorial.length+' (clearLog applied)');
   }
-  if(data.userEdits)      S.userEdits       = data.userEdits;
-  // Don't restore turnoHistorial if we just cleared a field
-  const _msClear=Date.now()-(S._lastClearTs||0);
-  const _histSameDevice=data.device&&data.device===DEVICE_ID;
-  if(data.turnoHistorial&&(!_histSameDevice||_msClear>5000)) S.turnoHistorial=data.turnoHistorial;
-  if(data.posAlerts)      S.posAlerts       = data.posAlerts;
-  if(data.sessionTurno)   S.sessionTurno    = data.sessionTurno;
-  if(data.sessionSup)     S.sessionSup      = data.sessionSup;
-  // Sync DV and INC from other devices
-  // Guard: never overwrite DV.registros within 30s of a local save
-  if(data.dvRegistros && Array.isArray(data.dvRegistros)){
-    const _msSinceSave = Date.now()-(DV._lastSaveTs||0);
-    const _sameDevice = data.device && data.device===DEVICE_ID;
-    if(!_sameDevice || _msSinceSave > 60000){
-      DV.registros = data.dvRegistros;
+
+  if(data.posAlerts)    S.posAlerts=data.posAlerts;
+  if(data.sessionTurno) S.sessionTurno=data.sessionTurno;
+  if(data.sessionSup)   S.sessionSup=data.sessionSup;
+
+  // ── 6. DV registros (60s same-device guard) ──
+  if(data.dvRegistros&&Array.isArray(data.dvRegistros)){
+    if(!_sameDevice||Date.now()-(DV._lastSaveTs||0)>60000) DV.registros=data.dvRegistros;
+  }
+  if(data.dvHistorial!==undefined&&Array.isArray(data.dvHistorial)){
+    var _msHistDel=Date.now()-(DV._histDeleteTs||0);
+    if(data.dvHistorial.length>0&&(!_sameDevice||_msHistDel>60000)){
+      DV.historial=data.dvHistorial;
+      try{localStorage.setItem('trx_dv_historial',JSON.stringify(DV.historial));}catch(e){}
     }
   }
-  if(data.dvHistorial !== undefined && Array.isArray(data.dvHistorial)){
-    const _msHistDel = Date.now()-(DV._histDeleteTs||0);
-    const _histSameDevice = data.device && data.device===DEVICE_ID;
-    // Don't overwrite if this device just deleted (60s guard) — but allow cross-device
-    if(data.dvHistorial.length > 0 && (!_histSameDevice || _msHistDel > 60000)){
-      DV.historial = data.dvHistorial;
-      try{ localStorage.setItem('trx_dv_historial',JSON.stringify(DV.historial)); }catch(e){}
-    }
-  }
-  if(data.dvTurno)        DV.turno          = data.dvTurno;
-  // Only restore dvSup from Firebase if user hasn't set it manually this session
-  if(data.dvSup && !DV._supSetByUser && !DV.sup) DV.sup = data.dvSup;
-  // Guard: don't overwrite INC.registros within 15s of local delete
-  if(data.incRegistros && Array.isArray(data.incRegistros)){
-    const _msIncSave = Date.now()-(INC._lastSaveTs||0);
-    const _incSameDevice = data.device && data.device===DEVICE_ID;
-    if(!_incSameDevice || _msIncSave > 15000){
-      INC.registros = data.incRegistros;
-      // Always refresh badge and panel regardless of role
+  if(data.dvTurno) DV.turno=data.dvTurno;
+  if(data.dvSup&&!DV._supSetByUser&&!DV.sup) DV.sup=data.dvSup;
+
+  // ── 7. INC (15s same-device guard) ──
+  if(data.incRegistros&&Array.isArray(data.incRegistros)){
+    if(!_sameDevice||Date.now()-(INC._lastSaveTs||0)>15000){
+      INC.registros=data.incRegistros;
       if(typeof badge==='function') badge();
-  if(typeof updateSemanaCounter==='function') updateSemanaCounter();
-      const _iv=g('view-inc');
+      if(typeof updateSemanaCounter==='function') updateSemanaCounter();
+      var _iv=g('view-inc');
       if(_iv&&!_iv.classList.contains('hidden')) incRender();
     }
   }
-  // Restore CUST.historial from Firebase
-  if(data.custHistorial && Array.isArray(data.custHistorial)){
-    // Allow any size — deletions reduce length
-    const _custSameDevice=data.device&&data.device===DEVICE_ID;
-    const _msCustClear=Date.now()-(S._lastClearTs||0);
-    if(!_custSameDevice || _msCustClear>5000){
-      CUST.historial = data.custHistorial;
-      try{localStorage.setItem('trx_cust_hist',JSON.stringify(CUST.historial));}catch(e){}
-    }
-  }
-  if(!S.rows || !S.rows.length){ if(!fbIsAdmin && !fbIsDocumentador){
-  ['kRow','tabs'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('hidden'); });
-  var _rsEl2=g('p-rs'); if(_rsEl2) _rsEl2.classList.remove('hidden');
-  if(typeof renderResumen==='function') renderResumen();
-  if(typeof badge==='function') badge();
-} return; }
 
-  // GUEST: render and return before admin UI
-  if(!fbIsAdmin && !fbIsDocumentador){
-    ['kRow','tabs'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('hidden'); });
-    var _prs=g('p-rs'); if(_prs) _prs.classList.remove('hidden');
-    var _vemb=g('view-emb'); if(_vemb) _vemb.classList.remove('hidden');
-    ['view-desc','view-inc','view-hist'].forEach(function(id){ var el=g(id); if(el) el.classList.add('hidden'); });
-    kpi(); badge();
-    requestAnimationFrame(function(){ if(typeof renderResumen==='function') renderResumen(); });
+  // ── 8. CUST historial — remove entries per clearLog ──
+  if(data.custHistorial&&Array.isArray(data.custHistorial)){
+    CUST.historial=data.custHistorial.filter(function(h){
+      // Remove if customBy or customBy2 was cleared for this emb
+      var k1=String(h.emb)+'|customBy', k2=String(h.emb)+'|customBy2';
+      var cleared1=S._clearLog[k1], cleared2=S._clearLog[k2];
+      // If this entry was added before a clear, filter it out
+      if(cleared1&&h.customBy&&h.ts&&h.ts<cleared1) return false;
+      if(cleared2&&h.customBy&&h.ts&&h.ts<cleared2) return false;
+      return true;
+    });
+    try{localStorage.setItem('trx_cust_hist',JSON.stringify(CUST.historial));}catch(e){}
+    console.log('[SYNC] custHistorial restored n='+CUST.historial.length+' (clearLog applied)');
+  }
+
+  // ── 9. Normalize cortina values ──
+  if(S.rows&&typeof fmtCortina==='function'){
+    S.rows.forEach(r=>{
+      if(r.con&&!r.con.startsWith('Rampa')){var fc2=fmtCortina(r.con);r.con=fc2==='—'?'':fc2;}
+    });
+  }
+
+  // ── 10. Remove stale alert embs ──
+  if(typeof alertedEmbs!=='undefined'){
+    alertedEmbs.forEach(emb=>{if(!S.rows.find(r=>r.emb===emb)) alertedEmbs.delete(emb);});
+  }
+
+  // ── 11. custSyncFromRows (respects S.rows which already has clearLog applied) ──
+  if(typeof _custSyncFromRows==='function') _custSyncFromRows();
+
+  // ── 12. GUEST: render and return ──
+  if(!fbIsAdmin&&!fbIsDocumentador){
+    console.log('[SYNC] Guest render: rows='+S.rows.length);
+    ['kRow','tabs'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('hidden');});
+    var _vemb=g('view-emb');if(_vemb)_vemb.classList.remove('hidden');
+    ['view-desc','view-inc','view-hist'].forEach(function(id){var el=g(id);if(el)el.classList.add('hidden');});
+    var _prs=g('p-rs');if(_prs)_prs.classList.remove('hidden');
+    ['tk','al','vf','dc','vac'].forEach(function(x){var el=g('p-'+x);if(el)el.classList.add('hidden');});
+    document.querySelectorAll('.tab').forEach(function(t){
+      t.classList.toggle('active',(t.getAttribute('onclick')||'').includes("'rs'"));
+    });
+    if(typeof kpi==='function') kpi();
+    if(typeof badge==='function') badge();
+    if(typeof renderResumen==='function') renderResumen();
     return;
   }
-  // Guest handled above already — only continue for Admin/Documentador
-  // Show UI chrome (admin/documentador only)
+
+  // ── 13. Early exit if no rows ──
+  if(!S.rows||!S.rows.length) return;
+
+  // ── 14. Admin/Documentador UI chrome ──
   ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.classList.remove('hidden');
+    var el=document.getElementById(id);if(el)el.classList.remove('hidden');
   });
   if(typeof updateTopbarSup==='function') updateTopbarSup();
 
-  
+  // ── 15. DOCUMENTADOR ──
   if(fbIsDocumentador){
-    // DOCUMENTADOR: gets DV + INC updates in real time
     requestAnimationFrame(()=>{
-      const _dv=g('view-desc'); if(_dv&&!_dv.classList.contains('hidden')) dvRender();
-      const _iv=g('view-inc'); if(_iv&&!_iv.classList.contains('hidden')) incRender();
-      const _hv=g('view-hist'); if(_hv&&!_hv.classList.contains('hidden')) renderHist();
+      var _dv=g('view-desc');if(_dv&&!_dv.classList.contains('hidden')) dvRender();
+      var _iv2=g('view-inc');if(_iv2&&!_iv2.classList.contains('hidden')) incRender();
+      var _hv=g('view-hist');if(_hv&&!_hv.classList.contains('hidden')) renderHist();
     });
     return;
   }
 
-  // ADMIN: render current visible panel only — defer everything else
+  // ── 16. ADMIN render ──
   kpi(); alerts(); badge();
-  // Only render the ACTIVE panel — avoids blocking the UI
   requestAnimationFrame(()=>{
-    const activeTab = document.querySelector('.tab.active');
-    const oc = activeTab ? (activeTab.getAttribute('onclick')||'') : '';
-    if(oc.includes("'tk'") || !activeTab){ render(); }
-    else if(oc.includes("'rs'") && g('p-rs')&&!g('p-rs').classList.contains('hidden')){ renderResumen(); }
-    else if(oc.includes("'vf'") && g('p-vf')&&!g('p-vf').classList.contains('hidden')){ if(typeof kpiVerif==='function') kpiVerif(); }
-    else if(oc.includes("'cl'") && g('p-cl')&&!g('p-cl').classList.contains('hidden')){ if(typeof renderClientes==='function') renderClientes(); }
-    else{ render(); }
+    var activeTab=document.querySelector('.tab.active');
+    var oc=activeTab?(activeTab.getAttribute('onclick')||''):'';
+    if(oc.includes("'tk'")||!activeTab) render();
+    else if(oc.includes("'rs'")&&g('p-rs')&&!g('p-rs').classList.contains('hidden')) renderResumen();
+    else if(oc.includes("'vf'")&&g('p-vf')&&!g('p-vf').classList.contains('hidden')){if(typeof kpiVerif==='function')kpiVerif();}
+    else if(oc.includes("'cl'")&&g('p-cl')&&!g('p-cl').classList.contains('hidden')){if(typeof renderClientes==='function')renderClientes();}
+    else render();
   });
-
-  // Refresh visible DV/INC panels on any sync
-  const _incView=g('view-inc');
+  var _incView=g('view-inc');
   if(_incView&&!_incView.classList.contains('hidden')) incRender();
-  const _descView=g('view-desc');
+  var _descView=g('view-desc');
   if(_descView&&!_descView.classList.contains('hidden')) dvRender();
 }
 
