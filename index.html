@@ -1109,7 +1109,8 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <div style="display:flex;gap:2px;background:var(--navy2);border-radius:8px;padding:3px;margin-bottom:14px;width:fit-content">
     <button id="htab-emb" onclick="histSubTab('emb')" style="background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 16px;font-size:11px;font-weight:600;cursor:pointer">📦 Embarques</button>
     <button id="htab-cust" onclick="histSubTab('cust')" style="background:none;color:var(--text3);border:none;border-radius:6px;padding:5px 16px;font-size:11px;cursor:pointer">⚙ Customizadores</button>
-    <button id="htab-desc" onclick="histSubTab('desc')" style="background:none;color:var(--text3);border:none;border-radius:6px;padding:5px 16px;font-size:11px;font-weight:600;cursor:pointer">🚛 Descargas</button>
+    <button id="htab-desc" onclick="histSubTab('desc')" style="background:none;color:var(--text3);border:none;border-radius:6px;padding:5px 16px;font-size:11px;cursor:pointer">⬇ Descargas</button>
+    
     <button id="htab-vf" onclick="histSubTab('vf')" style="background:none;color:var(--text3);border:none;border-radius:6px;padding:5px 16px;font-size:11px;font-weight:600;cursor:pointer">✅ Verificadores</button>
   </div>
   <!-- Embarques panel -->
@@ -1128,22 +1129,32 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <div id="custPanelContent"><!-- rendered by renderHistCust() --></div>
 </div>
 
-<div id="hpan-desc" style="display:none">
+
+  <!-- Verificadores panel -->
+  <div id="hpan-desc" style="display:none">
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-      <input id="histDescSearch" class="edt-sel" type="text" placeholder="Buscar montacarguista, origen, STO..." style="height:30px;font-size:11px;min-width:200px" oninput="renderHistDesc()">
+      <input id="histDescSearch" class="edt-sel" type="text" placeholder="Buscar montacarguista, origen, cortina..." style="height:30px;font-size:11px;min-width:200px" oninput="renderHistDesc()">
       <button class="btn" onclick="exportHistDescXLSX()" style="font-size:11px;border-color:var(--blue);color:var(--blue)">📊 Exportar Excel</button>
     </div>
     <div id="histDescKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px"></div>
     <div id="histDescContent"></div>
   </div>
-  <!-- Verificadores panel -->
+
   <div id="hpan-vf" style="display:none">
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <input id="histVfSearch" class="edt-sel" type="text" placeholder="Buscar verificador, flete o cliente..." style="height:30px;font-size:11px;min-width:220px" oninput="renderHistVf()">
       <button class="btn" onclick="exportHistVfCSV()" style="font-size:11px;border-color:var(--green);color:var(--green)">⬇ Exportar CSV</button>
     </div>
     <div id="histVfKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px"></div>
-    <div id="histVfContent" style="max-height:65vh;overflow-y:auto"></div>
+    <div id="histVfRanking" style="margin-bottom:12px"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+      <div style="flex:1;font-size:10px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.5px">📋 Detalle por fecha</div>
+      <button onclick="vfToggleDetalle()" id="vfDetalleBtn"
+        style="background:none;border:1px solid var(--border2);color:var(--brand);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer">▼ Ver detalle</button>
+    </div>
+    <div id="vfDetallePanel" style="display:none">
+      <div id="histVfContent"></div>
+    </div>
   </div>
 </div><!-- /view-hist -->
 
@@ -2805,13 +2816,26 @@ function alertsRelevant(){
   // Fuera de tiempo
   const fuera = S.rows.filter(r=>r.sem&&r.sem.toLowerCase().includes('fuera'));
 
+  // Parse cita date — handles dd/mm/yyyy hh:mm and ISO formats
+  function parseCita(ci){
+    if(!ci) return null;
+    // Try ISO first
+    let d=new Date(ci); if(!isNaN(d)) return d;
+    // Try dd/mm/yyyy hh:mm or dd/mm/yyyy, hh:mm
+    const m=String(ci).match(/(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})[,\s]*(\d{1,2}):(\d{2})?/);
+    if(m) return new Date(+m[3],+m[2]-1,+m[1],+(m[4]||0),+(m[5]||0));
+    // Try dd/mm/yyyy only
+    const m2=String(ci).match(/(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
+    if(m2) return new Date(+m2[3],+m2[2]-1,+m2[1]);
+    return null;
+  }
   // Riesgo: menos de 2 horas para la cita (pero no fuera)
   const riesgo = S.rows.filter(r=>{
     if(r.sem&&r.sem.toLowerCase().includes('fuera')) return false;
     if(!r.ci) return false;
-    const d=new Date(r.ci); if(isNaN(d)) return false;
+    const d=parseCita(r.ci); if(!d||isNaN(d)) return false;
     const h=(d-now)/3600000;
-    return h>=0 && h<2;
+    return h>=-1 && h<2;
   });
 
   // Nuevos: fletes que no existían en el semáforo anterior
@@ -3421,8 +3445,6 @@ function syncEvidenciasToHist(emb, evidencias){
 }
 
 function histSubTab(t){
-  // Documentador: only Descargas sub-tab
-  if(fbIsDocumentador && t!=='desc'){ histSubTab('desc'); return; }
   ['emb','desc','vf','cust'].forEach(x=>{
     const panel=document.getElementById('hpan-'+x); if(panel) panel.style.display=x===t?'':'none';
     const btn=document.getElementById('htab-'+x);
@@ -3503,6 +3525,7 @@ function renderHistVf(){
   ].map(([l,c,v])=>`<div class="kpi" style="border-top:2px solid ${c}"><div class="kpi-v" style="color:${c};font-size:${String(v).length>8?'11px':'16px'}">${v}</div><div class="kpi-l">${l}</div></div>`).join('');
 
   if(!all.length){
+    const _rk=g('histVfRanking'); if(_rk) _rk.innerHTML='';
     el.innerHTML='<div style="text-align:center;padding:32px;color:var(--text3)">Sin fletes verificados en el historial.</div>';
     return;
   }
@@ -3524,53 +3547,36 @@ function renderHistVf(){
       </div>`
     : '';
 
-  // ── SINGLE TABLE: colaborador | flete | cliente | semáforo | día ──────────
-  // Group by date for section headers
-  const byFecha = {};
-  all.forEach(r=>{
-    if(!byFecha[r.fecha]) byFecha[r.fecha]=[];
-    byFecha[r.fecha].push(r);
-  });
 
-  // Sort dates descending
-  const fechasSorted = Object.keys(byFecha).sort((a,b)=>{
-    if(a===todayKey) return -1; if(b===todayKey) return 1;
-    return b.localeCompare(a);
-  });
-
-  const tableHtml = fechasSorted.map(fecha=>{
-    const rows = byFecha[fecha].sort((a,b)=>a.nombre.localeCompare(b.nombre));
-    const secId = 'vfsec_'+fecha.replace(/\//g,'_');
-    const tbl = `<table style="width:100%;border-collapse:collapse;font-size:11px">
+  // ── FLAT TABLE (no date grouping) ────────────────────────────────────────
+  const tableHtml = all.length ? `
+  <div style="overflow-x:auto;overflow-y:auto;max-height:45vh;border-radius:8px;border:1px solid var(--border)">
+    <table style="width:100%;border-collapse:collapse;font-size:10.5px">
       <thead><tr style="background:var(--navy2)">
-        <th style="padding:5px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">#</th>
-        <th style="padding:5px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Verificador</th>
-        <th style="padding:5px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">No. Flete</th>
-        <th style="padding:5px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Cliente</th>
-        <th style="padding:5px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase">Semáforo</th>
+        <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--border)">#</th>
+        <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--border)">Fecha</th>
+        <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--border)">Verificador</th>
+        <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--border)">No. Flete</th>
+        <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Cliente</th>
+        <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Semáforo</th>
       </tr></thead>
       <tbody>
-        ${rows.map((r,i)=>`<tr style="border-bottom:1px solid var(--border)">
-          <td style="padding:4px 10px;font-size:9px;color:var(--text3)">${i+1}</td>
-          <td style="padding:4px 10px;font-weight:600;font-size:11px"><span style="background:rgba(208,223,0,.12);color:var(--brand,#D0DF00);border:1px solid rgba(208,223,0,.25);border-radius:4px;padding:2px 7px;font-size:10px">✅ ${es(r.nombre)}</span></td>
-          <td style="padding:4px 10px;font-family:monospace;font-size:10.5px;font-weight:700;color:var(--cyan)">${es(r.emb)}</td>
-          <td style="padding:4px 10px;font-size:10.5px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${es(r.nom||'—')}</td>
-          <td style="padding:4px 10px;font-size:10px;color:var(--text3)">${es(r.sem||'—')}</td>
+        ${all.map((r,i)=>`<tr style="border-bottom:1px solid rgba(30,58,95,.4)" onmouseover="this.style.background='rgba(255,255,255,.025)'" onmouseout="this.style.background=''">
+          <td style="padding:4px 8px;font-size:9px;color:var(--text3)">${i+1}</td>
+          <td style="padding:4px 8px;font-size:9px;color:var(--text3);white-space:nowrap">${es(r.fecha||'—')}</td>
+          <td style="padding:4px 8px;white-space:nowrap"><span style="background:rgba(208,223,0,.12);color:var(--brand);border:1px solid rgba(208,223,0,.25);border-radius:4px;padding:2px 7px;font-size:10px">✅ ${es(r.nombre)}</span></td>
+          <td style="padding:4px 8px;font-family:monospace;font-size:10.5px;font-weight:700;color:var(--cyan);white-space:nowrap">${es(r.emb)}</td>
+          <td style="padding:4px 8px;font-size:10px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${es(r.nom||'—')}</td>
+          <td style="padding:4px 8px;font-size:10px;color:var(--text3);white-space:nowrap">${es(r.sem||'—')}</td>
         </tr>`).join('')}
       </tbody>
-    </table>`;
+    </table>
+  </div>` : '';
 
-    return `<div style="background:var(--card);border:1px solid var(--border2);border-radius:10px;margin-bottom:12px;overflow:hidden">
-      <div style="background:var(--navy2);padding:8px 14px;display:flex;align-items:center;gap:10px;border-left:4px solid var(--brand,#D0DF00);cursor:pointer" onclick="vfSecToggle('${secId}',this)">
-        <span style="font-size:11px;font-weight:700">📅 ${es(fecha)}</span>
-        <span style="font-size:10px;color:var(--text3)">${rows.length} flete${rows.length!==1?'s':''}</span>
-        <span style="margin-left:auto;font-size:10px;color:var(--text3);background:rgba(255,255,255,.07);border:1px solid var(--border2);border-radius:4px;padding:2px 8px">▶ Ver</span>
-      </div>
-      <div id="${secId}" style="display:${fecha===todayKey?'block':'none'};overflow-x:auto">${tbl}</div>
-    </div>`;
-  }).join('');
-
-  el.innerHTML = rankHtml + tableHtml;
+  // Write ranking to always-visible div, detail to toggled panel
+  const _rkEl=g('histVfRanking');
+  if(_rkEl) _rkEl.innerHTML=rankHtml;
+  el.innerHTML = tableHtml;
 }
 
 function vfSecToggle(id, header){
@@ -3583,33 +3589,30 @@ function vfSecToggle(id, header){
 }
 
 function exportHistVfCSV(){
-  const all = [];
-  [...S.turnoHistorial].sort((a,b)=>(b.ts||0)-(a.ts||0)).forEach(h=>{
+  const seen=new Map();
+  [...S.turnoHistorial].sort((a,b)=>(a.ts||0)-(b.ts||0)).forEach(h=>{
+    const dayLabel=(h.hora||h.fecha||'').split(',')[0].trim()||'—';
     (h.fletes||[]).forEach(f=>{
-      if(!f.verif) return;
-      all.push([
-        f.fecha||h.hora||h.fecha||'',
-        h.turno||'',
-        SUPS[h.sup]||h.sup||'',
-        VERIFICADORES.find(v=>v.id===f.verif)?.nombre||f.verif,
-        f.emb||'',
-        f.nom||'',
-        f.sem||''
-      ]);
+      if(!f.verif||!f.emb) return;
+      const key=f.emb+'|'+f.verif;
+      seen.set(key,{fecha:dayLabel,turno:h.turno||'',sup:SUPS[h.sup]||h.sup||'',
+        nombre:VERIFICADORES.find(v=>v.id===f.verif)?.nombre||f.verif,
+        emb:f.emb,nom:f.nom||'',sem:f.sem||''});
     });
   });
-  // Current turn
   S.rows.filter(r=>r.verif).forEach(r=>{
-    all.unshift(['Turno activo', S.sessionTurno, SUPS[S.sessionSup]||'',
-      VERIFICADORES.find(v=>v.id===r.verif)?.nombre||r.verif,
-      r.emb||'', r.nom||'', r.sem||'']);
+    const key=(r.emb||'')+'|'+(r.verif||'');
+    if(!seen.has(key)) seen.set(key,{fecha:'Turno activo',turno:S.sessionTurno,
+      sup:SUPS[S.sessionSup]||'',nombre:VERIFICADORES.find(v=>v.id===r.verif)?.nombre||r.verif,
+      emb:r.emb||'',nom:r.nom||'',sem:r.sem||''});
   });
-  if(!all.length){ alert('Sin datos de verificaciones para exportar.'); return; }
-  const headers = ['Fecha/Hora','Turno','Supervisor','Verificador (Nombre Completo)','No. Flete','Cliente','Semáforo'];
-  const csv = '\uFEFF' + [headers,...all].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download = 'Verificadores_Historial_'+new Date().toISOString().slice(0,10)+'.csv';
+  if(!seen.size){alert('Sin datos para exportar.');return;}
+  const headers=['Fecha','Turno','Supervisor','Verificador','No. Flete','Cliente','Semáforo'];
+  const rows=[headers,...[...seen.values()].map(r=>[r.fecha,r.turno,r.sup,r.nombre,r.emb,r.nom,r.sem])];
+  const csv='\uFEFF'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='Verificadores_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
 }
 
@@ -3687,27 +3690,24 @@ function renderHist(){
 
 
 function getAllDescargas(){
-  // ONLY return registros that have at least one incidencia
   const all = [];
   const inHist = new Set();
-
   DV.historial.forEach(b => {
     (b.registros||[]).forEach(r => {
-      if((r.incidencias||[]).length > 0){   // ← only with incidencias
-        all.push({...r, fechaTurno:b.fecha||'', turnoLabel:b.turno||''});
+      if((r.incidencias||[]).length > 0){
+        all.push({...r, fechaTurno:b.fecha||b._dayKey||'', turnoLabel:b.turno||'',
+          supNombre:b.supNombre||SUPS[b.sup]||b.sup||'—'});
       }
       if(r._dvIdx !== undefined) inHist.add(r._dvIdx);
     });
   });
-
-  // Live registros WITH incidencias not yet in historial
   DV.registros.forEach((r,i) => {
     if((r.incidencias||[]).length > 0 && !inHist.has(i)){
-      all.push({...r, fechaTurno:'Turno activo', turnoLabel:DV.turno||'', _liveIdx:i});
+      all.push({...r, fechaTurno:'Turno activo', turnoLabel:DV.turno||S.sessionTurno||'',
+        supNombre:SUPS[DV.sup]||DV.sup||'—'});
     }
   });
-
-  return all;
+  return all.sort((a,b)=>(b._ts||0)-(a._ts||0));
 }
 
 
@@ -3968,14 +3968,16 @@ function renderHistCust(){
     <div style="font-size:10px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🏆 Ranking Customizadores</div>
     ${ranking.length===0
       ?'<div style="font-size:11px;color:var(--text3);padding:8px">Sin datos.</div>'
-      :`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px">
-        ${ranking.map(([nom,d],ri)=>`
-        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px 11px;display:flex;align-items:center;gap:8px;min-width:0">
-          <span style="font-size:13px;font-weight:800;color:${ri===0?'var(--amber)':ri===1?'var(--text3)':ri===2?'#CD7F32':'var(--text3)'};min-width:20px;flex-shrink:0">${ri+1}</span>
-          <span style="flex:1;font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${es(nom)}">${es(nom)}</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:var(--purple);flex-shrink:0">${d.count}</span>
-          <span style="font-size:9px;color:var(--text3);flex-shrink:0">fletes</span>
-        </div>`).join('')}
+      :`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <div style="padding:8px 12px">
+          ${ranking.map(([nom,d],ri)=>`
+          <div style="display:flex;align-items:center;gap:10px;padding:6px 4px;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px;font-weight:800;color:${ri===0?'var(--amber)':ri<3?'var(--amber)':'var(--text3)'};min-width:22px">${ri+1}</span>
+            <span style="flex:1;font-size:11.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${es(nom)}">${es(nom)}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:14px;color:var(--purple)">${d.count}</span>
+            <span style="font-size:10px;color:var(--text3)">fletes</span>
+          </div>`).join('')}
+        </div>
       </div>`
     }
   </div>
@@ -4055,121 +4057,70 @@ function custExportar(){
 }
 
 function renderHistDesc(){
-  const q = (g('histDescSearch')?.value||'').toLowerCase();
-  const allDesc = getAllDescargas();
-  const filtered = q ? allDesc.filter(r =>
-    (MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta||'').toLowerCase().includes(q) ||
-    (r.origen||'').toLowerCase().includes(q) ||
-    (r.trans||'').toLowerCase().includes(q) ||
-    (r.incidencias||[]).some(x=>(x.emb||'').includes(q)) ||
-    (r.cortina+'').includes(q)
-  ) : allDesc;
+  const q=(g('histDescSearch')?.value||'').toLowerCase();
+  const allDesc=getAllDescargas();
+  const filtered=q?allDesc.filter(r=>
+    (MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta||'').toLowerCase().includes(q)||
+    (r.origen||'').toLowerCase().includes(q)||
+    (r.cortina+'').includes(q)||
+    (r.supNombre||'').toLowerCase().includes(q)
+  ):allDesc;
 
-  // All descargas, highlight those with incidencias
-  const conInc = filtered;
+  const kpiEl=g('histDescKpis');
+  if(kpiEl){
+    const uniqDias=new Set(allDesc.map(r=>r._dayKey||r.fechaTurno)).size;
+    const conInc=allDesc.filter(r=>(r.incidencias||[]).length>0).length;
+    const uniqMonta=new Set(allDesc.map(r=>r.monta).filter(Boolean)).size;
+    kpiEl.innerHTML=[
+      ['Total descargas','var(--green)',allDesc.length],
+      ['Con incidencia','var(--red)',conInc],
+      ['Días registrados','var(--cyan)',uniqDias],
+      ['Montacarguistas','var(--purple)',uniqMonta],
+    ].map(([l,c,v])=>`<div class="kpi" style="border-top:2px solid ${c}"><div class="kpi-v" style="color:${c};font-size:18px">${v}</div><div class="kpi-l">${l}</div></div>`).join('');
+  }
 
-  const kpiEl = g('histDescKpis');
-  const allIncs = conInc.flatMap(r => r.incidencias||[]);
-  const totalDescargas = filtered.length;
-  const descConInc = filtered.filter(r=>r.incidencias?.length>0).length;
-  if(kpiEl) kpiEl.innerHTML=[
-    ['Total descargas','var(--blue)',totalDescargas],
-    ['Con incidencias','var(--red)',descConInc],
-    ['Total incidencias','var(--amber)',allIncs.length],
-    ['Cajas afectadas','var(--purple)',allIncs.reduce((a,x)=>a+(parseFloat(x.cant)||0),0)],
-  ].map(([l,c,v])=>`<div class="kpi" style="border-top:2px solid ${c}"><div class="kpi-v" style="color:${c}">${v}</div><div class="kpi-l">${l}</div></div>`).join('');
+  const el=g('histDescContent'); if(!el) return;
 
-  // Sort newest first
-  // Sort by most recent incidencia ts, fallback to _ts of the row itself
-  conInc.sort((a,b)=>{
-    const aIncs=a.incidencias||[], bIncs=b.incidencias||[];
-    const ta = aIncs.length ? Math.max(...aIncs.map(x=>x.ts||0)) : (a._ts||a.ts||0);
-    const tb = bIncs.length ? Math.max(...bIncs.map(x=>x.ts||0)) : (b._ts||b.ts||0);
-    if(ta&&tb) return tb-ta;
-    return (b.fechaTurno||'').localeCompare(a.fechaTurno||'');
-  });
-
-  const el = g('histDescContent'); if(!el) return;
-  if(!conInc.length){
-    el.innerHTML='<div style="text-align:center;padding:32px;color:var(--text3)">Sin descargas registradas en el histórico.</div>';
+  if(!filtered.length){
+    el.innerHTML='<div style="text-align:center;padding:32px;color:var(--text3)">Sin descargas registradas.</div>';
     return;
   }
 
-  // Group by descarga — one card per descarga
-  const cards = conInc.map((r,idx) => {
-    const mnNom = MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta||'—';
-    const incs = r.incidencias||[];
-    const num = idx+1;
-    // Store data in cache for PDF/Email
-    const cacheKey = 'hd_desc_'+num+'_'+(r.fechaTurno||'').replace(/[^a-z0-9]/gi,'');
-    window._hdCache = window._hdCache||{};
-    // Fingerprint to identify row in both DV.registros and DV.historial
-    const _fp = (r.monta||'')+'|'+(r.cortina||'')+'|'+(r.hora||'')+'|'+(r.origen||'');
-    window._hdCache[cacheKey] = {
-      dvIdx: r._dvIdx,      // index in historial registros (if saved there)
-      liveIdx: r._liveIdx,  // index in DV.registros (if still live)
-      fp: _fp,              // fingerprint for matching
-      mnNom, cortina:r.cortina||'', origen:r.origen||'',
-      linea:incs[0]?.linea||r.trans||'',
-      placa:incs[0]?.placa||'',
-      fecha:incs[0]?.fecha||r.fechaTurno||r.hora||'',
-      elab:incs[0]?.elab||'', emb:incs[0]?.emb||'',
-      folio:incs[0]?.folio||'',
-      fotos:incs[0]?.fotos||[],
-      desc:incs[0]?.desc||'',
-      skus:incs.map(x=>({sku:x.sku,cant:x.cant,unidad:x.unidad,tipo:x.tipo}))
-    };
-    const hasInc = incs.length > 0;
-    const incBadge = hasInc
-      ? '<span style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700">⚠ '+incs.length+' inc.</span>'
-      : '<span style="font-size:10px;color:var(--text3)">Sin incidencias</span>';
-    const acciones = hasInc
-      ? '<button data-hk="'+cacheKey+'" onclick="histDescPDF(this.dataset.hk)" style="background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#818CF8;border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer;margin-right:4px">📄 PDF</button>'
-        +'<button data-hk="'+cacheKey+'" onclick="histDescEmail(this.dataset.hk)" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green);border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer;margin-right:4px">✉ Correo</button>'
-        +'<button data-ridx="'+num+'" data-rkey="'+cacheKey+'" onclick="histDescEliminar(this)" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);border-radius:5px;padding:3px 10px;font-size:10px;cursor:pointer">🗑</button>'
-      : '';
-    const skuRows = incs.map(inc =>
-      '<tr style="border-bottom:1px solid var(--border)">'
-      +'<td style="padding:3px 10px;font-family:monospace;font-size:10px">'+es(inc.sku||'—')+'</td>'
-      +'<td style="padding:3px 10px;font-weight:700;text-align:center">'+es(inc.cant||'—')+'</td>'
-      +'<td style="padding:3px 10px;font-size:10px">'+es(inc.unidad||'CAJAS')+'</td>'
-      +'<td style="padding:3px 10px"><span style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:3px;padding:1px 6px;font-size:9px;font-weight:700">'+es(inc.tipo||'—')+'</span></td>'
-      +'</tr>'
-    ).join('');
-    return '<div style="background:var(--card);border:1px solid var(--border2);border-radius:10px;margin-bottom:10px;overflow:hidden">'
-      // Header: number + descarga info + badge + actions
-      +'<div style="background:var(--navy2);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-left:4px solid var(--brand,#D0DF00)">'
-        +'<span style="background:#D0DF00;color:#1a1a00;font-weight:700;font-size:11px;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+num+'</span>'
-        +'<div style="flex:1;display:flex;gap:10px;flex-wrap:wrap;align-items:center">'
-          +'<span style="font-size:11px;font-weight:600">'+es(mnNom)+'</span>'
-          +(r.cortina?'<span style="font-size:10px;color:var(--text3)">Cortina '+r.cortina+'</span>':'')
-          +(r.origen?origenBadge(r.origen):'')
-          +(incs[0]?.emb?'<span style="font-family:monospace;font-size:10px;color:var(--cyan);background:rgba(6,182,212,.1);padding:1px 7px;border-radius:4px;border:1px solid rgba(6,182,212,.2)">STO: '+es(incs[0].emb)+'</span>':'')
-          +(incs[0]?.linea?'<span style="font-size:10px;color:var(--text3)">'+es(incs[0].linea)+'</span>':'')
-          +(incs[0]?.placa?'<span style="font-size:9px;color:var(--text3);font-family:monospace">🚛 '+es(incs[0].placa)+'</span>':'')
-          +(incs[0]?.fecha||r.fechaTurno?'<span style="font-size:9px;color:var(--text3)">'+(incs[0]?.fecha||r.fechaTurno)+'</span>':'')
-          +incBadge
-        +'</div>'
-        +'<div style="display:flex;gap:6px;align-items:center">'
-          +(hasInc?'<button data-dk="'+cacheKey+'" onclick="hdToggle(this)" style="background:var(--navy2);border:1px solid var(--border2);color:var(--text3);border-radius:5px;padding:3px 9px;font-size:9px;cursor:pointer">▶ Ver detalle</button>':'')
-          +acciones
-          +'<button data-ck="'+cacheKey+'" onclick="histDescEliminarCard(this)" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);border-radius:5px;padding:3px 8px;font-size:9px;cursor:pointer" title="Eliminar">🗑</button>'
-        +'</div>'
-      +'</div>'
-      // SKU table (collapsible, only if has incidencias)
-      +(hasInc?'<div id="desc-detail-'+cacheKey+'" style="display:none;padding:0">'
-        +'<table style="width:100%;border-collapse:collapse;font-size:11px">'
-          +'<thead><tr style="background:rgba(239,68,68,.05)">'
-            +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">SKU</th>'
-            +'<th style="padding:4px 10px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Cant.</th>'
-            +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Unidad</th>'
-            +'<th style="padding:4px 10px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Tipo</th>'
-          +'</tr></thead><tbody>'+skuRows+'</tbody></table>'
-        +'</div>':'')
-      +'</div>';
-  }).join('');
-  el.style.maxHeight='65vh'; el.style.overflowY='auto';
-  el.innerHTML = cards || '<div style="text-align:center;padding:32px;color:var(--text3)">Sin descargas registradas.</div>';
+  el.innerHTML=`<div style="overflow-x:auto;overflow-y:auto;max-height:45vh;border-radius:8px;border:1px solid var(--border)">
+    <table style="width:100%;border-collapse:collapse;font-size:10.5px">
+      <thead><tr style="background:var(--navy2)">
+        <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">#</th>
+        <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap;border-bottom:1px solid var(--border)">Fecha</th>
+        <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Turno</th>
+        <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Supervisor</th>
+        <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Hora</th>
+        <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Montacarguista</th>
+        <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Cortina</th>
+        <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Origen</th>
+        <th style="position:sticky;top:0;background:var(--navy2);padding:5px 8px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)">Inc.</th>
+      </tr></thead>
+      <tbody>
+        ${filtered.map((r,i)=>{
+          const montaNom=MONTACARGUISTAS.find(m=>m.id===r.monta)?.nombre||r.monta||'—';
+          const incCount=(r.incidencias||[]).length;
+          return `<tr style="border-bottom:1px solid rgba(30,58,95,.4)" onmouseover="this.style.background='rgba(255,255,255,.025)'" onmouseout="this.style.background=''">
+            <td style="padding:4px 8px;font-size:9px;color:var(--text3)">${i+1}</td>
+            <td style="padding:4px 8px;font-size:9px;color:var(--text3);white-space:nowrap">${es(r.fechaTurno||'—')}</td>
+            <td style="padding:4px 8px;font-size:9.5px;white-space:nowrap">${es(r.turnoLabel||'—')}</td>
+            <td style="padding:4px 8px;font-size:9.5px;white-space:nowrap">${es(r.supNombre||'—')}</td>
+            <td style="padding:4px 8px;font-size:9px;color:var(--text3);white-space:nowrap">${es(r.hora||'—')}</td>
+            <td style="padding:4px 8px;font-weight:600;font-size:10px;white-space:nowrap">${es(montaNom)}</td>
+            <td style="padding:4px 8px;font-size:10px;white-space:nowrap">${es(r.cortina||'—')}</td>
+            <td style="padding:4px 8px">${r.origen?origenBadge(r.origen):'<span style="color:var(--text3)">—</span>'}</td>
+            <td style="padding:4px 8px;text-align:center">${incCount>0
+              ?`<span style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:4px;padding:1px 5px;font-size:9px">${incCount}</span>`
+              :'<span style="color:var(--text3);font-size:9px">—</span>'
+            }</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
 }
 
 function exportHistDescXLSX(){
@@ -6226,6 +6177,24 @@ function renderDescargas(){
 let filtroPrio = false;
 let mostrarCargados = true; // show all fletes including 100% by default
 
+function vfToggleDetalle(){
+  const p=g('vfDetallePanel'),b=g('vfDetalleBtn');
+  if(!p||!b) return;
+  const open=p.style.display==='none';
+  p.style.display=open?'block':'none';
+  b.textContent=open?'▲ Ocultar detalle':'▼ Ver detalle';
+  if(open) renderHistVf();
+}
+
+function descToggleDetalle(){
+  const p=g('descDetallePanel'),b=g('descDetalleBtn');
+  if(!p||!b) return;
+  const open=p.style.display==='none';
+  p.style.display=open?'block':'none';
+  b.textContent=open?'▲ Ocultar detalle':'▼ Ver detalle';
+  if(open) renderHistDesc();
+}
+
 function dvToggleEstopDrop(e){
   e.stopPropagation();
   var d=g('fEstopDrop'); if(d) d.style.display=d.style.display==='none'?'block':'none';
@@ -7086,7 +7055,7 @@ function applyAdminUI(){
   ['vsw-emb','vsw-desc','vsw-hist','vsw-inc'].forEach(id=>{
     const el=g(id); if(el){el.style.display='';el.style.visibility='';}
   });
-  ['htab-emb','htab-desc','htab-vf'].forEach(id=>{
+  ['htab-emb','htab-vf'].forEach(id=>{
     const el=g(id); if(el) el.style.display='';
   });
   ['view-emb','view-desc','view-inc','view-hist'].forEach(id=>{
