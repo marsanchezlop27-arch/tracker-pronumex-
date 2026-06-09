@@ -1641,7 +1641,8 @@ function patchDetPtr(){
   });
   ptrRows.forEach(r=>{
     const k = nk(fc(r,['No. Embarque','embarque','Embarque']));
-    if(k) ptrMap[k] = r;
+    if(!k || !/^\d+$/.test(k)) return; // skip TOTALES and non-numeric
+    ptrMap[k] = r;
     const pCom=fc(r,['Comentarios:','Comentarios','comentarios'])||'';
     (String(pCom).match(/\d{5,}/g)||[]).forEach(n=>{const nk2=nk(n);if(nk2&&!ptrMap[nk2]) ptrMap[nk2]=r;});
   });
@@ -1763,7 +1764,8 @@ function build(){
   const ptrMap={};
   ptrRows.forEach(r=>{
     const k=nk(fc(r,['No. Embarque','embarque']));
-    if(k) ptrMap[k]=r;
+    if(!k || !/^\d+$/.test(k)) return;
+    ptrMap[k]=r;
     const pCom2=fc(r,['Comentarios:','Comentarios','comentarios'])||'';
     (String(pCom2).match(/\d{5,}/g)||[]).forEach(n=>{const nk2=nk(n);if(nk2&&!ptrMap[nk2]) ptrMap[nk2]=r;});
   });
@@ -2453,7 +2455,7 @@ function render(){
         if(r.con){ const _cf=fmtCortina(r.con); if(_cf!=='—') return `<span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--cyan);font-weight:600;display:inline-flex;align-items:center;gap:4px">${_cf}<button onclick="upd(${idx},'con','');render()" style="background:none;border:none;cursor:pointer;opacity:.5;color:inherit;font-size:10px;padding:0" title="Editar">✎</button></span>`; }
         return `<input class="edt" type="text" value="" placeholder="— cortina —" onchange="upd(${idx},'con',this.value);render()" style="min-width:65px">`;
       })()}</td>
-      <td class="m" style="text-align:right;font-size:11px">${r.pal?r.pal:'<span style="color:var(--text3);font-size:10px">N/A</span>'}</td>
+      <td class="m" style="text-align:right;font-size:11px">${r.pal!==''&&r.pal!==null&&r.pal!==undefined?r.pal:'<span style="color:var(--text3);font-size:10px">N/A</span>'}</td>
       <td>${bar(r.pt)}</td>
       <td>${bar(r.pr)}</td>
       <td>${restHtml}</td>
