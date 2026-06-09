@@ -2592,6 +2592,7 @@ function upd(idx,field,val){
 
   // When clearing a field — remove from historial
   if(val==='' || val===null){
+    S._lastClearTs = Date.now(); // prevent turnoHistorial overwrite from sync
     const embStr=String(emb);
     // Remove from turnoHistorial snaps
     if(['verif','verif2','monta','monta2'].includes(field)){
@@ -2609,6 +2610,15 @@ function upd(idx,field,val){
         return !(String(h.emb)===embStr && h.customBy===oldVal);
       });
       try{localStorage.setItem('trx_cust_hist',JSON.stringify(CUST.historial));}catch(e){}
+      S.turnoHistorial.forEach(function(h){
+        (h.fletes||[]).forEach(function(f){
+          if(String(f.emb)===embStr){
+            if(field==='customBy') f.customBy='';
+            if(field==='customBy2') f.customBy2='';
+          }
+        });
+      });
+      hSave();
     }
   }
 }
@@ -7448,7 +7458,10 @@ function applyRemoteData(data){
     });
   }
   if(data.userEdits)      S.userEdits       = data.userEdits;
-  if(data.turnoHistorial) S.turnoHistorial  = data.turnoHistorial;
+  // Don't restore turnoHistorial if we just cleared a field
+  const _msClear=Date.now()-(S._lastClearTs||0);
+  const _histSameDevice=data.device&&data.device===DEVICE_ID;
+  if(data.turnoHistorial&&(!_histSameDevice||_msClear>5000)) S.turnoHistorial=data.turnoHistorial;
   if(data.posAlerts)      S.posAlerts       = data.posAlerts;
   if(data.sessionTurno)   S.sessionTurno    = data.sessionTurno;
   if(data.sessionSup)     S.sessionSup      = data.sessionSup;
@@ -7493,9 +7506,12 @@ function applyRemoteData(data){
       try{localStorage.setItem('trx_cust_hist',JSON.stringify(CUST.historial));}catch(e){}
     }
   }
-  if(!S.rows || !S.rows.length){ if(!fbIsAdmin && !fbIsDocumentador){ // Show guest UI chrome so tabs/panels appear
+  if(!S.rows || !S.rows.length){ if(!fbIsAdmin && !fbIsDocumentador){
   ['kRow','tabs'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('hidden'); });
-  if(typeof renderResumen==='function') renderResumen(); if(typeof badge==='function') badge(); } return; }
+  var _rsEl2=g('p-rs'); if(_rsEl2) _rsEl2.classList.remove('hidden');
+  if(typeof renderResumen==='function') renderResumen();
+  if(typeof badge==='function') badge();
+} return; }
 
   // Show UI chrome
   ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
@@ -7504,8 +7520,10 @@ function applyRemoteData(data){
   if(typeof updateTopbarSup==='function') updateTopbarSup();
 
   if(!fbIsAdmin && !fbIsDocumentador){
-    // GUEST: show UI chrome + render resumen
     ['kRow','tabs'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('hidden'); });
+    var _prs=g('p-rs'); if(_prs) _prs.classList.remove('hidden');
+    var _vemb=g('view-emb'); if(_vemb) _vemb.classList.remove('hidden');
+    ['view-desc','view-inc','view-hist'].forEach(function(id){ var el=g(id); if(el) el.classList.add('hidden'); });
     kpi(); badge();
     requestAnimationFrame(function(){ if(typeof renderResumen==='function') renderResumen(); });
     return;
@@ -7590,7 +7608,8 @@ setInterval(()=>{
 const _origUpd = upd;
 window.upd = function(idx,field,val){
   _origUpd(idx,field,val);
-  fbSave();
+  // fbSave() called AFTER _origUpd so cleared fields are persisted
+  setTimeout(fbSave, 50);
   if(['monta','precarga','verif'].includes(field) && val){
     const r = S.rows[idx];
     if(!r) return;
