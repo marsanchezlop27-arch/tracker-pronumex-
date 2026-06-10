@@ -7271,22 +7271,29 @@ function fbSave(){
       const ts = Date.now();
       lastSavedTs = ts;
       // Trim rows — only keep fields needed for sync
+      // Helper: replace undefined with '' to avoid Firestore error
+      const _s=function(v){return v===undefined||v===null?'':v;};
+      const _b=function(v){return v===true;};
+      const _n=function(v){return (v===undefined||v===null)?null:v;};
       const _trimRow=function(r){
-        return {emb:r.emb,nom:r.nom,sem:r.sem,ci:r.ci,tra:r.tra,
-          con:r.con,contenedor:r.contenedor,
-          pt:r.pt,pr:r.pr,pc:r.pc,pal:r.pal,res:r.res,
-          tr:r.tr,ar:r.ar,tf:r.tf,com:r.com,tu:r.tu,
-          al:r.al,est:r.est,estop:r.estop,prio:r.prio,
-          precarga:r.precarga,monta:r.monta,monta2:r.monta2||'',
-          verif:r.verif,verif2:r.verif2||'',
-          custom:r.custom,customBy:r.customBy,customBy2:r.customBy2||'',
-          _wmsMatch:r._wmsMatch,_wmsEmb:r._wmsEmb,
-          posAlert:r.posAlert,_posDesplazado:r._posDesplazado};
+        return {
+          emb:_s(r.emb),nom:_s(r.nom),sem:_s(r.sem),ci:_s(r.ci),
+          con:_s(r.con),pal:_s(r.pal),
+          pt:_n(r.pt),pr:_n(r.pr),pc:_n(r.pc),
+          tr:_s(r.tr),ar:_s(r.ar),
+          estop:_s(r.estop),prio:_b(r.prio),
+          precarga:_s(r.precarga),
+          monta:_s(r.monta),monta2:_s(r.monta2),
+          verif:_s(r.verif),verif2:_s(r.verif2),
+          customBy:_s(r.customBy),customBy2:_s(r.customBy2),
+          _wmsEmb:_s(r._wmsEmb),_wmsMatch:_b(r._wmsMatch)
+        };
       };
-      // Keep only last 15 turnoHistorial entries
-      const _trimHist=S.turnoHistorial.slice(-15);
-      // Keep only last 20 DV.historial entries
-      const _trimDvHist=(DV.historial||[]).slice(-20);
+      // Keep only last 8 turnoHistorial entries, trim fletes fields
+      const _trimFlete=function(f){return{emb:_s(f.emb),nom:_s(f.nom),verif:_s(f.verif),verif2:_s(f.verif2),monta:_s(f.monta),monta2:_s(f.monta2),customBy:_s(f.customBy),customBy2:_s(f.customBy2),estop:_s(f.estop),sem:_s(f.sem),precarga:_s(f.precarga),pt:_n(f.pt),ts:f.ts||0};};      
+      const _trimHist=S.turnoHistorial.slice(-8).map(function(h){return{id:h.id,turno:h.turno,sup:h.sup,hora:h.hora,ts:h.ts||0,fletes:(h.fletes||[]).map(_trimFlete)};});
+      // Keep only last 10 DV.historial entries
+      const _trimDvHist=(DV.historial||[]).slice(-10);
       const payload = {
         rows: S.rows.map(_trimRow),
         userEdits: S.userEdits,
@@ -7298,18 +7305,26 @@ function fbSave(){
         dvHistorial: _trimDvHist,
         dvTurno: DV.turno,
         dvSup: DV.sup,
-        incRegistros: INC.registros,
-        custHistorial: CUST.historial,
+        incRegistros: (INC.registros||[]).slice(-50),
+        custHistorial: (CUST.historial||[]).slice(-100),
         ts, device: DEVICE_ID
       };
       // Size check before sending
       const _payloadStr=JSON.stringify(payload);
-      if(_payloadStr.length>900000){
-        console.warn('[fbSave] payload '+Math.round(_payloadStr.length/1024)+'KB — trimming further');
-        payload.turnoHistorial=_trimHist.slice(-5);
-        payload.dvHistorial=_trimDvHist.slice(-10);
-        payload.incRegistros=(INC.registros||[]).slice(-50);
-        payload.custHistorial=(CUST.historial||[]).slice(-100);
+      const _kb=Math.round(_payloadStr.length/1024);
+      console.log('[fbSave] payload '+_kb+'KB');
+      if(_payloadStr.length>700000){
+        console.warn('[fbSave] TRIMMING payload '+_kb+'KB');
+        payload.turnoHistorial=_trimHist.slice(-3);
+        payload.dvHistorial=_trimDvHist.slice(-5);
+        payload.incRegistros=(INC.registros||[]).slice(-20);
+        payload.custHistorial=(CUST.historial||[]).slice(-50);
+        payload.posAlerts=[];
+      }
+      const _finalKb=Math.round(JSON.stringify(payload).length/1024);
+      if(_finalKb>950){
+        console.error('[fbSave] STILL TOO LARGE '+_finalKb+'KB — aborting save');
+        return;
       }
 
       autoSaveVerifHistorial(); // persist verif assignments
