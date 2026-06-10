@@ -846,18 +846,14 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
         <thead><tr>
           <th style="width:44px;text-align:center">Prio.</th>
           <th style="width:108px">No. Embarque</th>
-          <th style="min-width:140px">Cliente</th>
-          <th style="width:160px">Semáforo</th>
+          <th style="min-width:160px">Cliente</th>
+          <th style="width:180px">Semáforo</th>
           <th style="width:80px">Cortina</th>
-          <th style="width:110px;color:var(--cyan)">Precarga</th>
-          <th style="width:120px;color:var(--green)">Monta.</th>
-          <th style="width:120px;color:var(--purple)">Verif.</th>
-          <th style="width:120px;color:var(--purple)">Custom.</th>
-          <th style="width:120px;color:var(--cyan)">Estatus op.</th>
-          <th style="width:70px;text-align:right;color:var(--cyan)">Pallets</th>
-          <th style="width:80px;color:var(--purple)">Pend. Tarea</th>
-          <th style="width:90px;color:var(--amber)">Pend. Pick.</th>
-          <th style="min-width:130px">Comentarios</th>
+          <th style="width:120px;color:var(--cyan)">Precarga</th>
+          <th style="width:140px;color:var(--cyan)">Estatus op.</th>
+          <th style="width:110px;color:var(--purple)">Pend. Tarea</th>
+          <th style="width:110px;color:var(--amber)">Pend. Picking</th>
+          <th style="min-width:150px">Comentarios</th>
         </tr></thead>
         <tbody id="rsTb"></tbody>
       </table>
@@ -1638,7 +1634,7 @@ function patchDetPtr(){
 
   const detRows = S.buf.det ? toObjects(parseSlot(S.buf.det)) : [];
   const ptrRows = S.buf.ptr ? toObjects(parseSlot(S.buf.ptr)) : [];
-  const detMap = {}, comMap = {}, ptrMap = {};
+  const detMap = {}, comMap = {}; S.ptrMap = S.ptrMap || {}; const ptrMap = S.ptrMap;
   detRows.forEach(r=>{
     const k = nk(fc(r,['No. Embarque','embarque','Embarque','Folio','folio']));
     if(k) detMap[k] = r;
@@ -1669,7 +1665,7 @@ function patchDetPtr(){
       r.con = getCortina(D)||r.con; // convert DI-N → 'Rampa N'
       r.contenedor = fc(D,['# Contenedor','Contenedor'])||r.contenedor;
     }
-    const P = ptrMap[r.emb] || {};
+    const P = ptrMap[r.emb] || (r._wmsEmb&&ptrMap[r._wmsEmb]) || {};
     if(Object.keys(P).length){
       r.pal = fc(P,['Pallets','pallets','Pallet'])||r.pal;
       r.res = fc(P,['Restos','restos'])||r.res;
@@ -1703,6 +1699,7 @@ function patchDetPtr(){
 // ─── BUILD ────────────────────────────────────────────────────────────────────
 function build(){
   console.log('[BUILD START] S.rows='+S.rows.length+' buf.sem='+(S.buf.sem?'OK':'missing')+' buf.det='+(S.buf.det?'OK':'missing'));
+  S.ptrMap = {}; // reset so fresh PTR data is loaded
 
   // Reset alert tracking so new semaforo fires fresh notifications
   alertedEmbs.clear();
@@ -6422,7 +6419,7 @@ function renderResumen(){
   const tb=g('rsTb');
   if(!tb) return;
   if(!rows.length){
-    tb.innerHTML=`<tr><td colspan="14" style="text-align:center;padding:36px;color:var(--text3)">Sin resultados</td></tr>`;
+    tb.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:36px;color:var(--text3)">Sin resultados</td></tr>`;
     g('rsTf').textContent=''; return;
   }
 
@@ -6492,18 +6489,6 @@ function renderResumen(){
           onchange="upd(${idx},'precarga',this.value);renderResumen()" title="Precarga">`;
       })()}</td>
 
-      <td style="font-size:10px;color:var(--green)">${(()=>{
-        const mn=r.monta?(MONTACARGUISTAS.find(m=>m.id===r.monta)||{}).nombre||r.monta:'';
-        return mn?`<span style="font-size:10px;font-weight:600;color:var(--green)">${es(mn.split(' ')[0])}</span>`:'<span style="color:var(--text3);font-size:10px">—</span>';
-      })()}</td>
-      <td style="font-size:10px;color:var(--purple)">${(()=>{
-        const vn=r.verif?(VERIFICADORES.find(v=>v.id===r.verif)||{}).nombre||r.verif:'';
-        return vn?`<span style="font-size:10px;font-weight:600;color:var(--purple)">${es(vn.split(' ')[0])}</span>`:'<span style="color:var(--text3);font-size:10px">—</span>';
-      })()}</td>
-      <td style="font-size:10px;color:var(--purple)">${(()=>{
-        const cb=r.customBy||'';
-        return cb?`<span style="font-size:10px;font-weight:600;color:var(--purple)">${es(cb.split(' ')[0])}</span>`:'<span style="color:var(--text3);font-size:10px">—</span>';
-      })()}</td>
       <td>${fbIsAdmin
         ? `<select class="edt-sel" onchange="upd(${idx},'estop',this.value);renderResumen()"
             style="height:26px;font-size:10px;font-weight:600;border-radius:5px;cursor:pointer;
@@ -6517,7 +6502,6 @@ function renderResumen(){
             })()}">${opts}</select>`
         : `<span class="b ${{'POR VERIFICAR':'bb','POR CARGAR':'bc','PENDIENTE':'bp','CARGADO':'bg','EN PROCESO':'ba'}[r.estop]||'bx'}" style="font-size:10px;white-space:nowrap">${es(r.estop||'PENDIENTE')}</span>`
       }</td>
-      <td style="text-align:right;font-size:11px">${r.pal!==''&&r.pal!==null&&r.pal!==undefined?r.pal:'<span style="color:var(--text3);font-size:10px">N/A</span>'}</td>
       <td style="text-align:center">${pendTareaHtml}</td>
       <td style="text-align:center">${pendPickHtml}</td>
       <td><input class="edt" type="text" value="${es(r.com||'')}" placeholder="—"
@@ -6559,10 +6543,28 @@ function togglePrio(idx){
 }
 
 function exportResumen(){
-  // Export ONLY what is currently visible (filtered rows)
-  const rows = (S.lastResumenRows && S.lastResumenRows.length)
-    ? S.lastResumenRows
-    : [...S.rows];
+  // Apply the same filters as renderResumen() directly — no DOM dependency
+  const q=(g('qRs')?.value||'').toLowerCase();
+  const fs=g('fRsSem')?.value||'';
+  const fe=g('fRsEst')?.value||'';
+  const frt=g('fRsTrans')?.value||'';
+  const _estopBoxes=Array.from(document.querySelectorAll('#fRsEstopDrop input[type=checkbox][value]:checked'));
+  const rows=S.rows.filter(function(r){
+    if(!r.emb||!r.nom) return false;
+    if(q&&!r.emb.toLowerCase().includes(q)&&!r.nom.toLowerCase().includes(q)) return false;
+    if(fs&&!r.sem.includes(fs)) return false;
+    if(fe&&r.estop!==fe) return false;
+    if(filtroPrio&&!r.prio) return false;
+    if(frt==='con'&&!hasTrans(r)) return false;
+    if(frt==='sin'&&hasTrans(r)) return false;
+    if(_estopBoxes.length&&!_estopBoxes.map(function(b){return b.value;}).includes(r.estop)) return false;
+    if(!mostrarCargados&&(r.estop==='CARGADO'||r.pc===100)) return false;
+    return true;
+  });
+  if(!rows.length){alert('Sin datos para exportar con el filtro actual.');return;}
+  const _fEst = (document.getElementById('fRsEst')?.value||'').replace(/\s+/g,'_')||'todos';
+  const _fSem = (document.getElementById('fRsSem')?.value||'').replace(/\s+/g,'_')||'';
+  const _suffix = (_fEst!=='todos'?_fEst:'')+(_fSem?'_'+_fSem:'');
   const h=['Prioridad','No.Embarque','Cliente','Semaforo Carga','Precarga','Estatus Op.','Pend. Picking','Pend. Tarea %','Comentarios'];
   const d=rows.map(r=>{
     const trV=parseFloat(r.tr), arV=parseFloat(r.ar)||0;
@@ -6570,10 +6572,11 @@ function exportResumen(){
     const pendTarea=(parseFloat(r.pal)||0)===0?'N/A':r.pt===null||r.pt<100?(100-(r.pt||0))+'%':'Listo';
     return [r.prio?'⭐ PRIORIDAD':'',r.emb,r.nom,r.sem,r.precarga,r.estop,pendPick,pendTarea,String(r.com||'').replace(/,/g,';')];
   });
-  const csv=[h,...d].map(r=>r.map(v=>`"${v??''}"`).join(',')).join('\n');
+  const csv=[h,...d].map(function(row){return row.map(function(v){var s=String(v==null?'':v).replace(/"/g,"'");return '"'+s+'"';}).join(',');}).join('\n');
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
-  a.download='resumen_semaforo_'+new Date().toISOString().slice(0,10)+'.csv';
+  const _date=new Date().toISOString().slice(0,10);
+  a.download='resumen_semaforo'+ (_suffix?'_'+_suffix:'')+'_'+_date+'.csv';
   a.click();
 }
 
