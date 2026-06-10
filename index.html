@@ -1634,6 +1634,7 @@ function removeDupCols(aoa){
 
 // Actualiza Detalle/PTR sin recargar el semáforo
 function patchDetPtr(){
+  console.log('[PATCHDETPTR START] S.rows='+S.rows.length+' buf.det='+(S.buf.det?'OK':'missing')+' buf.ptr='+(S.buf.ptr?'OK':'missing'));
 
   const detRows = S.buf.det ? toObjects(parseSlot(S.buf.det)) : [];
   const ptrRows = S.buf.ptr ? toObjects(parseSlot(S.buf.ptr)) : [];
@@ -1686,6 +1687,8 @@ function patchDetPtr(){
     // com is already set from fc(D,['Comentarios:',...]) above
   });
   // _rm removed: all fletes kept, 100% auto-sets estop=CARGADO
+  console.log('[BUILD END] S.rows='+S.rows.length);
+  if(S.rows.length>0) console.log('[BUILD SAMPLE]',JSON.stringify(S.rows.slice(0,3).map(function(r){return{emb:r.emb,nom:r.nom,sem:r.sem,con:r.con,verif:r.verif,monta:r.monta};})));
   kpi(); render(); alerts(); badge();
   if(typeof kpiVerif==='function') kpiVerif();
   ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
@@ -1699,6 +1702,7 @@ function patchDetPtr(){
 
 // ─── BUILD ────────────────────────────────────────────────────────────────────
 function build(){
+  console.log('[BUILD START] S.rows='+S.rows.length+' buf.sem='+(S.buf.sem?'OK':'missing')+' buf.det='+(S.buf.det?'OK':'missing'));
 
   // Reset alert tracking so new semaforo fires fresh notifications
   alertedEmbs.clear();
@@ -2337,6 +2341,8 @@ function initResizableCols(){
 }
 
 function render(){
+  console.log('[RENDER START] S.rows='+S.rows.length);
+
 
   const q=(g('qry')?.value||'').toLowerCase();
   const fs=g('fSem')?.value||'';
@@ -7326,11 +7332,18 @@ function fbSave(){
         console.error('[fbSave] STILL TOO LARGE '+_finalKb+'KB — aborting save');
         return;
       }
+      // Deep-sanitize: replace undefined with null (Firebase rejects undefined)
+      const _sanitize=function(obj){
+        return JSON.parse(JSON.stringify(obj,function(k,v){
+          return v===undefined?null:v;
+        }));
+      };
+      const _safePayload=_sanitize(payload);
 
       autoSaveVerifHistorial(); // persist verif assignments
-      try{ localStorage.setItem('trx_state', JSON.stringify({rows:payload.rows,userEdits:payload.userEdits,sessionTurno:payload.sessionTurno,sessionSup:payload.sessionSup,turnoHistorial:payload.turnoHistorial})); }catch(e){}
+      try{ localStorage.setItem('trx_state', JSON.stringify({rows:_safePayload.rows,userEdits:payload.userEdits,sessionTurno:payload.sessionTurno,sessionSup:payload.sessionSup,turnoHistorial:payload.turnoHistorial})); }catch(e){}
       const ref = FB.doc(FB.db, 'tracker', DOC_ID);
-      await FB.setDoc(ref, payload);
+      await FB.setDoc(ref, _safePayload);
       // Update sync dot green
       const dot=document.getElementById('syncDot');
       if(dot){dot.style.background='var(--green)';setTimeout(()=>dot.style.background='',2000);}
@@ -7364,9 +7377,11 @@ function applyRemoteData(data){
   }
   // Don't overwrite S.rows if build() just ran (guard 8 seconds)
   const _msSinceBuild = Date.now()-(S._lastBuildTs||0);
-  if(data.rows && _msSinceBuild > 8000) S.rows = data.rows;
-  else if(data.rows && _msSinceBuild <= 8000){
-    console.log('[SYNC] S.rows restore SKIPPED — build ran '+Math.round(_msSinceBuild/1000)+'s ago');
+  if(data.rows && _msSinceBuild > 8000){
+    S.rows = data.rows;
+    console.log('[SYNC] S.rows RESTORED from Firebase rows='+S.rows.length+' (build was '+Math.round(_msSinceBuild/1000)+'s ago)');
+  } else if(data.rows && _msSinceBuild <= 8000){
+    console.log('[SYNC] S.rows SKIPPED — build ran '+Math.round(_msSinceBuild/1000)+'s ago, keeping local rows='+S.rows.length);
   }
 
   // Sync customBy from restored rows into CUST.historial
@@ -7614,8 +7629,10 @@ window.updVerif = function(idx,val){ _origUpdVerif(idx,val); fbSave(); };
 // Also save after build() and applyNew()
 const _origBuild = build;
 window.build = function(){
-  S._lastBuildTs = Date.now(); // guard: don't restore rows from Firebase right after build
+  console.log('[WINDOW.BUILD] starting, buf keys='+(Object.keys(S.buf||{}).join(',')));
+  S._lastBuildTs = Date.now();
   _origBuild();
+  console.log('[WINDOW.BUILD AFTER _origBuild] S.rows='+S.rows.length);
   fbSave();
 };
 
