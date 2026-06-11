@@ -23,7 +23,8 @@ const firebaseConfig = {
 const fbApp  = initializeApp(firebaseConfig);
 const fbAuth = getAuth(fbApp);
 const fbDb   = getFirestore(fbApp);
-const fbStorage = getStorage(fbApp);
+let fbStorage = null;
+try{ fbStorage = getStorage(fbApp); }catch(e){ console.warn('Storage no disponible:', e.message); }
 
 // Expose to global scope so main script can call them
 window.FB = { auth: fbAuth, db: fbDb, storage: fbStorage,
@@ -31,13 +32,15 @@ window.FB = { auth: fbAuth, db: fbDb, storage: fbStorage,
   signOut: () => signOut(fbAuth),
   onAuth: (cb) => onAuthStateChanged(fbAuth, cb),
   doc, setDoc, onSnapshot, getDoc,
-  // Upload a base64 dataURL to Storage, returns download URL
+  // Upload a base64 dataURL to Storage, returns download URL (or null if unavailable)
   uploadPhoto: async (path, b64DataUrl) => {
+    if(!fbStorage) return null;
     const r = storageRef(fbStorage, path);
     await uploadString(r, b64DataUrl, 'data_url');
     return await getDownloadURL(r);
   },
   deletePhoto: async (path) => {
+    if(!fbStorage) return;
     try{ await deleteObject(storageRef(fbStorage, path)); }catch(e){ console.warn('deletePhoto', e); }
   }
 };
@@ -3374,7 +3377,11 @@ function evSubir(idx, inp){
           const _path='evidencias/'+_emb0+'/'+_tsNow+'.jpg';
           FB.uploadPhoto(_path,b64).then(function(url){
             const ph=S.rows[idx].evidencias.find(function(e){return e._tsNow===_tsNow;});
-            if(ph){ ph.url=url; ph.path=_path; ph.uploading=false; delete ph.b64; }
+            if(ph){
+              if(url){ ph.url=url; ph.path=_path; delete ph.b64; }
+              else { ph.b64=b64; } // Storage unavailable — keep local b64
+              ph.uploading=false;
+            }
             const emb2=S.rows[idx].emb;
             if(!S.userEdits[emb2]) S.userEdits[emb2]={};
             S.userEdits[emb2].evidencias=S.rows[idx].evidencias;
@@ -4623,7 +4630,7 @@ async function incGuardar(){
       try{
         const path='incidencias/'+emb.trim()+'/'+ts+'_'+i+'.jpg';
         const url=await FB.uploadPhoto(path, incFotos[i]);
-        fotoUrls.push(url);
+        fotoUrls.push(url||incFotos[i]); // fallback to b64 if Storage unavailable
       }catch(e){
         console.error('incFoto upload error',e);
         fotoUrls.push(incFotos[i]); // fallback to b64 if upload fails
