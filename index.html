@@ -9,7 +9,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import { getStorage, ref as storageRef, uploadString, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBD0iRmTA6xBBLfezVu046dGP7Q9GOS52k",
@@ -23,13 +23,23 @@ const firebaseConfig = {
 const fbApp  = initializeApp(firebaseConfig);
 const fbAuth = getAuth(fbApp);
 const fbDb   = getFirestore(fbApp);
+const fbStorage = getStorage(fbApp);
 
 // Expose to global scope so main script can call them
-window.FB = { auth: fbAuth, db: fbDb,
+window.FB = { auth: fbAuth, db: fbDb, storage: fbStorage,
   signIn: signInWithEmailAndPassword,
   signOut: () => signOut(fbAuth),
   onAuth: (cb) => onAuthStateChanged(fbAuth, cb),
-  doc, setDoc, onSnapshot, getDoc
+  doc, setDoc, onSnapshot, getDoc,
+  // Upload a base64 dataURL to Storage, returns download URL
+  uploadPhoto: async (path, b64DataUrl) => {
+    const r = storageRef(fbStorage, path);
+    await uploadString(r, b64DataUrl, 'data_url');
+    return await getDownloadURL(r);
+  },
+  deletePhoto: async (path) => {
+    try{ await deleteObject(storageRef(fbStorage, path)); }catch(e){ console.warn('deletePhoto', e); }
+  }
 };
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1048,7 +1058,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     <!-- Guardar -->
     <input id="incTipo" type="hidden" value="">
     <input id="incTipoOtro" type="hidden" value="">
-    <button class="btn ok" onclick="incGuardar()" style="width:100%;justify-content:center">
+    <button id="incBtnGuardar" class="btn ok" onclick="incGuardar()" style="width:100%;justify-content:center">
       <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
       Guardar incidencia
     </button>
@@ -3295,6 +3305,7 @@ function abrirEvidencias(idx){
   const r = S.rows[idx];
   if(!r) return;
   if(!r.evidencias) r.evidencias = [];
+  window._evUrls = r.evidencias.map(function(ev){return JSON.stringify(ev.url||ev.b64||'');});
   const modal = document.createElement('div');
   modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto';
   modal.innerHTML=`<div style="background:var(--card);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:520px">
@@ -3309,7 +3320,8 @@ function abrirEvidencias(idx){
       <div id="ev-grid-${idx}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:12px">
         ${(r.evidencias||[]).map((ev,ei)=>`
           <div style="background:var(--navy2);border-radius:8px;overflow:hidden;position:relative">
-            <img src="${ev.b64}" style="width:100%;height:120px;object-fit:cover;cursor:pointer" onclick="evVerFoto('${ev.b64}')">
+            ${ev.uploading?'<div style="width:100%;height:120px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:10px">⏳ Subiendo...</div>'
+             :('<img src="'+(ev.url||ev.b64)+'" style="width:100%;height:120px;object-fit:cover;cursor:pointer" onclick="evVerFoto(window._evUrls['+ei+'])">')}
             <div style="padding:5px 8px">
               <div style="font-size:9px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ev.desc||'Sin descripción'}</div>
               <div style="font-size:8px;color:var(--text3)">${ev.ts}</div>
@@ -3353,18 +3365,36 @@ function evSubir(idx, inp){
         canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
         const b64=canvas.toDataURL('image/jpeg',0.82);
         if(!S.rows[idx].evidencias) S.rows[idx].evidencias=[];
-        S.rows[idx].evidencias.push({
-          b64,
-          desc: '',
-          ts: new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'})
-        });
+        const _tsNow=Date.now();
+        const _placeholder={b64:'', uploading:true, desc:'', ts:new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}), _tsNow:_tsNow};
+        S.rows[idx].evidencias.push(_placeholder);
+        const _emb0=S.rows[idx].emb;
+        // Upload to Firebase Storage (async, doesn't block)
+        if(window.FB&&FB.uploadPhoto){
+          const _path='evidencias/'+_emb0+'/'+_tsNow+'.jpg';
+          FB.uploadPhoto(_path,b64).then(function(url){
+            const ph=S.rows[idx].evidencias.find(function(e){return e._tsNow===_tsNow;});
+            if(ph){ ph.url=url; ph.path=_path; ph.uploading=false; delete ph.b64; }
+            const emb2=S.rows[idx].emb;
+            if(!S.userEdits[emb2]) S.userEdits[emb2]={};
+            S.userEdits[emb2].evidencias=S.rows[idx].evidencias;
+            syncEvidenciasToHist(emb2, S.rows[idx].evidencias);
+            fbSave();
+            const modal=document.querySelector('div[style*="z-index: 9999"], div[style*="z-index:9999"]');
+            if(modal) modal.remove();
+            abrirEvidencias(idx);
+          }).catch(function(err){
+            console.error('uploadPhoto error',err);
+            // Fallback: keep small inline b64 if upload fails
+            const ph=S.rows[idx].evidencias.find(function(e){return e._tsNow===_tsNow;});
+            if(ph){ ph.b64=b64; ph.uploading=false; }
+            alert('No se pudo subir la foto a Firebase Storage. Se guardó localmente.');
+          });
+        } else {
+          _placeholder.b64=b64; _placeholder.uploading=false;
+        }
         pending--;
         if(pending===0){
-          const emb=S.rows[idx].emb;
-          if(!S.userEdits[emb]) S.userEdits[emb]={};
-          S.userEdits[emb].evidencias=S.rows[idx].evidencias;
-          syncEvidenciasToHist(emb, S.rows[idx].evidencias);
-          fbSave();
           document.querySelector('div[style*="z-index: 9999"], div[style*="z-index:9999"]')?.remove();
           abrirEvidencias(idx);
         }
@@ -4519,7 +4549,7 @@ function incFotoChange(inp){
   files.forEach(file=>{
   const reader=new FileReader();
   reader.onload=e=>{
-    const img_=new Image(); img_.onload=()=>{ const c=document.createElement('canvas'); const sc=Math.min(1,600/img_.width); c.width=Math.round(img_.width*sc); c.height=Math.round(img_.height*sc); c.getContext('2d').drawImage(img_,0,0,c.width,c.height); const b64=c.toDataURL('image/jpeg',0.82); incFotos.push(b64); incFotoData=b64; incRefreshFotos(); }; img_.src=e.target.result;
+    const img_=new Image(); img_.onload=()=>{ const c=document.createElement('canvas'); const sc=Math.min(1,400/img_.width); c.width=Math.round(img_.width*sc); c.height=Math.round(img_.height*sc); c.getContext('2d').drawImage(img_,0,0,c.width,c.height); const b64=c.toDataURL('image/jpeg',0.6); incFotos.push(b64); incFotoData=b64; incRefreshFotos(); }; img_.src=e.target.result;
   };
   reader.readAsDataURL(file);
   }); // end files.forEach
@@ -4573,7 +4603,7 @@ function incGetSkus(){
   }).filter(s => s.tipo);
 }
 
-function incGuardar(){
+async function incGuardar(){
   const emb = g('incEmb').value.trim();
   let tipo = g('incTipo').value;
   if(tipo==='OTROS') tipo = g('incTipoOtro').value.trim()||'OTROS';
@@ -4584,6 +4614,26 @@ function incGuardar(){
   const r = S.rows.find(x=>x.emb===nk(emb));
   const hora = new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
   const ts = Date.now();
+
+  // Upload photos to Firebase Storage first (if available), get URLs
+  let fotoUrls = [];
+  if(incFotos.length && window.FB && FB.uploadPhoto){
+    const btn=g('incBtnGuardar'); if(btn){btn.disabled=true; btn.textContent='Subiendo fotos...';}
+    for(let i=0;i<incFotos.length;i++){
+      try{
+        const path='incidencias/'+emb.trim()+'/'+ts+'_'+i+'.jpg';
+        const url=await FB.uploadPhoto(path, incFotos[i]);
+        fotoUrls.push(url);
+      }catch(e){
+        console.error('incFoto upload error',e);
+        fotoUrls.push(incFotos[i]); // fallback to b64 if upload fails
+      }
+    }
+    if(btn){btn.disabled=false; btn.textContent='Guardar';}
+  } else {
+    fotoUrls = [...incFotos];
+  }
+
   if(skus.length){
     // Save one record per SKU row
     skus.forEach((s,si) => {
@@ -4594,7 +4644,7 @@ function incGuardar(){
         colab: g('incColab')?.value||'',
         colabInc: g('incColabInc')?.value||'',
         sku: s.sku, cantidad: s.cant, unidad: s.unidad,
-        foto: si===0?incFotoData:'', fotos: si===0?(incFotos.length?[...incFotos]:[incFotoData].filter(Boolean)):[],
+        foto: si===0?(fotoUrls[0]||''):'', fotos: si===0?fotoUrls:[],
         hora, ts: ts+si, turno: S.sessionTurno, sup: S.sessionSup
       });
     });
@@ -4604,7 +4654,7 @@ function incGuardar(){
       tipo, desc: '',
       colab: g('incColab')?.value||'', colabInc: g('incColabInc')?.value||'',
       sku: '', cantidad: '', unidad: 'CAJAS',
-      foto: incFotoData, fotos: incFotos.length?[...incFotos]:[incFotoData].filter(Boolean),
+      foto: fotoUrls[0]||'', fotos: fotoUrls,
       hora, ts, turno: S.sessionTurno, sup: S.sessionSup
     });
   }
@@ -7295,17 +7345,22 @@ function fbSave(){
           monta:_s(r.monta),monta2:_s(r.monta2),
           verif:_s(r.verif),verif2:_s(r.verif2),
           customBy:_s(r.customBy),customBy2:_s(r.customBy2),
-          _wmsEmb:_s(r._wmsEmb),_wmsMatch:_b(r._wmsMatch)
+          _wmsEmb:_s(r._wmsEmb),_wmsMatch:_b(r._wmsMatch),
+          evidencias:(r.evidencias||[]).filter(function(ev){return ev.url;}).map(function(ev){return{url:ev.url,path:_s(ev.path),desc:_s(ev.desc),ts:ev.ts||0};})
         };
       };
       // Keep only last 8 turnoHistorial entries, trim fletes fields
-      const _trimFlete=function(f){return{emb:_s(f.emb),nom:_s(f.nom),verif:_s(f.verif),verif2:_s(f.verif2),monta:_s(f.monta),monta2:_s(f.monta2),customBy:_s(f.customBy),customBy2:_s(f.customBy2),estop:_s(f.estop),sem:_s(f.sem),precarga:_s(f.precarga),pt:_n(f.pt),ts:f.ts||0};};      
+      const _trimFlete=function(f){return{emb:_s(f.emb),nom:_s(f.nom),verif:_s(f.verif),verif2:_s(f.verif2),monta:_s(f.monta),monta2:_s(f.monta2),customBy:_s(f.customBy),customBy2:_s(f.customBy2),estop:_s(f.estop),sem:_s(f.sem),precarga:_s(f.precarga),pt:_n(f.pt),ts:f.ts||0,evidencias:(f.evidencias||[]).filter(function(ev){return ev.url;}).map(function(ev){return{url:ev.url,path:_s(ev.path),desc:_s(ev.desc),ts:ev.ts||0};})};};      
       const _trimHist=S.turnoHistorial.slice(-8).map(function(h){return{id:h.id,turno:h.turno,sup:h.sup,hora:h.hora,ts:h.ts||0,fletes:(h.fletes||[]).map(_trimFlete)};});
       // Keep only last 10 DV.historial entries
       const _trimDvHist=(DV.historial||[]).slice(-10);
       const payload = {
         rows: S.rows.map(_trimRow),
-        userEdits: S.userEdits,
+        userEdits: (function(){
+          var ue={}; Object.keys(S.userEdits||{}).forEach(function(k){
+            var v={...S.userEdits[k]}; delete v.evidencias; ue[k]=v;
+          }); return ue;
+        })(),
         turnoHistorial: _trimHist,
         posAlerts: S.posAlerts,
         sessionTurno: S.sessionTurno,
@@ -7314,7 +7369,9 @@ function fbSave(){
         dvHistorial: _trimDvHist,
         dvTurno: DV.turno,
         dvSup: DV.sup,
-        incRegistros: (INC.registros||[]).slice(-50),
+        incRegistros: (INC.registros||[]).slice(-50).map(function(r){
+          var rr={...r}; delete rr.fotos; return rr; // drop redundant 'fotos' array, keep single 'foto'
+        }),
         custHistorial: (CUST.historial||[]).slice(-100),
         ts, device: DEVICE_ID
       };
@@ -7326,9 +7383,12 @@ function fbSave(){
         console.warn('[fbSave] TRIMMING payload '+_kb+'KB');
         payload.turnoHistorial=_trimHist.slice(-3);
         payload.dvHistorial=_trimDvHist.slice(-5);
-        payload.incRegistros=(INC.registros||[]).slice(-20);
+        payload.incRegistros=(INC.registros||[]).slice(-20).map(function(r){
+          var rr={...r}; delete rr.fotos; delete rr.foto; return rr; // drop photos entirely if still too big
+        });
         payload.custHistorial=(CUST.historial||[]).slice(-50);
         payload.posAlerts=[];
+        // (evidencias are now tiny URL refs, no need to drop)
       }
       const _finalKb=Math.round(JSON.stringify(payload).length/1024);
       if(_finalKb>950){
