@@ -5170,7 +5170,7 @@ function dvCerrarTurno(){
     DV.historial.push(entry);
   }
 
-  // Add valid registros to entry (deep copy, sanitize fotos)
+  // Add valid registros to entry — upsert by _dvIdx to avoid duplicates
   regsValidos.forEach((r,i)=>{
     const snap = {
       ...r,
@@ -5182,7 +5182,10 @@ function dvCerrarTurno(){
         fotos:(inc.fotos||[]).filter(f=>typeof f==='string'&&f.startsWith('data:'))
       }))
     };
-    entry.registros.push(snap);
+    // Upsert: if already added (e.g. by dvIncGuardar), replace; otherwise push
+    const ei = entry.registros.findIndex(function(x){ return x._dvIdx===i; });
+    if(ei>=0) entry.registros[ei]=snap;
+    else entry.registros.push(snap);
   });
 
   // Clear current turn
@@ -6576,19 +6579,27 @@ function renderResumen(){
 function togglePrio(idx){
   if(!fbIsAdmin)return;
   const r=S.rows[idx];
-  if(r.prioNum){
-    // Already has priority — remove it
+  if(r.prio){
+    // Ya tiene prioridad — quitar sin pedir nada
     r.prio=false; r.prioNum=0;
     const emb=r.emb;
     if(!S.userEdits[emb]) S.userEdits[emb]={};
     S.userEdits[emb].prio=false; S.userEdits[emb].prioNum=0;
+    // Re-numerar restantes para que no queden huecos
+    S.rows.filter(function(x){return x.prio;})
+      .sort(function(a,b){return (a.prioNum||0)-(b.prioNum||0);})
+      .forEach(function(x,i){
+        x.prioNum=i+1;
+        if(!S.userEdits[x.emb]) S.userEdits[x.emb]={};
+        S.userEdits[x.emb].prioNum=i+1;
+      });
   } else {
-    // Ask for position number
-    const totalActivos=S.rows.length;
-    const numStr=prompt(`Posición de prioridad para el flete ${r.emb}\n(1 = primero, máx ${totalActivos}):`);
+    // Marcar como prioridad — pedir posición entre todos los fletes visibles
+    const totalFilas=S.rows.filter(function(x){return x.estop!=='CARGADO'&&x.pc!==100;}).length;
+    const numStr=prompt('Posicion en semaforo para flete '+r.emb+' (1=primero, max '+totalFilas+'):')
     if(!numStr) return;
     const num=parseInt(numStr);
-    if(isNaN(num)||num<1||num>totalActivos){ alert('Número inválido. Ingresa un número entre 1 y '+totalActivos); return; }
+    if(isNaN(num)||num<1||num>totalFilas){ alert('Número inválido. Ingresa un número entre 1 y '+totalFilas); return; }
     r.prio=true; r.prioNum=num;
     const emb=r.emb;
     if(!S.userEdits[emb]) S.userEdits[emb]={};
@@ -7260,8 +7271,8 @@ function applyDocumentadorUI(){
   document.body.classList.remove('guest-mode');
   // Hide vsw buttons for Embarques and Incidencias
   ['vsw-emb','vsw-inc'].forEach(id=>{ const el=g(id); if(el) el.style.display='none'; });
-  // Hide htab for Embarques and Verificadores in historial
-  ['htab-emb','htab-vf'].forEach(id=>{ const el=g(id); if(el) el.style.display='none'; });
+  // Hide htab-emb only (Verificadores sí está disponible para Documentador)
+  ['htab-emb'].forEach(id=>{ const el=g(id); if(el) el.style.display='none'; });
   // Switch to Descargas view
   ['view-emb','view-inc','view-hist'].forEach(id=>{ const el=g(id); if(el) el.classList.add('hidden'); });
   const vDesc=g('view-desc'); if(vDesc) vDesc.classList.remove('hidden');
@@ -7269,9 +7280,8 @@ function applyDocumentadorUI(){
   const vswD=g('vsw-desc'); if(vswD) vswD.classList.add('active');
   // Render immediately — don't wait for Firebase
   dvRender();
-  // Also ensure historial sub-tab restriction
+  // Also ensure historial sub-tab restriction (solo htab-emb)
   const htabEmb2=g('htab-emb'); if(htabEmb2) htabEmb2.style.display='none';
-  const htabVf2=g('htab-vf');   if(htabVf2)  htabVf2.style.display='none';
 }
 
 let _authApplied = false;
@@ -7449,6 +7459,16 @@ function applyRemoteData(data){
   const _msSinceBuild = Date.now()-(S._lastBuildTs||0);
   if(data.rows && _msSinceBuild > 8000){
     S.rows = data.rows;
+    // Re-apply userEdits on top of Firebase rows — local edits (prio, verif, etc.) always win
+    S.rows.forEach(function(r){
+      const saved = S.userEdits[r.emb];
+      if(saved){
+        var savedWithoutCom = Object.assign({}, saved);
+        delete savedWithoutCom.com;
+        delete savedWithoutCom.evidencias;
+        Object.assign(r, savedWithoutCom);
+      }
+    });
     console.log('[SYNC] S.rows RESTORED from Firebase rows='+S.rows.length+' (build was '+Math.round(_msSinceBuild/1000)+'s ago)');
   } else if(data.rows && _msSinceBuild <= 8000){
     console.log('[SYNC] S.rows SKIPPED — build ran '+Math.round(_msSinceBuild/1000)+'s ago, keeping local rows='+S.rows.length);
@@ -7476,7 +7496,21 @@ function applyRemoteData(data){
     });
   }
   if(data.userEdits && _msSinceBuild > 8000) S.userEdits = data.userEdits;
-  if(data.turnoHistorial) S.turnoHistorial  = data.turnoHistorial;
+  // MERGE turnoHistorial — Firebase solo guarda las últimas 50, el historial completo vive en localStorage
+  if(data.turnoHistorial && Array.isArray(data.turnoHistorial)){
+    if(data.turnoHistorial.length >= S.turnoHistorial.length){
+      S.turnoHistorial = data.turnoHistorial;
+    } else {
+      // Firebase tiene menos — merge por id, conservar entradas locales que Firebase no tiene
+      var _merged = S.turnoHistorial.slice();
+      data.turnoHistorial.forEach(function(h){
+        var _i = _merged.findIndex(function(x){ return x.id===h.id; });
+        if(_i>=0) _merged[_i]=h; else _merged.push(h);
+      });
+      _merged.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
+      S.turnoHistorial = _merged;
+    }
+  }
   if(data.posAlerts)      S.posAlerts       = data.posAlerts;
   if(data.sessionTurno)   S.sessionTurno    = data.sessionTurno;
   if(data.sessionSup)     S.sessionSup      = data.sessionSup;
