@@ -2,6 +2,9 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Tracker de Embarques — MACRO TOLUCA</title>
 <script type="module">
@@ -763,6 +766,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
         <option value="nv">Fletes nuevos</option>
         <option value="li">Marcados listos</option>
       </select>
+      <div id="fHrsWrap" style="position:relative;display:inline-block"><button id="fHrsBtn" onclick="tkToggleHrsDrop(event)" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:5px;height:28px;white-space:nowrap">Horas<span id="fHrsBadge" style="display:none;background:var(--brand);color:#000;border-radius:10px;padding:0 4px;font-size:9px;font-weight:700;line-height:14px"></span><svg width="9" height="5" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></button><div id="fHrsDrop" style="display:none;position:absolute;top:30px;left:0;background:var(--card);border:1px solid var(--border2);border-radius:6px;padding:4px 0;z-index:300;min-width:120px;box-shadow:0 3px 10px rgba(0,0,0,.3)"><label style="display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;text-align:left"><input type="checkbox" value="24" style="width:11px;height:11px"> ≤ 24h</label><label style="display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;text-align:left"><input type="checkbox" value="36" style="width:11px;height:11px"> 25–36h</label><label style="display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;text-align:left"><input type="checkbox" value="48" style="width:11px;height:11px"> 37–48h</label><label style="display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;text-align:left"><input type="checkbox" value="72" style="width:11px;height:11px"> 49–72h</label><label style="display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;text-align:left"><input type="checkbox" value="otros" style="width:11px;height:11px"> +72h/sin cita</label><div style="border-top:1px solid var(--border2);margin:3px 0"></div><div style="display:flex;gap:4px;padding:3px 8px"><button onclick="tkHrsClear()" style="flex:1;padding:3px 0;font-size:9px;background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text3);cursor:pointer">✕ Borrar</button><button onclick="tkHrsApply()" style="flex:1;padding:3px 0;font-size:9px;background:var(--brand);border:none;border-radius:4px;color:#000;cursor:pointer;font-weight:600">✓ OK</button></div></div></div>
       <div id="fEstopWrap" style="position:relative;display:inline-block"><button id="fEstopBtn" onclick="dvToggleEstopDrop(event)" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;height:30px;white-space:nowrap">Estatus OP<span id="fEstopBadge" style="display:none;background:var(--brand);color:#000;border-radius:10px;padding:0 5px;font-size:9px;font-weight:700;line-height:16px"></span><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M0 3l5 5 5-5z"/></svg></button><div id="fEstopDrop" style="display:none;position:absolute;top:100%;left:0;z-index:500;background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:4px;min-width:160px;box-shadow:0 4px 20px rgba(0,0,0,.4);margin-top:3px"><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;font-weight:700;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" id="fEstopAll" onchange="dvEstopAllChange(this)" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> Todos</label><div style="border-top:1px solid var(--border);margin:2px 0"></div><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="POR VERIFICAR" onchange="dvEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> POR VERIFICAR</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="POR CARGAR" onchange="dvEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> POR CARGAR</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="PENDIENTE" onchange="dvEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> PENDIENTE</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="CARGADO" onchange="dvEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> CARGADO</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="EN PROCESO" onchange="dvEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> EN PROCESO</label><div style="border-top:1px solid var(--border);margin-top:3px;padding-top:3px;padding-left:4px"><button onclick="dvEstopClear()" style="background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;padding:2px 4px">✕ Limpiar todo</button></div></div></div>
       <select id="fTrans" onchange="render()">
         <option value="">Con y sin transporte</option>
@@ -821,22 +825,16 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
         <input type="text" id="qRs" placeholder="Buscar embarque o nombre…" oninput="renderResumen()"
           style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 9px;font-size:12px;font-family:'IBM Plex Sans',sans-serif;height:30px;min-width:200px">
-        <select id="fRsSem" onchange="renderResumen()"
-          style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 9px;font-size:12px;font-family:'IBM Plex Sans',sans-serif;height:30px">
-          <option value="">Todos los semáforos</option>
-          <option>Fuera de Tiempo</option><option>En Tiempo</option><option>Urgente</option>
-        </select>
-        <select id="fRsEst" onchange="renderResumen()"
-          style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 9px;font-size:12px;font-family:'IBM Plex Sans',sans-serif;height:30px">
-          <option value="">Todos los estatus</option>
-          <option>POR VERIFICAR</option><option>POR CARGAR</option><option>PENDIENTE</option><option>CARGADO</option>
-        </select>
+        <select id="fRsSem" onchange="renderResumen()" style="display:none"></select>
+        <select id="fRsEst" onchange="renderResumen()" style="display:none"></select>
         <select id="fRsTrans" onchange="renderResumen()"
           style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 9px;font-size:12px;font-family:'IBM Plex Sans',sans-serif;height:30px">
           <option value="">Con y sin transporte</option>
           <option value="con">Con cortina</option>
           <option value="sin">Sin cortina</option>
         </select>
+        <div id="fRsHrsWrap" style="position:relative;display:inline-block"><button id="fRsHrsBtn" onclick="rsToggleHrsDrop(event)" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 9px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;height:30px;white-space:nowrap">Horas<span id="fRsHrsBadge" style="display:none;background:var(--brand);color:#000;border-radius:10px;padding:0 4px;font-size:9px;font-weight:700;line-height:14px"></span><svg width="9" height="5" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></button><div id="fRsHrsDrop" style="display:none;position:absolute;top:32px;left:0;background:var(--card);border:1px solid var(--border2);border-radius:6px;padding:4px 0;z-index:300;min-width:120px;box-shadow:0 3px 10px rgba(0,0,0,.3)"><label style="display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;text-align:left"><input type="checkbox" value="24" style="width:11px;height:11px"> ≤ 24h</label><label style="display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;text-align:left"><input type="checkbox" value="36" style="width:11px;height:11px"> 25–36h</label><label style="display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;text-align:left"><input type="checkbox" value="48" style="width:11px;height:11px"> 37–48h</label><label style="display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;text-align:left"><input type="checkbox" value="72" style="width:11px;height:11px"> 49–72h</label><label style="display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;text-align:left"><input type="checkbox" value="otros" style="width:11px;height:11px"> +72h/sin cita</label><div style="border-top:1px solid var(--border2);margin:3px 0"></div><div style="display:flex;gap:4px;padding:3px 8px"><button onclick="rsHrsClear()" style="flex:1;padding:3px 0;font-size:9px;background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text3);cursor:pointer">✕ Borrar</button><button onclick="rsHrsApply()" style="flex:1;padding:3px 0;font-size:9px;background:var(--brand);border:none;border-radius:4px;color:#000;cursor:pointer;font-weight:600">✓ OK</button></div></div>
+        <select id="fRsHrs" onchange="renderResumen()" style="display:none"></select></div>        <select id="fRsHrs" onchange="renderResumen()" style="display:none"></select>
       <div id="fRsEstopWrap" style="position:relative;display:inline-block"><button id="fRsEstopBtn" onclick="rsToggleEstopDrop(event)" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;height:30px;white-space:nowrap;min-width:120px">Estatus OP<span id="fRsEstopBadge" style="display:none;background:var(--brand);color:#000;border-radius:10px;padding:0 5px;font-size:9px;font-weight:700;line-height:16px"></span><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M0 3l5 5 5-5z"/></svg></button><div id="fRsEstopDrop" style="display:none;position:absolute;top:100%;left:0;z-index:500;background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:4px;min-width:160px;box-shadow:0 4px 20px rgba(0,0,0,.4);margin-top:3px"><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;font-weight:600" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" id="fRsEstopAll" onchange="rsEstopAllChange(this)" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> Todos</label><div style="border-top:1px solid var(--border);margin:2px 0"></div><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="POR VERIFICAR" onchange="rsEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> POR VERIFICAR</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="POR CARGAR" onchange="rsEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> POR CARGAR</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="PENDIENTE" onchange="rsEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> PENDIENTE</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="CARGADO" onchange="rsEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> CARGADO</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="EN PROCESO" onchange="rsEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> EN PROCESO</label><div style="border-top:1px solid var(--border);margin-top:3px;padding-top:3px;padding-left:4px"><button onclick="rsEstopClear()" style="background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;padding:2px 4px">✕ Limpiar todo</button></div></div></div>
         <button class="btn" id="fRsPrio" onclick="toggleFiltroPrio()" style="gap:6px">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -1157,6 +1155,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       <input id="histVfSearch" class="edt-sel" type="text" placeholder="Buscar verificador, flete o cliente..." style="height:30px;font-size:11px;min-width:220px" oninput="renderHistVf()">
       <button class="btn" onclick="exportHistVfCSV()" style="font-size:11px;border-color:var(--green);color:var(--green)">⬇ Exportar CSV</button>
+      <button class="btn" onclick="descargarBackupManual()" style="font-size:11px;border-color:var(--amber);color:var(--amber)">💾 Backup JSON</button>
     </div>
     <div id="histVfKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px"></div>
     <div id="histVfRanking" style="margin-bottom:12px"></div>
@@ -1220,6 +1219,39 @@ function autoSaveVerifHistorial(){
 
 function hSave(){
   try{ localStorage.setItem('trx_historial', JSON.stringify(S.turnoHistorial)); }catch(e){}
+  autoBackupHistorial();
+}
+
+// ── Auto-backup: descarga JSON cada vez que el historial crece ──────────────
+let _lastBackupCount = 0;
+let _backupTimer = null;
+function autoBackupHistorial(){
+  const totalFletes = S.turnoHistorial.reduce(function(s,h){ return s+(h.fletes||[]).length; },0);
+  // Solo descargar si hay datos nuevos desde el último backup
+  if(totalFletes <= _lastBackupCount || totalFletes === 0) return;
+  // Debounce: esperar 30 segundos para no descargar en cada keystroke
+  if(_backupTimer) clearTimeout(_backupTimer);
+  _backupTimer = setTimeout(function(){
+    try{
+      const backup = {
+        _fecha: new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
+        _dispositivo: DEVICE_ID||'',
+        _totalFletes: totalFletes,
+        turnoHistorial: S.turnoHistorial,
+        userEdits: S.userEdits
+      };
+      const json = JSON.stringify(backup, null, 2);
+      const blob = new Blob([json], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      const fecha = new Date().toISOString().slice(0,10);
+      a.download = 'backup_tracker_'+fecha+'_'+totalFletes+'fletes.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      _lastBackupCount = totalFletes;
+      console.log('[BACKUP] Descargado backup con '+totalFletes+' fletes verificados');
+    } catch(e){ console.warn('[BACKUP] Error al descargar backup:', e); }
+  }, 30000); // 30 segundos de debounce
 }
 function hLoad(){
   try{
@@ -2090,7 +2122,15 @@ function applyNew(){
       if(newAr) ex.ar=newAr;
       if(newCon) ex.con=newCon;   // update cortina from latest Detalle
       if(newCom&&!ex.com) ex.com=newCom;
-      ex._wmsMatch=!!wmsEmb; ex._wmsEmb=wmsEmb;
+      // Only update WMS fields if we have DETALLE data — don't clear if already set
+      if(wmsEmb){ ex._wmsMatch=true; ex._wmsEmb=wmsEmb; }
+      else if(!ex._wmsMatch){ ex._wmsMatch=false; ex._wmsEmb=''; }
+      // Persist WMS in userEdits so it survives page reload without DETALLE
+      if(ex._wmsMatch){
+        if(!S.userEdits[ex.emb]) S.userEdits[ex.emb]={};
+        S.userEdits[ex.emb]._wmsMatch=true;
+        S.userEdits[ex.emb]._wmsEmb=ex._wmsEmb;
+      }
     }
     if(Object.keys(P).length){
       const newPal=fc(P,['Pallets','pallets']);
@@ -2374,6 +2414,8 @@ function render(){
     if(ftr==='con'&&!hasTrans(r)) return false;
     if(ftr==='sin'&&hasTrans(r)) return false;
     if(festop.length && !festop.includes(r.estop)) return false;
+    // Filtro horas a cita (multi-select)
+    if(!matchHrsFilter(r, getHrsFilter('fHrsDrop'))) return false;
     return true;
   });
 
@@ -2462,9 +2504,11 @@ function render(){
       </td>
       <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;font-size:11px" title="${es(r.nom)}">${es(r.nom)}</td>
       <td>${(()=>{
-        let urgente=false;
-        if(r.ci){const d=new Date(r.ci);if(!isNaN(d)){const h=(d-new Date())/3600000;if(h>=0&&h<2)urgente=true;}}
+        const _d=r.ci?new Date(r.ci):null;
+        const _hL=(_d&&!isNaN(_d))?((_d-new Date())/3600000):null;
+        const urgente=_hL!==null&&_hL>=0&&_hL<2;
         const badgeCls=urgente?'br':scl(r.sem);
+        // Show r.sem label (from XLSX) — respects Fuera de Tiempo etc
         const label=urgente?(r.sem||'Sin estado')+' ⚠':(r.sem||'—');
         return `<span class="b ${badgeCls}" data-cita="${r.ci||''}" style="white-space:nowrap">${es(label)}</span>`;
       })()}</td>
@@ -2553,6 +2597,7 @@ function render(){
   const na=rows.filter(r=>r.al&&r.al!=='').length;
   const nCon=rows.filter(r=>hasTrans(r)).length;
   const nSin=rows.filter(r=>!hasTrans(r)).length;
+  kpi(rows); // recalculate KPIs with currently filtered rows
   g('tf').innerHTML=
     `<span>Mostrando <strong>${rows.length}</strong> de <strong>${S.rows.length}</strong></span>`+
     (nFuera?`<span style="color:var(--red)">🔴 ${nFuera} fuera de tiempo</span>`:'')+
@@ -2784,8 +2829,8 @@ function listo(i){
   kpi(); render();
 }
 
-function kpi(){
-  const r=S.rows;
+function kpi(filteredRows){
+  const r=filteredRows||S.rows;
   if(g('kT')) g('kT').textContent=r.length;
   if(g('kF')) g('kF').textContent=r.filter(x=>(x.sem||'').includes('Fuera')).length;
 
@@ -2842,17 +2887,28 @@ function alertsRelevant(){
   // Fuera de tiempo
   const fuera = S.rows.filter(r=>r.sem&&r.sem.toLowerCase().includes('fuera'));
 
-  // Parse cita date — handles dd/mm/yyyy hh:mm and ISO formats
+    // Parse cita date — handles es-MX short format dd/mm/yy h:mm a.m./p.m. and ISO
   function parseCita(ci){
     if(!ci) return null;
-    // Try ISO first
     let d=new Date(ci); if(!isNaN(d)) return d;
-    // Try dd/mm/yyyy hh:mm or dd/mm/yyyy, hh:mm
-    const m=String(ci).match(/(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})[,\s]*(\d{1,2}):(\d{2})?/);
-    if(m) return new Date(+m[3],+m[2]-1,+m[1],+(m[4]||0),+(m[5]||0));
-    // Try dd/mm/yyyy only
-    const m2=String(ci).match(/(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
-    if(m2) return new Date(+m2[3],+m2[2]-1,+m2[1]);
+    const s=String(ci).trim();
+    // Format: dd/mm/yy, h:mm a.m. or p.m. (es-MX short)
+    const m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})[,\s]+(\d{1,2}):(\d{2})\s*([ap])[\s.]*/i);
+    if(m){
+      let [,dd,mm,yy,hh,min,ap]=m;
+      let yyyy=yy.length===2?'20'+yy:yy;
+      let h=parseInt(hh);
+      if(ap.toLowerCase()==='p'&&h<12) h+=12;
+      if(ap.toLowerCase()==='a'&&h===12) h=0;
+      return new Date(yyyy+'-'+mm.padStart(2,'0')+'-'+dd.padStart(2,'0')+'T'+String(h).padStart(2,'0')+':'+min+':00');
+    }
+    // Format: dd/mm/yy, HH:mm (24h no am/pm)
+    const m2=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})[,\s]+(\d{1,2}):(\d{2})/);
+    if(m2){
+      let [,dd,mm,yy,hh,min]=m2;
+      let yyyy=yy.length===2?'20'+yy:yy;
+      return new Date(yyyy+'-'+mm.padStart(2,'0')+'-'+dd.padStart(2,'0')+'T'+hh.padStart(2,'0')+':'+min+':00');
+    }
     return null;
   }
   // Riesgo: menos de 2 horas para la cita (pero no fuera)
@@ -3636,6 +3692,29 @@ function vfSecToggle(id, header){
   panel.style.display = isOpen ? 'none' : 'block';
   const btn = header.querySelector('span:last-child');
   if(btn) btn.textContent = isOpen ? '▶ Ver detalle' : '▼ Ocultar';
+}
+
+function descargarBackupManual(){
+  try{
+    const totalFletes = S.turnoHistorial.reduce(function(s,h){ return s+(h.fletes||[]).length; },0);
+    const backup = {
+      _fecha: new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
+      _dispositivo: DEVICE_ID||'',
+      _totalFletes: totalFletes,
+      turnoHistorial: S.turnoHistorial,
+      userEdits: S.userEdits,
+      incRegistros: INC.registros
+    };
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const fecha = new Date().toISOString().slice(0,10);
+    a.download = 'backup_tracker_'+fecha+'_'+totalFletes+'fletes.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    alert('Backup descargado: '+totalFletes+' fletes verificados.');
+  } catch(e){ alert('Error al generar backup: '+e.message); }
 }
 
 function exportHistVfCSV(){
@@ -6272,6 +6351,125 @@ function dvToggleEstopDrop(e){
   e.stopPropagation();
   var d=g('fEstopDrop'); if(d) d.style.display=d.style.display==='none'?'block':'none';
 }
+
+// ── Hrs filter dropdown — Tracker Maestro ──────────────────────────────────
+function tkToggleHrsDrop(e){
+  e.stopPropagation();
+  const d=g('fHrsDrop'); if(!d) return;
+  const open=d.style.display!=='none';
+  document.querySelectorAll('#fHrsDrop,#fRsHrsDrop').forEach(function(el){el.style.display='none';});
+  if(!open) d.style.display='block';
+}
+function tkHrsChange(){
+  const boxes=Array.from(document.querySelectorAll('#fHrsDrop input[type=checkbox]:checked'));
+  const badge=g('fHrsBadge');
+  if(badge){ badge.textContent=boxes.length||''; badge.style.display=boxes.length?'':'none'; }
+}
+function tkHrsApply(){
+  tkHrsChange();
+  const d=g('fHrsDrop'); if(d) d.style.display='none';
+  render();
+}
+function tkHrsClear(){
+  document.querySelectorAll('#fHrsDrop input[type=checkbox]').forEach(function(b){b.checked=false;});
+  const badge=g('fHrsBadge'); if(badge){badge.textContent='';badge.style.display='none';}
+  g('fHrsDrop').style.display='none';
+  render();
+}
+
+// ── Hrs filter dropdown — Resumen Semáforo ─────────────────────────────────
+function rsToggleHrsDrop(e){
+  e.stopPropagation();
+  const d=g('fRsHrsDrop'); if(!d) return;
+  const open=d.style.display!=='none';
+  document.querySelectorAll('#fHrsDrop,#fRsHrsDrop').forEach(function(el){el.style.display='none';});
+  if(!open) d.style.display='block';
+}
+function rsHrsChange(){
+  const boxes=Array.from(document.querySelectorAll('#fRsHrsDrop input[type=checkbox]:checked'));
+  const badge=g('fRsHrsBadge');
+  if(badge){ badge.textContent=boxes.length||''; badge.style.display=boxes.length?'':'none'; }
+}
+function rsHrsApply(){
+  rsHrsChange();
+  const d=g('fRsHrsDrop'); if(d) d.style.display='none';
+  renderResumen();
+}
+function rsHrsClear(){
+  document.querySelectorAll('#fRsHrsDrop input[type=checkbox]').forEach(function(b){b.checked=false;});
+  const badge=g('fRsHrsBadge'); if(badge){badge.textContent='';badge.style.display='none';}
+  g('fRsHrsDrop').style.display='none';
+  renderResumen();
+}
+
+// ── Helper: get checked hrs values ─────────────────────────────────────────
+function getHrsFilter(dropId){
+  return Array.from(document.querySelectorAll('#'+dropId+' input[type=checkbox]:checked')).map(function(b){return b.value;});
+}
+
+// ── Calcula horas restantes desde r.ci usando tiempo REAL actual ─────────────
+function hrsFromCi(ci){
+  if(!ci) return null;
+  const s=String(ci).trim();
+  if(!s || s==='null' || s==='undefined') return null;
+  // Fuera de tiempo → negativo
+  if(s.toLowerCase().includes('fuera')) return -1;
+  // Siempre calcular desde la fecha real vs Date.now() para que coincida con el badge
+  // ISO from build(): '2026-06-25 14:30:00'
+  const iso=s.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+  if(iso){
+    const d=new Date(iso[1]+'-'+iso[2]+'-'+iso[3]+'T'+iso[4]+':'+iso[5]+':00');
+    return isNaN(d)?null:(d.getTime()-Date.now())/3600000;
+  }
+  // dd/mm/yy h:mm a.m./p.m. (applyNew format)
+  const dmyAP=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})[,\s]+(\d{1,2}):(\d{2})\s*([ap])[\s.]*/i);
+  if(dmyAP){
+    let [,dd,mm,yy,hh,min,ap]=dmyAP;
+    let yyyy=yy.length===2?'20'+yy:yy;
+    let h=parseInt(hh);
+    if(ap.toLowerCase()==='p'&&h<12) h+=12;
+    if(ap.toLowerCase()==='a'&&h===12) h=0;
+    const d=new Date(yyyy+'-'+mm.padStart(2,'0')+'-'+dd.padStart(2,'0')+'T'+String(h).padStart(2,'0')+':'+min+':00');
+    return isNaN(d)?null:(d.getTime()-Date.now())/3600000;
+  }
+  // Last resort
+  const d=new Date(s);
+  return isNaN(d)?null:(d.getTime()-Date.now())/3600000;
+}
+// ── Helper: match row to hrs bucket ──────────────────────────────────────────
+function matchHrsFilter(r, hrsVals){
+  if(!hrsVals.length) return true;
+  // Use r.sem text first (what user sees), fallback to r.ci
+  let _hL = null;
+  const _semStr = String(r.sem||'').trim();
+  const _semHM = _semStr.match(/(\d+)h\s*(\d+)m/);
+  if(_semHM){
+    _hL = parseInt(_semHM[1]) + parseInt(_semHM[2])/60;
+  } else if(_semStr.match(/^(\d+)m\s*restantes?/i)){
+    _hL = parseInt(_semStr)/60;
+  } else if(_semStr.toLowerCase().includes('fuera')){
+    _hL = -1;
+  } else if(_semStr.toLowerCase().includes('en tiempo')){
+    _hL = 0;
+  } else {
+    _hL = hrsFromCi(r.ci);
+  }
+  if(_hL===null) return hrsVals.includes('otros');
+  // Bucket boundaries match label exactly:
+  // ≤24h = less than 24h (exclusive) — '24h 26m' goes to 25-36h
+  // 25-36h = 24h to 36h
+  // 37-48h = 36h to 48h
+  // 49-72h = 48h to 72h
+  for(var v of hrsVals){
+    if(v==='24'  && (_hL<0 || (_hL>=0 && _hL<=24))) return true; // Fuera de Tiempo tb entra aqui
+    if(v==='36'  && _hL>24   && _hL<=36) return true;
+    if(v==='48'  && _hL>36   && _hL<=48) return true;
+    if(v==='72'  && _hL>48   && _hL<=72) return true;
+    if(v==='otros' && _hL>72) return true;
+  }
+  return false;
+}
+
 function dvEstopAllChange(cb){
   document.querySelectorAll('#fEstopDrop input[type=checkbox][value]').forEach(b=>b.checked=cb.checked);
   dvEstopChange();
@@ -6325,6 +6523,12 @@ function rsEstopClear(){
 document.addEventListener('click',function(e){
   if(!e.target.closest('#fRsEstopWrap')){
     const d=g('fRsEstopDrop'); if(d) d.style.display='none';
+  }
+  if(!e.target.closest('#fHrsWrap')){
+    const d=g('fHrsDrop'); if(d) d.style.display='none';
+  }
+  if(!e.target.closest('#fRsHrsWrap')){
+    const d=g('fRsHrsDrop'); if(d) d.style.display='none';
   }
 });
 
@@ -6438,6 +6642,8 @@ function renderResumen(){
     const frt=g('fRsTrans')?.value||'';
     if(frt==='con'&&!hasTrans(r)) return false;
     if(frt==='sin'&&hasTrans(r)) return false;
+    // Horas a cita filter (multi-select)
+    if(!matchHrsFilter(r, getHrsFilter('fRsHrsDrop'))) return false;
     // Multi-select estop filter
     const _rsEstopBoxes=Array.from(document.querySelectorAll('#fRsEstopDrop input[type=checkbox][value]:checked'));
     if(_rsEstopBoxes.length && !_rsEstopBoxes.map(b=>b.value).includes(r.estop)) return false;
@@ -6460,6 +6666,14 @@ function renderResumen(){
   const _rsPend=rows.filter(r=>r.estop!=='CARGADO'&&r.pc!==100);
   const totCon=_rsPend.filter(r=>hasTrans(r)).length;
   const totSin=_rsPend.filter(r=>!hasTrans(r)).length;
+  // Add hrs breakdown KPI if filter active
+  const _fHrsActive = g('fRsHrs')?.value||'';
+  const _hrsKpis = _fHrsActive ? [] : [
+    ['≤24h', rows.filter(function(r){var h=r.ci?(new Date(r.ci)-Date.now())/3600000:null;return h!==null&&h<=24;}).length, 'var(--red)'],
+    ['25-36h', rows.filter(function(r){var h=r.ci?(new Date(r.ci)-Date.now())/3600000:null;return h!==null&&h>24&&h<=36;}).length, 'var(--amber)'],
+    ['37-48h', rows.filter(function(r){var h=r.ci?(new Date(r.ci)-Date.now())/3600000:null;return h!==null&&h>36&&h<=48;}).length, '#FCD34D'],
+    ['+48h', rows.filter(function(r){var h=r.ci?(new Date(r.ci)-Date.now())/3600000:null;return h===null||h>48;}).length, 'var(--text3)'],
+  ];
   g('rsKpi').innerHTML=[
     ['Total',rows.length,'var(--blue)'],
     ['⭐ Prioridad',totPrioM,'#FACC15'],
@@ -6470,6 +6684,7 @@ function renderResumen(){
     ['En proceso',totEP,'#FCD34D'],
     ['Pendiente',totPe,'#C4B5FD'],
     ['Cargado',totCa,'var(--green)'],
+    ..._hrsKpis,
   ].map(([l,v,c])=>`
     <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;display:flex;align-items:baseline;gap:8px">
       <span style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;color:${c}">${v}</span>
@@ -6493,6 +6708,7 @@ function renderResumen(){
     // Semaforo badge
     const semUrgente=(()=>{ if(!r.ci) return false; const d=new Date(r.ci); return !isNaN(d)&&(d-new Date())/3600000>=0&&(d-new Date())/3600000<2; })();
     const semBadgeCls=semUrgente?'br':scl(r.sem);
+    // Use r.sem label from XLSX — respects Fuera de Tiempo, En Tiempo etc
     const semLabel=semUrgente?(r.sem||'Sin estado')+' ⚠':(r.sem||'—');
     const semCell=`<div><span class="b ${semBadgeCls}" data-cita="${r.ci||''}">${es(semLabel)}</span>${r.con?`<div style="margin-top:4px;font-size:10px;color:var(--text2);font-family:'IBM Plex Mono',monospace;font-weight:600">${fmtCortina(r.con)}</div>`:''}</div>`;
 
@@ -6625,6 +6841,7 @@ function exportResumen(){
     if(filtroPrio&&!r.prio) return false;
     if(frt==='con'&&!hasTrans(r)) return false;
     if(frt==='sin'&&hasTrans(r)) return false;
+    if(!matchHrsFilter(r, getHrsFilter('fRsHrsDrop'))) return false;
     if(_estopBoxes.length&&!_estopBoxes.map(function(b){return b.value;}).includes(r.estop)) return false;
     if(!mostrarCargados&&(r.estop==='CARGADO'||r.pc===100)) return false;
     return true;
@@ -6633,12 +6850,12 @@ function exportResumen(){
   const _fEst = (document.getElementById('fRsEst')?.value||'').replace(/\s+/g,'_')||'todos';
   const _fSem = (document.getElementById('fRsSem')?.value||'').replace(/\s+/g,'_')||'';
   const _suffix = (_fEst!=='todos'?_fEst:'')+(_fSem?'_'+_fSem:'');
-  const h=['Prioridad','No.Embarque','Cliente','Semaforo Carga','Precarga','Estatus Op.','Pend. Picking','Pend. Tarea %','Comentarios'];
+  const h=['No.Embarque','Cliente','Semaforo Carga','Cortina','Precarga','Estatus Op.','Pend. Picking','Pend. Tarea %','Comentarios'];
   const d=rows.map(r=>{
     const trV=parseFloat(r.tr), arV=parseFloat(r.ar)||0;
     const pendPick=(!r.tr||isNaN(trV)||trV===0)?'N/A':Math.max(0,trV-arV).toString();
     const pendTarea=(parseFloat(r.pal)||0)===0?'N/A':r.pt===null||r.pt<100?(100-(r.pt||0))+'%':'Listo';
-    return [r.prio?'⭐ PRIORIDAD':'',r.emb,r.nom,r.sem,r.precarga,r.estop,pendPick,pendTarea,String(r.com||'').replace(/,/g,';')];
+    return [r.emb,r.nom,r.sem,r.con||'',r.precarga,r.estop,pendPick,pendTarea,String(r.com||'').replace(/,/g,';')];
   });
   const csv=[h,...d].map(function(row){return row.map(function(v){var s=String(v==null?'':v).replace(/"/g,"'");return '"'+s+'"';}).join(',');}).join('\n');
   const a=document.createElement('a');
@@ -7458,8 +7675,28 @@ function applyRemoteData(data){
   // Don't overwrite S.rows if build() just ran (guard 8 seconds)
   const _msSinceBuild = Date.now()-(S._lastBuildTs||0);
   if(data.rows && _msSinceBuild > 8000){
-    S.rows = data.rows;
-    // Re-apply userEdits on top of Firebase rows — local edits (prio, verif, etc.) always win
+    const _sameDevice = data.device && data.device===DEVICE_ID;
+    const _incomingRows = data.rows.length;
+    const _localRows = S.rows.length;
+    // Only restore if: same device (own save), OR incoming has MORE rows (new semaforo), OR local is empty
+    const _shouldRestore = _sameDevice || _incomingRows > _localRows || _localRows === 0;
+    if(_shouldRestore){
+      S.rows = data.rows;
+    } else if(_incomingRows === _localRows){
+      // Same count — merge row by row: take incoming fields but keep local userEdits
+      data.rows.forEach(function(nr){
+        var idx = S.rows.findIndex(function(r){ return r.emb===nr.emb; });
+        if(idx>=0){
+          // Keep local prio/verif/monta/wms — take incoming sem/estop/pc/pt from Firebase
+          var keep = {prio:S.rows[idx].prio, prioNum:S.rows[idx].prioNum,
+                      _wmsMatch:S.rows[idx]._wmsMatch, _wmsEmb:S.rows[idx]._wmsEmb};
+          S.rows[idx] = Object.assign({}, nr, keep);
+        }
+      });
+    } else {
+      console.log('[SYNC] S.rows SKIPPED — local has MORE rows ('+_localRows+') than Firebase ('+_incomingRows+'), keeping local');
+    }
+    // Re-apply userEdits on top — always wins
     S.rows.forEach(function(r){
       const saved = S.userEdits[r.emb];
       if(saved){
@@ -7469,7 +7706,7 @@ function applyRemoteData(data){
         Object.assign(r, savedWithoutCom);
       }
     });
-    console.log('[SYNC] S.rows RESTORED from Firebase rows='+S.rows.length+' (build was '+Math.round(_msSinceBuild/1000)+'s ago)');
+    console.log('[SYNC] S.rows restore: local='+_localRows+' incoming='+_incomingRows+' sameDevice='+_sameDevice+' restored='+(_shouldRestore||_incomingRows===_localRows));
   } else if(data.rows && _msSinceBuild <= 8000){
     console.log('[SYNC] S.rows SKIPPED — build ran '+Math.round(_msSinceBuild/1000)+'s ago, keeping local rows='+S.rows.length);
   }
