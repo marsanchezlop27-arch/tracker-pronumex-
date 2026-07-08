@@ -590,6 +590,10 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
     Reporte de turno
   </button>
+  <button class="btn hidden" id="btnMantenimiento" onclick="mantenimientoRespaldoLimpieza()" style="border-color:var(--amber);color:var(--amber)" title="Respalda toda la información y borra del tracker lo que ya tiene más de 7 días, para que la sincronización con los demás usuarios vuelva a funcionar bien">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 8v13H3V8M1 3h22v5H1z"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+    Respaldo y limpieza
+  </button>
 </div>
 
 <div class="shell">
@@ -7304,6 +7308,108 @@ function exportCSV(){
   a.click();
 }
 
+// ─── MANTENIMIENTO: Respaldo completo + limpieza de historial obsoleto (>7 días) ───
+// La sincronización con otros usuarios se detiene cuando el documento de Firestore
+// crece demasiado (fbSave aborta el guardado si el payload supera ~950KB, ver
+// '[fbSave] STILL TOO LARGE — aborting save' en consola). Esta función:
+//  1) Descarga un respaldo COMPLETO (sin recortes) de toda la información actual.
+//  2) Borra del tracker el historial con más de 7 días (turnos, descargas,
+//     incidencias, personalizados). Los embarques activos (S.rows) NO se tocan.
+//  3) Guarda de inmediato el tracker ya más ligero para restablecer la sincronización.
+function _parseFechaMX(str){
+  // Admite 'DD/MM/YYYY' (formato es-MX) al inicio de la cadena
+  if(!str) return 0;
+  const m = String(str).match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if(!m) return 0;
+  let d=parseInt(m[1],10), mo=parseInt(m[2],10), y=parseInt(m[3],10);
+  if(m[3].length===2) y+=2000;
+  const dt = new Date(y, mo-1, d, 12, 0, 0);
+  return dt.getTime()||0;
+}
+
+function mantenimientoRespaldoLimpieza(){
+  if(!fbIsAdmin){ alert('Solo un administrador puede hacer el respaldo y limpieza.'); return; }
+  if(!confirm(
+    'Esto va a:\n\n'+
+    '1) Descargar un respaldo COMPLETO de toda la información actual (JSON).\n'+
+    '2) Borrar del tracker el historial con más de 7 días (turnos, descargas, incidencias, personalizados).\n'+
+    '   Los embarques activos de la tabla NO se tocan.\n'+
+    '3) Guardar el tracker ya más ligero para restablecer la sincronización con los demás usuarios.\n\n'+
+    '¿Continuar?'
+  )) return;
+
+  // ── 1) Respaldo completo (sin recortes) ──
+  try{
+    const backup = {
+      _generado: new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'}),
+      _dispositivo: DEVICE_ID||'',
+      rows: S.rows,
+      userEdits: S.userEdits,
+      turnoHistorial: S.turnoHistorial,
+      posAlerts: S.posAlerts,
+      sessionTurno: S.sessionTurno,
+      sessionSup: S.sessionSup,
+      dvRegistros: DV.registros,
+      dvHistorial: DV.historial,
+      dvTurno: DV.turno,
+      dvSup: DV.sup,
+      incRegistros: INC.registros,
+      custHistorial: CUST.historial
+    };
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const fecha = new Date().toISOString().slice(0,10);
+    a.download = 'respaldo_completo_tracker_'+fecha+'.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }catch(e){
+    alert('No se pudo generar el respaldo, se cancela la limpieza por seguridad.\n'+e.message);
+    return;
+  }
+
+  // ── 2) Limpieza de información con más de 7 días ──
+  const CUTOFF = Date.now() - 7*24*60*60*1000;
+  const removidos = {turnos:0, descargas:0, incidencias:0, personalizados:0};
+
+  const beforeTH = S.turnoHistorial.length;
+  S.turnoHistorial = S.turnoHistorial.filter(h => (h.ts||0) >= CUTOFF);
+  removidos.turnos = beforeTH - S.turnoHistorial.length;
+  hSave();
+
+  const beforeDV = DV.historial.length;
+  DV.historial = DV.historial.filter(b => _parseFechaMX(b._dayKey||b.fecha) >= CUTOFF);
+  removidos.descargas = beforeDV - DV.historial.length;
+  try{ localStorage.setItem('trx_dv_historial', JSON.stringify(DV.historial)); }catch(e){}
+
+  const beforeINC = INC.registros.length;
+  INC.registros = INC.registros.filter(r => (r.ts||0) >= CUTOFF);
+  removidos.incidencias = beforeINC - INC.registros.length;
+  try{ localStorage.setItem('trx_incidencias', JSON.stringify(INC.registros)); }catch(e){}
+
+  const beforeCUST = CUST.historial.length;
+  CUST.historial = CUST.historial.filter(r => (r.ts||0) >= CUTOFF);
+  removidos.personalizados = beforeCUST - CUST.historial.length;
+  try{ localStorage.setItem('trx_cust_hist', JSON.stringify(CUST.historial)); }catch(e){}
+
+  // ── 3) Forzar guardado inmediato en Firestore (payload ya más ligero) ──
+  fbSave();
+
+  setTimeout(()=>{
+    alert(
+      'Listo. Respaldo descargado y limpieza aplicada:\n\n'+
+      '• Turnos de historial borrados: '+removidos.turnos+'\n'+
+      '• Turnos de descargas (documentador) borrados: '+removidos.descargas+'\n'+
+      '• Incidencias borradas: '+removidos.incidencias+'\n'+
+      '• Personalizados borrados: '+removidos.personalizados+'\n\n'+
+      'Se guardó el tracker actualizado. Revisa el punto de sincronización (arriba a la izquierda) — debe ponerse verde.'
+    );
+    if(typeof renderHist==='function') renderHist();
+    if(typeof badge==='function') badge();
+  }, 600);
+}
+
 function reset(){
   S.rows=[];
   Object.keys(S.buf).forEach(k=>delete S.buf[k]);
@@ -7796,7 +7902,7 @@ function applyRemoteData(data){
   if(!S.rows || !S.rows.length) return;
 
   // Show UI chrome
-  ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
+  ['kRow','tabs','btnExp','btnRecalc','btnReporte','btnMantenimiento'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.classList.remove('hidden');
   });
   if(typeof updateTopbarSup==='function') updateTopbarSup();
