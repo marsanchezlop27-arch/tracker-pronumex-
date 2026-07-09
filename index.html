@@ -7697,6 +7697,7 @@ function fbSave(){
       const _trimDvHist=(DV.historial||[]).slice(-10);
       const payload = {
         rows: S.rows.map(_trimRow),
+        buildTs: S._lastBuildTs||0,
         userEdits: (function(){
           var ue={}; Object.keys(S.userEdits||{}).forEach(function(k){
             var v={...S.userEdits[k]}; delete v.evidencias; ue[k]=v;
@@ -7785,10 +7786,14 @@ function applyRemoteData(data){
     const _sameDevice = data.device && data.device===DEVICE_ID;
     const _incomingRows = data.rows.length;
     const _localRows = S.rows.length;
-    // Only restore if: same device (own save), OR incoming has MORE rows (new semaforo), OR local is empty
-    const _shouldRestore = _sameDevice || _incomingRows > _localRows || _localRows === 0;
+    // ¿Es una carga de archivo NUEVA en otra máquina? (buildTs más reciente que la última que aplicamos)
+    const _isNewerBuild = !!(data.buildTs && data.buildTs > (window._lastAppliedBuildTs||0));
+    // Restaurar si: mismo dispositivo (nuestro propio guardado), O es una carga nueva de otra máquina
+    // (gana SIEMPRE, aunque tenga menos filas que antes), O trae más filas, O estamos vacíos.
+    const _shouldRestore = _sameDevice || _isNewerBuild || _incomingRows > _localRows || _localRows === 0;
     if(_shouldRestore){
       S.rows = data.rows;
+      if(data.buildTs) window._lastAppliedBuildTs = Math.max(window._lastAppliedBuildTs||0, data.buildTs);
     } else if(_incomingRows === _localRows){
       // Same count — merge row by row: take incoming fields but keep local userEdits
       data.rows.forEach(function(nr){
