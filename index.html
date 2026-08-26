@@ -247,6 +247,7 @@ tr.prio-mark td{color:var(--text)!important}
 #alertBanner .abt{flex:1;font-size:12px;color:#FCA5A5;line-height:1.5}
 #alertBanner .abx{cursor:pointer;color:#FCA5A5;font-size:18px;opacity:.7;flex-shrink:0}
 #alertBanner .abx:hover{opacity:1}
+
 tr.row-risk td{background:rgba(239,68,68,.09)!important}
 /* Precarga / monta histórico (del turno anterior) */
 .tag-hist{font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:5px;
@@ -292,6 +293,69 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 .dc-del:hover{opacity:1;background:rgba(239,68,68,.1)}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 .hidden{display:none!important}
+
+/* MONTACARGUISTAS — COLA DE ASIGNACIÓN AUTOMÁTICA */
+#modalMontaQueue{position:fixed;inset:0;z-index:2050;background:rgba(0,0,0,.8);display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+#modalMontaQueue.hidden{display:none!important}
+.mq-box{background:var(--card);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:760px;padding:26px 30px;box-shadow:0 8px 40px rgba(0,0,0,.6);margin:auto}
+.mq-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px}
+@media (max-width:720px){.mq-cols{grid-template-columns:1fr}}
+.mq-sub-ttl{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px}
+.mq-list{max-height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:8px}
+.mq-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--border);font-size:11.5px}
+.mq-item:last-child{border-bottom:none}
+.mq-item label{flex:1;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mq-queue-item{display:flex;align-items:center;gap:6px;padding:7px 10px;border-bottom:1px solid var(--border);font-size:11.5px}
+.mq-queue-item:last-child{border-bottom:none}
+.mq-queue-n{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);width:16px;flex-shrink:0}
+.mq-queue-item .mq-emb{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--text)}
+.mq-mini-btn{background:none;border:1px solid var(--border2);color:var(--text3);border-radius:5px;width:20px;height:20px;
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;flex-shrink:0}
+.mq-mini-btn:hover{color:var(--text);border-color:var(--text3)}
+
+/* MONTACARGUISTAS — PANTALLA GRANDE ("banco") */
+#modalMontaBoard{position:fixed;inset:0;z-index:2100;background:rgba(0,0,0,.88);display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto}
+#modalMontaBoard.hidden{display:none!important}
+.mb-box{background:var(--card);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:1040px;padding:28px 32px;margin:auto;box-shadow:0 10px 56px rgba(0,0,0,.75)}
+.mb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px;margin-top:18px}
+.mb-card{background:var(--navy2);border:2px solid var(--border2);border-radius:14px;padding:18px 20px;position:relative}
+.mb-card.mb-active{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand) inset}
+.mb-monta{font-size:11.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:8px;
+  display:flex;align-items:center;gap:6px}
+.mb-emb{font-family:'IBM Plex Mono',monospace;font-size:42px;font-weight:700;color:var(--brand);line-height:1.02;word-break:break-word}
+.mb-nom{font-size:12.5px;color:var(--text2);margin:6px 0 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mb-next-ttl{font-size:9.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-top:10px;border-top:1px solid var(--border);padding-top:8px}
+.mb-next-item{font-size:11px;color:var(--text2);font-family:'IBM Plex Mono',monospace;padding:2px 0}
+.mb-empty-slot{color:var(--text3);font-size:13px;padding:6px 0}
+
+/* TABLERO DE TURNO — matriz de responsabilidades */
+.tab-section-card{background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:16px 18px;min-height:60px}
+.tab-auto-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.tab-auto-card{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;min-height:70px}
+.tab-auto-ttl{font-size:11.5px;font-weight:700;color:var(--cyan)}
+.tab-auto-row{padding:9px 0;border-top:1px solid var(--border);font-size:12px;display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 10px}
+.tab-auto-row:first-child{border-top:none}
+.tab-auto-row b{color:var(--text);font-size:13px;white-space:normal;overflow:visible;text-overflow:clip;flex:0 0 auto}
+.tab-auto-tag{display:inline-block;background:var(--navy2);border:1px solid var(--border2);color:var(--text2);
+  font-size:10.5px;border-radius:10px;padding:3px 9px;margin:0}
+.tab-empty{color:var(--text3);font-size:11.5px;padding:6px 0}
+.tab-role-row{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;margin-bottom:10px}
+.tab-role-ttl{font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.tab-role-ttl .cnt{font-size:10px;color:var(--text3);font-weight:400}
+.tab-chip{display:inline-flex;align-items:center;gap:6px;background:var(--navy2);border:1px solid var(--border2);
+  border-radius:14px;padding:4px 6px 4px 12px;font-size:12px;margin:0 6px 6px 0;white-space:normal}
+.tab-chip button{background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;
+  width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tab-chip button:hover{color:var(--red);background:rgba(239,68,68,.12)}
+.tab-add-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.tab-add-row select,.tab-add-row input{background:var(--navy2);border:1px solid var(--border2);color:var(--text);
+  border-radius:6px;padding:5px 8px;font-size:11.5px;height:28px}
+.tab-add-row select{flex:1;min-width:220px}
+.tab-add-row input{flex:1;min-width:160px}
+.tab-hist-day{background:var(--navy2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.tab-hist-day-ttl{font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tab-hist-sec{font-size:11px;margin:6px 0}
+.tab-hist-sec b{color:var(--text2);font-weight:700}
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    PC / ESCRITORIO  ≥1280px
@@ -582,6 +646,10 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 019-9 9 9 0 016.38 2.62M21 12a9 9 0 01-9 9 9 9 0 01-6.38-2.62"/><polyline points="16 6 21 6 21 11"/><polyline points="8 18 3 18 3 13"/></svg>
     Cargar guardado
   </button>
+  <button class="btn hidden" id="btnMontaBoard" onclick="openMontaBoard()" style="border-color:var(--brand);color:var(--brand)" title="Pantalla grande: qué flete le toca a cada montacarguista">
+    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    Turno montacarguistas
+  </button>
   <button class="btn hidden" id="btnRecalc" onclick="recalcular()" style="border-color:var(--cyan);color:var(--cyan)">
     <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
     Actualizar vista
@@ -612,9 +680,9 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     Histórico
   </button>
-  <button class="vsw-btn" id="vsw-inc" onclick="switchView('inc')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    Incidencias <span id="incBdg" style="margin-left:2px"></span>
+  <button class="vsw-btn" id="vsw-tab" onclick="switchView('tab')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+    Tablero de turno
   </button>
 
 </div>
@@ -648,6 +716,54 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
     <div id="repContent"></div>
   </div>
 </div>
+
+<!-- MODAL COLA DE MONTACARGUISTA -->
+<div id="modalMontaQueue" class="hidden">
+  <div class="mq-box">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px">
+      <div>
+        <div class="rep-ttl">Cola de fletes por montacarguista</div>
+        <div class="rep-sub">Registra varios fletes a la vez. Al terminar uno (CARGADO), se asigna automáticamente el siguiente de la cola, en el orden del semáforo.</div>
+      </div>
+      <button class="btn" onclick="closeMontaQueue()">✕ Cerrar</button>
+    </div>
+    <select id="mqMontaSel" onchange="renderMontaQueueModal()"
+      style="width:100%;background:var(--navy2);border:1px solid var(--border2);color:var(--text);border-radius:7px;padding:8px 10px;font-size:13px;margin:10px 0 4px">
+      <option value="">— Selecciona un montacarguista —</option>
+    </select>
+    <div class="mq-cols">
+      <div>
+        <div class="mq-sub-ttl">Fletes pendientes (orden del semáforo)</div>
+        <div class="mq-list" id="mqPendList"><div style="padding:14px;color:var(--text3);font-size:11.5px">Selecciona un montacarguista.</div></div>
+        <button class="btn" onclick="montaQueueAddSelected()" style="margin-top:8px;width:100%;justify-content:center;border-color:var(--brand);color:var(--brand)">
+          + Agregar seleccionados a la cola
+        </button>
+      </div>
+      <div>
+        <div class="mq-sub-ttl">Cola actual <span id="mqQueueCount" style="color:var(--text3);font-weight:400"></span></div>
+        <div class="mq-list" id="mqQueueList"><div style="padding:14px;color:var(--text3);font-size:11.5px">Sin fletes en cola.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PANTALLA GRANDE — TURNO DE MONTACARGUISTAS -->
+<div id="modalMontaBoard" class="hidden">
+  <div class="mb-box">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between">
+      <div>
+        <div class="rep-ttl">🚛 Turno de montacarguistas</div>
+        <div class="rep-sub">Flete que le toca a cada montacarguista ahora mismo — como el turno de un banco.</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="openMontaQueue()" style="border-color:var(--brand);color:var(--brand)">📋 Administrar colas</button>
+        <button class="btn" onclick="closeMontaBoard()">✕ Cerrar</button>
+      </div>
+    </div>
+    <div class="mb-grid" id="mbGrid"></div>
+  </div>
+</div>
+
 
   <div class="steps">
     <div class="step active" id="stp1"><div class="step-n">1</div><div class="step-t">Cargar archivos</div></div>
@@ -734,42 +850,12 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
       Resumen semáforo
     </div>
-    <div class="tab" onclick="swTab(this,'vf')">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-      Verificación <span id="vfBdg" style="margin-left:2px"></span>
-    </div>
-    <div class="tab" onclick="swTab(this,'dc')">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8l5 3-5 3V8z"/></svg>
-      Control descargas
-    </div>
-    <div class="tab" onclick="swTab(this,'cl')">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-      Clientes
-    </div>
-    <div class="tab" onclick="swTab(this,'vac')">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      Vacaciones
-    </div>
   </div>
 
   <!-- TRACKER -->
   <div id="p-tk">
     <div class="filters">
       <input type="text" id="qry" placeholder="Buscar embarque o nombre…" oninput="render()">
-      <select id="fSem" onchange="render()">
-        <option value="">Todos los semáforos</option>
-        <option>Fuera de Tiempo</option><option>En Tiempo</option><option>Urgente</option>
-      </select>
-      <select id="fTur" onchange="render()">
-        <option value="">Todos los turnos</option>
-        <option>PRIMERO</option><option>SEGUNDO</option><option>TERCERO</option>
-      </select>
-      <select id="fEst" onchange="render()">
-        <option value="">Todos los estados</option>
-        <option value="al">Con alerta de hora</option>
-        <option value="nv">Fletes nuevos</option>
-        <option value="li">Marcados listos</option>
-      </select>
       <div id="fHrsWrap" style="position:relative;display:inline-block"><button id="fHrsBtn" onclick="tkToggleHrsDrop(event)" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:5px;height:28px;white-space:nowrap">Horas<span id="fHrsBadge" style="display:none;background:var(--brand);color:#000;border-radius:10px;padding:0 4px;font-size:9px;font-weight:700;line-height:14px"></span><svg width="9" height="5" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></button><div id="fHrsDrop" style="display:none;position:absolute;top:30px;left:0;background:var(--card);border:1px solid var(--border2);border-radius:6px;padding:4px 0;z-index:300;min-width:120px;box-shadow:0 3px 10px rgba(0,0,0,.3)"><label style="display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;text-align:left"><input type="checkbox" value="24" style="width:11px;height:11px"> ≤ 24h</label><label style="display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;text-align:left"><input type="checkbox" value="36" style="width:11px;height:11px"> 25–36h</label><label style="display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;text-align:left"><input type="checkbox" value="48" style="width:11px;height:11px"> 37–48h</label><label style="display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;text-align:left"><input type="checkbox" value="72" style="width:11px;height:11px"> 49–72h</label><label style="display:flex;align-items:center;gap:5px;padding:3px 10px;cursor:pointer;font-size:10px;text-align:left"><input type="checkbox" value="otros" style="width:11px;height:11px"> +72h/sin cita</label><div style="border-top:1px solid var(--border2);margin:3px 0"></div><div style="display:flex;gap:4px;padding:3px 8px"><button onclick="tkHrsClear()" style="flex:1;padding:3px 0;font-size:9px;background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text3);cursor:pointer">✕ Borrar</button><button onclick="tkHrsApply()" style="flex:1;padding:3px 0;font-size:9px;background:var(--brand);border:none;border-radius:4px;color:#000;cursor:pointer;font-weight:600">✓ OK</button></div></div></div>
       <div id="fEstopWrap" style="position:relative;display:inline-block"><button id="fEstopBtn" onclick="dvToggleEstopDrop(event)" style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;height:30px;white-space:nowrap">Estatus OP<span id="fEstopBadge" style="display:none;background:var(--brand);color:#000;border-radius:10px;padding:0 5px;font-size:9px;font-weight:700;line-height:16px"></span><svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><path d="M0 3l5 5 5-5z"/></svg></button><div id="fEstopDrop" style="display:none;position:absolute;top:100%;left:0;z-index:500;background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:4px;min-width:160px;box-shadow:0 4px 20px rgba(0,0,0,.4);margin-top:3px"><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;font-weight:700;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" id="fEstopAll" onchange="dvEstopAllChange(this)" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> Todos</label><div style="border-top:1px solid var(--border);margin:2px 0"></div><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="POR VERIFICAR" onchange="dvEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> POR VERIFICAR</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="POR CARGAR" onchange="dvEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> POR CARGAR</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="PENDIENTE" onchange="dvEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> PENDIENTE</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="CARGADO" onchange="dvEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> CARGADO</label><label style="display:flex;align-items:center;gap:6px;padding:3px 8px;cursor:pointer;border-radius:4px;font-size:11px;user-select:none" onmouseover="this.style.background='var(--navy2)'" onmouseout="this.style.background=''"><input type="checkbox" value="EN PROCESO" onchange="dvEstopChange()" style="width:12px;height:12px;cursor:pointer;accent-color:var(--brand)"> EN PROCESO</label><div style="border-top:1px solid var(--border);margin-top:3px;padding-top:3px;padding-left:4px"><button onclick="dvEstopClear()" style="background:none;border:none;color:var(--text3);font-size:10px;cursor:pointer;padding:2px 4px">✕ Limpiar todo</button></div></div></div>
       <select id="fTrans" onchange="render()">
@@ -777,22 +863,30 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
         <option value="con">Con cortina (Rampa asignada)</option>
         <option value="sin">Sin cortina (sin rampa)</option>
       </select>
+      <button class="btn" id="fTkPicking" onclick="toggleFiltroPicking()" style="gap:6px;height:30px" title="Solo fletes con picking pendiente (T.Restos > A.Restos)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12l-8 8-8-8M12 4v16"/></svg>
+        Picking pendiente
+      </button>
+      <button class="btn" id="fTkTareas" onclick="toggleFiltroTareas()" style="gap:6px;height:30px" title="Solo fletes con tareas faltantes (% Tareas &lt; 100)">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M8 8h8M8 16h5"/></svg>
+        Tareas faltantes
+      </button>
     </div>
     <div class="tw"><div class="ts">
       <table id="tk-table">
         <thead>
           <tr>
-            <th colspan="4" style="background:#0F2544;color:var(--text3);font-size:9px;letter-spacing:.1em;border-bottom:none;padding-bottom:3px">IDENTIFICACIÓN</th>
+            <th colspan="5" style="background:#0F2544;color:var(--text3);font-size:9px;letter-spacing:.1em;border-bottom:none;padding-bottom:3px">IDENTIFICACIÓN</th>
             <th colspan="5" style="background:#0F2544;color:var(--text3);font-size:9px;letter-spacing:.1em;border-bottom:none;padding-bottom:3px">CARGA</th>
             <th colspan="3" style="background:#0F2544;color:var(--text3);font-size:9px;letter-spacing:.1em;border-bottom:none;padding-bottom:3px;color:var(--cyan)">ASIGNACIÓN</th>
             <th colspan="2" style="background:#0F2544;color:var(--text3);font-size:9px;letter-spacing:.1em;border-bottom:none;padding-bottom:3px;color:var(--purple)">VERIFICACIÓN</th>
-            <th colspan="2" style="background:#0F2544;color:var(--text3);font-size:9px;letter-spacing:.1em;border-bottom:none;padding-bottom:3px">ESTATUS</th>
           </tr>
           <tr>
             <th style="width:30px;text-align:center">#</th>
             <th data-c="emb" onclick="sort(this)" style="min-width:85px">Embarque</th>
             <th data-c="nom" onclick="sort(this)" style="min-width:160px">Cliente</th>
             <th data-c="sem" onclick="sort(this)" style="min-width:130px">Semáforo</th>
+            <th data-c="tra" onclick="sort(this)" style="min-width:90px">Unidad</th>
             <th class="col-cortina" style="min-width:70px">Cortina</th>
             <th data-c="pal" onclick="sort(this)" style="min-width:50px">Pal.</th>
             <th data-c="pt"  onclick="sort(this)" style="min-width:68px">%Tareas</th>
@@ -803,7 +897,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
             <th class="col-verif" style="min-width:120px;color:var(--purple)">Verificador</th>
             <th class="col-custom" style="min-width:70px;text-align:center;color:var(--purple)">Custom.</th>
             <th style="min-width:110px;color:var(--cyan)">Estatus op.</th>
-            <th class="col-alerta" style="min-width:110px">Alerta</th>
           </tr>
         </thead>
         <tbody id="tb"></tbody>
@@ -847,6 +940,14 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
         <button class="btn" id="fRsCargado" onclick="toggleMostrarCargados()" style="gap:6px;background:rgba(16,185,129,.2);border-color:var(--green);color:var(--green)">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
           Mostrar cargados
+        </button>
+        <button class="btn" id="fRsPicking" onclick="toggleFiltroPicking()" style="gap:6px" title="Solo fletes con picking pendiente (T.Restos > A.Restos)">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12l-8 8-8-8M12 4v16"/></svg>
+          Picking pendiente
+        </button>
+        <button class="btn" id="fRsTareas" onclick="toggleFiltroTareas()" style="gap:6px" title="Solo fletes con tareas faltantes (% Tareas &lt; 100)">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M8 8h8M8 16h5"/></svg>
+          Tareas faltantes
         </button>
       </div>
       <button class="btn" onclick="exportResumen()" style="border-color:var(--cyan);color:var(--cyan)">
@@ -997,163 +1098,16 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 
 </div><!-- /view-desc -->
 
-<!-- VISTA INCIDENCIAS -->
-<div id="view-inc" class="hidden">
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px">
-    <div class="kpi" style="border-top:2px solid var(--red)"><div class="kpi-v" id="incKtotal" style="color:var(--red)">0</div><div class="kpi-l">Total incidencias</div></div>
-    <div class="kpi" style="border-top:2px solid var(--amber)"><div class="kpi-v" id="incKturno" style="color:var(--amber)">0</div><div class="kpi-l">Este turno</div></div>
-    <div class="kpi" style="border-top:2px solid var(--purple)"><div class="kpi-v" id="incKtipos" style="color:var(--purple)">0</div><div class="kpi-l">Tipos distintos</div></div>
-  </div>
-
-  <!-- Formulario nueva incidencia -->
-  <div class="card" style="margin-bottom:12px">
-    <div class="card-ttl">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-      Registrar nueva incidencia
-    </div>
-    <!-- Fila 1: Quien reporta · Colaborador con incidencia · No. Embarque -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
-      <div>
-        <div style="font-size:9.5px;color:var(--text3);margin-bottom:4px;text-transform:uppercase">Quien reporta</div>
-        <div id="incColabWrap" style="position:relative">
-          <input id="incColab" class="edt-sel" type="text" placeholder="Nombre o número..." style="width:100%;height:30px;font-size:11px">
-        </div>
-        <input id="incColabId" type="hidden">
-      </div>
-      <div>
-        <div style="font-size:9.5px;color:var(--text3);margin-bottom:4px;text-transform:uppercase">Colaborador con incidencia</div>
-        <div id="incColabIncWrap" style="position:relative">
-          <input id="incColabInc" class="edt-sel" type="text" placeholder="Nombre o número..." style="width:100%;height:30px;font-size:11px">
-        </div>
-        <input id="incColabIncId" type="hidden">
-      </div>
-      <div>
-        <div style="font-size:9.5px;color:var(--text3);margin-bottom:4px;text-transform:uppercase">No. Embarque</div>
-        <div style="display:flex;gap:5px">
-          <input id="incEmb" class="edt-sel" type="text" placeholder="ej. 1569426" style="flex:1;height:30px;font-size:11px">
-          <button class="btn" onclick="incBuscarEmb()" style="height:30px;padding:0 8px;font-size:11px">🔍</button>
-        </div>
-        <div id="incEmbInfo" style="font-size:10px;color:var(--cyan);margin-top:3px"></div>
-      </div>
-    </div>
-    <!-- Fila 2: SKUs dinámicos (SKU · Cantidad · Unidad · Tipo) -->
-    <div style="margin-bottom:8px">
-      <div style="font-size:9.5px;color:var(--text3);margin-bottom:5px;text-transform:uppercase">SKU · Cantidad · Unidad · Tipo de incidencia</div>
-      <div id="incSkuList" style="display:grid;gap:5px;margin-bottom:5px"></div>
-      <button onclick="incAddSku()" style="background:var(--navy2);border:1px dashed var(--border2);color:var(--text3);border-radius:6px;padding:4px;font-size:11px;cursor:pointer;width:100%;text-align:center">+ Agregar otro SKU</button>
-    </div>
-    <!-- Fila 3: Foto -->
-    <div style="margin-bottom:10px">
-      <div style="font-size:9.5px;color:var(--text3);margin-bottom:4px;text-transform:uppercase">Foto (opcional)</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--navy2);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;height:30px">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span style="font-size:11px;color:var(--text2)">📷 Galería</span>
-          <input id="incFoto" type="file" accept="image/*" multiple class="hidden" onchange="incFotoChange(this)">
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--navy2);border:1px solid var(--border2);border-radius:6px;padding:5px 10px;height:30px">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span style="font-size:11px;color:var(--text2)">📸 Cámara</span>
-          <input type="file" accept="image/*" capture="environment" class="hidden" onchange="incFotoChange(this)">
-        </label>
-        <span id="incFotoLbl" style="font-size:10px;color:var(--text3)"></span>
-      </div>
-    </div>
-    <div id="incFotoPreview" style="margin-bottom:10px;display:none;flex-wrap:wrap;gap:6px"></div>
-    <!-- Guardar -->
-    <input id="incTipo" type="hidden" value="">
-    <input id="incTipoOtro" type="hidden" value="">
-    <button id="incBtnGuardar" class="btn ok" onclick="incGuardar()" style="width:100%;justify-content:center">
-      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-      Guardar incidencia
-    </button>
-  </div>
-
-  <!-- Filtros -->
-  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
-    <select id="incFiltTipo" onchange="incRender()" class="edt-sel" style="height:30px;min-width:160px">
-      <option value="">Todos los tipos</option>
-      <option value="SOBRANTE">SOBRANTE</option>
-      <option value="FALTANTE">FALTANTE</option>
-      <option value="PALLET DE MÁS">PALLET DE MÁS</option>
-      <option value="DAÑOS">DAÑOS</option>
-      <option value="CÓDIGOS CAMBIADOS">CÓDIGOS CAMBIADOS</option>
-      <option value="OTROS">OTROS</option>
-    </select>
-    <select id="incFiltPeriodo" onchange="incRender()" class="edt-sel" style="height:30px;min-width:140px">
-      <option value="turno">Este turno</option>
-      <option value="dia" selected>Hoy</option>
-      <option value="semana">Esta semana</option>
-      <option value="mes">Este mes</option>
-      <option value="todos">Todos</option>
-    </select>
-    <button class="btn" onclick="incExportar()" style="height:30px;font-size:11px">
-      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-      Exportar CSV
-    </button>
-  </div>
-
-  <!-- Lista de incidencias -->
-  <!-- Gerencial: colaboradores -->
-  <div style="background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:14px;margin-bottom:12px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase">Ranking colaboradores con más incidencias</div>
-      <button onclick="incExportarGerencial()" style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer">📊 Exportar</button>
-    </div>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
-      <button onclick="incExportarGerencial()" style="background:none;border:1px solid var(--border2);color:var(--text3);border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer">⬇ Descargar ranking</button>
-    </div>
-    <div id="incColabRank"></div>
-  </div>
-  <!-- Charts -->
-  <div id="incCharts" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-    <div style="background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:14px">
-      <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:10px">Por tipo de incidencia</div>
-      <canvas id="chartTipo" height="160"></canvas>
-    </div>
-    <div style="background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:14px">
-      <div style="font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:10px">Por día (últimos 7 días)</div>
-      <canvas id="chartDia" height="160"></canvas>
-    </div>
-  </div>
-  <div id="incLista"></div>
-</div><!-- /view-inc -->
 
 <div id="view-hist" class="hidden">
   <!-- Sub-tabs -->
   <div style="display:flex;gap:2px;background:var(--navy2);border-radius:8px;padding:3px;margin-bottom:14px;width:fit-content">
-    <button id="htab-emb" onclick="histSubTab('emb')" style="background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 16px;font-size:11px;font-weight:600;cursor:pointer">📦 Embarques</button>
-    <button id="htab-cust" onclick="histSubTab('cust')" style="background:none;color:var(--text3);border:none;border-radius:6px;padding:5px 16px;font-size:11px;cursor:pointer">⚙ Customizadores</button>
-    <button id="htab-desc" onclick="histSubTab('desc')" style="background:none;color:var(--text3);border:none;border-radius:6px;padding:5px 16px;font-size:11px;cursor:pointer">⬇ Descargas</button>
-    
+    <button id="htab-cust" onclick="histSubTab('cust')" style="background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 16px;font-size:11px;font-weight:600;cursor:pointer">⚙ Customizadores</button>
     <button id="htab-vf" onclick="histSubTab('vf')" style="background:none;color:var(--text3);border:none;border-radius:6px;padding:5px 16px;font-size:11px;font-weight:600;cursor:pointer">✅ Verificadores</button>
   </div>
-  <!-- Embarques panel -->
-  <div id="hpan-emb">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <input id="histSearch" class="edt-sel" type="text" placeholder="Buscar flete o cliente..." style="height:30px;font-size:11px;min-width:200px" oninput="renderHist()">
-        <button class="btn" onclick="exportHistCSV()" style="font-size:11px;border-color:var(--green);color:var(--green)">⬇ CSV</button>
-      </div>
-    </div>
-    <div id="histKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px"></div>
-    <div id="histContent"></div>
-  </div>
-  <!-- Descargas panel -->
-  <div id="hpan-cust" style="display:none">
+  <div id="hpan-cust">
   <div id="custPanelContent"><!-- rendered by renderHistCust() --></div>
 </div>
-
-
-  <!-- Verificadores panel -->
-  <div id="hpan-desc" style="display:none">
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-      <input id="histDescSearch" class="edt-sel" type="text" placeholder="Buscar montacarguista, origen, cortina..." style="height:30px;font-size:11px;min-width:200px" oninput="renderHistDesc()">
-      <button class="btn" onclick="exportHistDescXLSX()" style="font-size:11px;border-color:var(--blue);color:var(--blue)">📊 Exportar Excel</button>
-    </div>
-    <div id="histDescKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:12px"></div>
-    <div id="histDescContent"></div>
-  </div>
 
   <div id="hpan-vf" style="display:none">
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
@@ -1174,12 +1128,90 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   </div>
 </div><!-- /view-hist -->
 
+<!-- VISTA TABLERO DE TURNO — matriz de responsabilidades -->
+<div id="view-tab" class="hidden">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+    <div>
+      <div style="font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;color:var(--cyan)">📋 Tablero de turno — matriz de responsabilidades</div>
+      <div style="font-size:11.5px;color:var(--text3);max-width:640px;margin-top:3px">
+        Descargas y Verificación se jalan automático del Tracker y del módulo de Descargas.
+        Tareas y Supervisor se asignan a mano — si la persona no está en la lista, puedes escribirla directo.
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="tabTurnoSel" onchange="renderTablero()"
+        style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:6px 10px;font-size:12px;height:32px">
+        <option value="1">Turno 1</option>
+        <option value="2">Turno 2</option>
+        <option value="3">Turno 3</option>
+        <option value="MIXTO">Mixto</option>
+      </select>
+      <button class="btn" onclick="renderTablero()" style="border-color:var(--cyan);color:var(--cyan)">⟳ Actualizar</button>
+      <button class="btn" onclick="guardarCierreTablero()" style="border-color:var(--green);color:var(--green)">📌 Guardar cierre de turno</button>
+      <button class="btn" id="tabHistToggleBtn" onclick="toggleTableroHist()" style="border-color:var(--brand);color:var(--brand)">🕐 Histórico</button>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO (oculto por defecto) -->
+  <div id="tabHistPanel" style="display:none;margin-bottom:22px;background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:14px 16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:700;color:var(--brand)">🕐 Histórico de tableros — qué hizo cada turno, día por día</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <select id="tabHistTurnoFilter" onchange="renderTableroHist()"
+          style="background:var(--navy2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 9px;font-size:11px">
+          <option value="">Todos los turnos</option>
+          <option value="1">Turno 1</option>
+          <option value="2">Turno 2</option>
+          <option value="3">Turno 3</option>
+          <option value="MIXTO">Mixto</option>
+        </select>
+        <input type="date" id="tabHistFechaFilter" onchange="renderTableroHist()"
+          style="background:var(--navy2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 9px;font-size:11px">
+        <button class="btn" onclick="g('tabHistFechaFilter').value='';renderTableroHist()" style="font-size:11px;padding:5px 10px">✕ Quitar fecha</button>
+      </div>
+    </div>
+    <div id="tabHistList"></div>
+  </div>
+
+  <!-- SUPERVISOR (asignación única, arriba de todo) -->
+  <div id="tabSupervisorWrap" style="margin-bottom:20px"></div>
+
+  <!-- SECCIÓN: DESCARGAS -->
+  <div class="section-title" style="display:flex;align-items:center;gap:10px;margin:10px 0">
+    <span style="font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.09em">🚛 Descargas — automático (Tracker / módulo Descargas)</span>
+    <hr style="flex:1;border:none;border-top:1px solid var(--border)">
+  </div>
+  <div class="tab-section-card">
+    <div id="tabAutoMonta"></div>
+  </div>
+
+  <!-- SECCIÓN: TAREAS -->
+  <div class="section-title" style="display:flex;align-items:center;gap:10px;margin:22px 0 10px">
+    <span style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.09em">📦 Tareas — picking, customizado, armado, devoluciones</span>
+    <hr style="flex:1;border:none;border-top:1px solid var(--border)">
+  </div>
+  <div class="tab-section-card" style="margin-bottom:14px">
+    <div class="tab-auto-ttl" style="margin-bottom:8px">🎨 Customizando ahora (automático — Tracker)</div>
+    <div id="tabAutoCust"></div>
+  </div>
+  <div id="tabManualWrap"></div>
+
+  <!-- SECCIÓN: VERIFICACIÓN -->
+  <div class="section-title" style="display:flex;align-items:center;gap:10px;margin:22px 0 10px">
+    <span style="font-size:11px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:.09em">🧾 Verificación — automático (Tracker)</span>
+    <hr style="flex:1;border:none;border-top:1px solid var(--border)">
+  </div>
+  <div class="tab-section-card">
+    <div id="tabAutoVerif"></div>
+  </div>
+</div><!-- /view-tab -->
+
 
 </div><!-- /shell -->
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
-const S = { rows:[], buf:{}, sc:'', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[], initialSemEmbs:[], initialSemArBase:{} };
+const S = { rows:[], buf:{}, sc:'', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[], initialSemEmbs:[], initialSemArBase:{}, montaQueue:{}, turnoTablero:{}, tableroHistorial:[] };
 
 // ─── HISTORIAL PERSISTENTE (localStorage) ────────────────────────────────────
 
@@ -1268,94 +1300,416 @@ hLoad(); // cargar al inicio
 // ─── SUPERVISORES / MONTACARGUISTAS DATA ──────────────────────────────────────
 // Full personnel list — all roles
 const ALL_PERSONAL = [
-  {id:'10049147',nombre:'FLORES GARCIA MARCO ANTONIO',puesto:'Supervisor de OP'},
-  {id:'10077324',nombre:'FUENTES SANCHEZ LUIS ALBERTO',puesto:'Verificador PT'},
-  {id:'10044308',nombre:'QUINTERO MARTINEZ SAUL',puesto:'Verificador PT'},
-  {id:'10012425',nombre:'HERNANDEZ MARTINEZ JOSE GUADALUPE',puesto:'Montacarguista'},
-  {id:'10070250',nombre:'OLVERA RAMON OSCAR',puesto:'Montacarguista'},
-  {id:'10012393',nombre:'ROJAS GONZALEZ RAUL',puesto:'Montacarguista'},
-  {id:'10012400',nombre:'REYNALDOS MORAN DAVID',puesto:'Montacarguista'},
-  {id:'10038863',nombre:'ROBLES GONZALEZ ERIC MARIO',puesto:'Montacarguista'},
-  {id:'10012480',nombre:'ALVAREZ MEJIA LUIS ENRIQUE',puesto:'Montacarguista'},
-  {id:'10088114',nombre:'LOPEZ OBLEA VICTOR EDUARDO',puesto:'Montacarguista'},
-  {id:'10113379',nombre:'SANCHEZ MORENO JOSUE ANTONIO',puesto:'Cargadores Master'},
-  {id:'10115329',nombre:'VASQUEZ LUIS DYLAN JOSEFT',puesto:'Cargadores Master'},
-  {id:'10115374',nombre:'CASTAÑEDA CARRILLO ALEXIS',puesto:'Ayudante Gral. PT'},
-  {id:'10114975',nombre:'SEBASTIAN VIGUERAS ALBERTO',puesto:'Cargadores Master'},
-  {id:'10104185',nombre:'ALAN SANCHEZ HUAZO',puesto:'Ayudante Gral. PT'},
-  {id:'10112938',nombre:'ROSALES CORONA MARIO ANGEL',puesto:'Ayudante Gral. PT'},
-  {id:'10113327',nombre:'MARTINEZ ANGELES ELEAZAR',puesto:'Cargadores Master'},
-  {id:'10080847',nombre:'MARTINEZ GONZALEZ MARCELO',puesto:'Ayudante Gral. PT'},
-  {id:'10077635',nombre:'TINOCO CEBALLOS CARLOS',puesto:'Ayudante Gral. PT'},
-  {id:'10012354',nombre:'IVAN AGUILAR HERNANDEZ',puesto:'Supervisor de OP'},
-  {id:'10090353',nombre:'MARTINEZ FERNANDEZ JORGE LUIS',puesto:'Ayudante Gral. PT'},
-  {id:'10045618',nombre:'SANCHEZ HERNANDEZ LUIS ANTONIO',puesto:'Ayudante Gral. PT'},
-  {id:'10112197',nombre:'JIMENEZ HERNANDEZ ROGELIO',puesto:'Ayudante Gral. PT'},
-  {id:'10105239',nombre:'CHAVEZ GONZALEZ VICTOR MANUEL',puesto:'Ayudante Gral. PT'},
-  {id:'10116625',nombre:'VILLANUEVA DE JESUS CRISTIAN',puesto:'Ayudante Gral. PT'},
-  {id:'10112615',nombre:'JOSE ZAMORA NORBERTO',puesto:'Cargadores Master'},
-  {id:'10076384',nombre:'LOPEZ SANCHEZ EMMANUEL',puesto:'Ayudante Gral. PT'},
-  {id:'10085561',nombre:'ALBARRAN REYES PEDRO CRUZ',puesto:'Ayudante Gral. PT'},
-  {id:'10094890',nombre:'RAMIREZ PEREZ CUAUHTEMOC',puesto:'Ayudante Gral. PT'},
-  {id:'10116140',nombre:'GONZALEZ HERNANDEZ ALEXANDER',puesto:'Cargadores Master'},
-  {id:'10116072',nombre:'ARIAS VENEGAS JOSE',puesto:'Cargadores Master'},
-  {id:'10115806',nombre:'CARBAJAL GONZALEZ JOHAN RICARDO',puesto:'Ayudante Gral. PT'},
-  {id:'10012394',nombre:'MARTINEZ CASIANO JUAN ANTONIO',puesto:'Montacarguista'},
-  {id:'10098493',nombre:'CRUZ CRUZ DIEGO',puesto:'Montacarguista'},
-  {id:'10012461',nombre:'ALBERTO MENDOZA GARCIA',puesto:'Montacarguista'},
-  {id:'10098494',nombre:'LEONARDO AXEL CRUZ CRUZ',puesto:'Montacarguista'},
-  {id:'10084872',nombre:'DAVILA MERCADO RAMIRO',puesto:'Montacarguista'},
-  {id:'10092387',nombre:'TAPIA FLORES LUIS ARMANDO',puesto:'Montacarguista'},
-  {id:'10025171',nombre:'FUENTES PEREZ ARTURO',puesto:'Verificador PT'},
-  {id:'10072188',nombre:'SALGADO CARRILLO MONSERRAT',puesto:'Verificador PT'},
-  {id:'10042949',nombre:'JIMENEZ REYES ARELI',puesto:'Verificador PT'},
-     {id:'10119176',nombre:'GONZALEZ ESTRELLA MARIA DE LOS ANGELES',puesto:'Verificador PT'},
-  {id:'10012427',nombre:'SANDOVAL JIMENEZ JOSE ADALBERTO',puesto:'Verificador PT'},
-  {id:'10049966',nombre:'SANCHEZ GONZALEZ ENRIQUE',puesto:'Supervisor de OP'},
-  {id:'10030022',nombre:'MORALES ALONSO ABRAHAM',puesto:'Verificador PT'},
-  {id:'10114311',nombre:'IBARRA JAIMES CRISTIAN GIOVANI',puesto:'Ayudante Gral. PT'},
-  {id:'10112195',nombre:'SANTOS CRUZ SERGIO ALEJANDRO',puesto:'Cargadores Master'},
-  {id:'10112411',nombre:'GARDUÑO MARTINEZ CRISTIAN ULISES',puesto:'Cargadores'},
-  {id:'10042231',nombre:'ORTIZ PEREZ ANGEL ELADIO',puesto:'Ayudante Gral. PT'},
-  {id:'10106043',nombre:'CABRERA REYES AURELIO MIGUEL',puesto:'Ayudante Gral. PT'},
-  {id:'10106664',nombre:'CABRERA REYES EDUARDO',puesto:'Ayudante Gral. PT'},
-  {id:'10113245',nombre:'JORGE ELPIDIO HERNANDEZ MANCINAS',puesto:'Cargadores'},
-  {id:'10114116',nombre:'SEBASTIAN CARRANZA HERNANDEZ',puesto:'Ayudante Gral. PT'},
-  {id:'10115419',nombre:'JAIMES SANCHEZ BRANDON JAIR',puesto:'Ayudante Gral. PT'},
-  {id:'',nombre:'GARCIA ALBARRAN BRYAN DE JESUS',puesto:'Cargadores Master'},
-  {id:'10112675',nombre:'SEVILLA SANCHEZ JOSE LUIS',puesto:'Cargadores'},
-  {id:'10116142',nombre:'URBANO SANTOS ALEXIS JOAQUIN',puesto:'Ayudante Gral. PT'},
-  {id:'10116632',nombre:'BALDIT VAZQUEZ ADRIAN',puesto:'Ayudante Gral. PT'},
-  {id:'10051343',nombre:'ANASTACIO JUAREZ ANGEL YAHIR',puesto:'Montacarguista'},
-  {id:'10012385',nombre:'COLIN PARRA LUIS FERNANDO',puesto:'Montacarguista'},
-  {id:'10030292',nombre:'CRUZ IGLESIAS DIAZ',puesto:'Montacarguista'},
-  {id:'10046141',nombre:'MEDINA RODRIGUEZ CRISTIAN MANUEL',puesto:'Montacarguista'},
-  {id:'10104186',nombre:'RICARDO MARCOS VIDAL',puesto:'Montacarguista'},
-  {id:'10012503',nombre:'GONZALEZ GONZALEZ DIEGO',puesto:'Montacarguista'},
-  {id:'10012405',nombre:'SIERRA GUZMAN GONZALO',puesto:'Montacarguista'},
-  {id:'10012361',nombre:'MARIA DEL ROSARIO SANCHEZ LOPEZ',puesto:'Coordinador Operaciones PT'},
-  {id:'10076460',nombre:'GONZALEZ GABINO MARLEN',puesto:'Supervisor de LI'},
-  {id:'10097826',nombre:'GABRIEL GONZALEZ GONZALEZ',puesto:'Verificador LI'},
-  {id:'10102640',nombre:'ENRIQUEZ DOMINGUEZ JESUS',puesto:'Ayudante Gral. LT'},
-  {id:'10094858',nombre:'ROMAN MIGUELES DIEGO',puesto:'Ayudante Gral. LT'},
-  {id:'10012465',nombre:'VELASCO MARTINEZ MARICRUZ',puesto:'Ayudante Gral. LT'},
-  {id:'10111020',nombre:'APOLONIO PIÑA ELIAB',puesto:'Ayudante Gral. LT'},
-  {id:'10096511',nombre:'MARTINEZ GARCIA KEVIN ALBERTO',puesto:'Ayudante Gral. LT'},
-  {id:'10116886',nombre:'MORA RAMIREZ VICTOR MANUEL',puesto:'Ayudante Gral. PT'},
-  {id:'10116885',nombre:'VIDAL RAMIREZ BRYAN RICARDO',puesto:'Ayudante Gral. PT'},
-  {id:'10058480',nombre:'GONZALEZ SANCHEZ SAMUEL',puesto:'Ayudante Gral. PT'},
-  {id:'10117025',nombre:'AGUILERA DIAZ OSWALDO',puesto:'Ayudante Gral. PT'},
-  {id:'10116882',nombre:'PALMA SERRANO ROLANDO',puesto:'Ayudante Gral. PT'},
-  {id:'10046786',nombre:'ESTRADA FLORES CESAR',puesto:'Supervisor de OP'},
-  {id:'10077243',nombre:'FABIO BAODAI MARTINEZ QUINTERO',puesto:'Montacarguista'},
-  {id:'10111130',nombre:'MARTINEZ MATIAS IRVIN',puesto:'Montacarguista'},
-  {id:'10117672',nombre:'CORRALES JIMENEZ ANGEL DE JESUS',puesto:'Ayudante Gral. PT'},
+  {id:'10046786',nombre:'ESTRADA FLORES CESAR',puesto:'Supervisor de OP',turno:'1'},
+  {id:'10077324',nombre:'FUENTES SANCHEZ LUIS ALBERTO',puesto:'VERIFICADOR',turno:'1'},
+  {id:'10051343',nombre:'ANASTACIO JUAREZ ANGEL YAHIR',puesto:'Montacarguista',turno:'1'},
+  {id:'10098493',nombre:'CRUZ CRUZ DIEGO',puesto:'Montacarguista',turno:'1'},
+  {id:'10012425',nombre:'HERNANDEZ MARTINEZ JOSE GUADALUPE',puesto:'Montacarguista',turno:'1'},
+  {id:'10038863',nombre:'ROBLES GONZALEZ ERIC MARIO',puesto:'Montacarguista',turno:'1'},
+  {id:'10012480',nombre:'ALVAREZ MEJIA LUIS ENRIQUE',puesto:'Montacarguista',turno:'1'},
+  {id:'10045618',nombre:'SANCHEZ HERNANDEZ LUIS ANTONIO',puesto:'AYUDANTE GENERAL',turno:'1'},
+  {id:'10118030',nombre:'VILCHIS MURILLO KEVIN JESUS',puesto:'AYUDANTE GENERAL',turno:'1'},
+  {id:'10104185',nombre:'ALAN SANCHEZ HUAZO',puesto:'AYUDANTE GENERAL',turno:'1'},
+  {id:'10115374',nombre:'CASTAÑEDA CARRILLO ALEXIS',puesto:'AYUDANTE GENERAL',turno:'1'},
+  {id:'10112938',nombre:'ROSALES CORONA MARIO ANGEL',puesto:'AYUDANTE GENERAL',turno:'1'},
+  {id:'10012492',nombre:'YASMIN LOPEZ GOMEZ',puesto:'Supervisor de OP',turno:'2'},
+  {id:'10072188',nombre:'SALGADO CARRILLO MONSERRAT',puesto:'VERIFICADOR',turno:'2'},
+  {id:'10025171',nombre:'FUENTES PEREZ ARTURO',puesto:'AYUDANTE GENERAL',turno:'2'},
+  {id:'10044308',nombre:'QUINTERO MARTINEZ SAUL',puesto:'VERIFICADOR',turno:'2'},
+  {id:'10012394',nombre:'MARTINEZ CASIANO JUAN ANTONIO',puesto:'Montacarguista',turno:'2'},
+  {id:'10084872',nombre:'DAVILA MERCADO RAMIRO',puesto:'Montacarguista',turno:'2'},
+  {id:'10098494',nombre:'LEONARDO AXEL CRUZ CRUZ',puesto:'Montacarguista',turno:'3'},
+  {id:'10012393',nombre:'ROJAS GONZALEZ RAUL',puesto:'Montacarguista',turno:'2'},
+  {id:'10070250',nombre:'OLVERA RAMON OSCAR',puesto:'Montacarguista',turno:'2'},
+  {id:'10119928',nombre:'DAVID ISAAC RIVERA VENTURA',puesto:'AYUDANTE GENERAL',turno:'2'},
+  {id:'10112197',nombre:'JIMENEZ HERNANDEZ ROGELIO',puesto:'AYUDANTE GENERAL',turno:'2'},
+  {id:'10117672',nombre:'CORRALES JIMENEZ ANGEL DE JESUS',puesto:'AYUDANTE GENERAL',turno:'2'},
+  {id:'10085561',nombre:'ALBARRAN REYES PEDRO CRUZ',puesto:'AYUDANTE GENERAL',turno:'2'},
+  {id:'10113379',nombre:'SANCHEZ MORENO JOSUE ANTONIO',puesto:'AYUDANTE GENERAL',turno:'2'},
+  {id:'10117025',nombre:'AGUILERA DIAZ OSWALDO',puesto:'AYUDANTE GENERAL',turno:'2'},
+  {id:'10080847',nombre:'MARTINEZ GONZALEZ MARCELO',puesto:'AYUDANTE GENERAL',turno:'2'},
+  {id:'10094890',nombre:'RAMIREZ PEREZ CUAUHTEMOC',puesto:'AYUDANTE GENERAL',turno:'2'},
+  {id:'10113327',nombre:'MARTINEZ ANGELES ELEAZAR',puesto:'AYUDANTE GENERAL',turno:'2'},
+  {id:'10049966',nombre:'SANCHEZ GONZALEZ ENRIQUE',puesto:'Supervisor de OP',turno:'2'},
+  {id:'10012354',nombre:'IVAN AGUILAR HERNANDEZ',puesto:'Supervisor de OP',turno:'3'},
+  {id:'10012385',nombre:'COLIN PARRA LUIS FERNANDO',puesto:'Montacarguista',turno:'3'},
+  {id:'10046141',nombre:'MEDINA RODRIGUEZ CRISTIAN MANUEL',puesto:'Montacarguista',turno:'3'},
+  {id:'10088114',nombre:'LOPEZ OBLEA VICTOR EDUARDO',puesto:'Montacarguista',turno:'3'},
+  {id:'10077243',nombre:'FABIO BAODAI MARTINEZ QUINTERO',puesto:'Montacarguista',turno:'3'},
+  {id:'10104186',nombre:'RICARDO MARCOS VIDAL',puesto:'Montacarguista',turno:'3'},
+  {id:'10012503',nombre:'GONZALEZ GONZALEZ DIEGO',puesto:'Montacarguista',turno:'2'},
+  {id:'10012405',nombre:'SIERRA GUZMAN GONZALO',puesto:'Montacarguista',turno:'3'},
+  {id:'10113245',nombre:'JORGE ELPIDIO HERNANDEZ MANCINAS',puesto:'AYUDANTE GENERAL',turno:'3'},
+  {id:'10090353',nombre:'MARTINEZ FERNANDEZ JORGE LUIS',puesto:'AYUDANTE GENERAL',turno:'3'},
+  {id:'10112199',nombre:'GARCIA ALBARRAN BRYAN DE JESUS',puesto:'AYUDANTE GENERAL',turno:'3'},
+  {id:'10116072',nombre:'ARIAS VENEGAS JOSE',puesto:'AYUDANTE GENERAL',turno:'3'},
+  {id:'10112615',nombre:'JOSE ZAMORA NORBERTO',puesto:'AYUDANTE GENERAL',turno:'3'},
+  {id:'10115419',nombre:'JAIMES SANCHEZ BRANDON JAIR',puesto:'AYUDANTE GENERAL',turno:'3'},
+  {id:'10076384',nombre:'LOPEZ SANCHEZ EMMANUEL',puesto:'AYUDANTE GENERAL',turno:'3'},
+  {id:'10115806',nombre:'CARBAJAL GONZALEZ JOHAN RICARDO',puesto:'AYUDANTE GENERAL',turno:'3'},
+  {id:'10042231',nombre:'ORTIZ PEREZ ANGEL ELADIO',puesto:'AYUDANTE GENERAL',turno:'3'},
+  {id:'10116140',nombre:'GONZALEZ HERNANDEZ ALEXANDER',puesto:'AYUDANTE GENERAL',turno:'3'},
+  {id:'10030022',nombre:'MORALES ALONSO ABRAHAM',puesto:'VERIFICADOR',turno:'3'},
+  {id:'10012427',nombre:'SANDOVAL JIMENEZ JOSE ADALBERTO',puesto:'VERIFICADOR',turno:'3'},
+  {id:'10049147',nombre:'FLORES GARCIA MARCO ANTONIO',puesto:'Supervisor de LI',turno:'MIXTO'},
+  {id:'10097826',nombre:'GABRIEL GONZALEZ GONZALEZ',puesto:'Verificador LI',turno:'MIXTO'},
+  {id:'10094858',nombre:'ROMAN MIGUELES DIEGO',puesto:'Ayudante Gral. LT',turno:'1'},
+  {id:'10112675',nombre:'SEVILLA SANCHEZ JOSE LUIS',puesto:'AYUDANTE GENERAL',turno:'3'},
+  {id:'10012465',nombre:'VELASCO MARTINEZ MARICRUZ',puesto:'Ayudante Gral. LT',turno:'1'},
+  {id:'10111020',nombre:'APOLONIO PIÑA ELIAB',puesto:'Ayudante Gral. LT',turno:'1'},
+  {id:'10012361',nombre:'MARIA DEL ROSARIO SANCHEZ LOPEZ',puesto:'Coordinador Operaciones PT',turno:'MIXTO'},
+  {id:'10120928',nombre:'ALVEDA ARZATE JOSE GUADALUPE',puesto:'AYUDANTE GENERAL',turno:'2'},
+  {id:'10120929',nombre:'HERNANDEZ GUTIERREZ SAUL',puesto:'AYUDANTE GENERAL',turno:'MIXTO'},
+  {id:'10120923',nombre:'SILVA CARBAJAL PEDRO',puesto:'Montacarguista',turno:'1'},
+  {id:'10120985',nombre:'MEDINA SANCHEZ BRENDA PAMELA',puesto:'Ayudante Gral. LT',turno:'1'},
+  {id:'10121035',nombre:'DIAZ CHAVEZ RENE',puesto:'AYUDANTE GENERAL',turno:'2'},
+  {id:'10102640',nombre:'ENRIQUEZ DOMINGUEZ JESUS',puesto:'Ayudante Gral. LT',turno:'1'},
+  {id:'10096511',nombre:'Kevin Alberto Martinez Garcia',puesto:'AYUDANTE GENERAL',turno:'MIXTO'},
+  {id:'10121286',nombre:'JOSE ALEJANDRO MARTINEZ ORTIZ',puesto:'AYUDANTE GENERAL',turno:'1'},
+  {id:'10121288',nombre:'PEDRO AURELIO CHAPARRO TORRES',puesto:'VERIFICADOR',turno:'1'},
+  {id:'10121425',nombre:'VALDEZ ESQUIVEL OMAR',puesto:'AYUDANTE GENERAL',turno:'1'},
+  {id:'10121428',nombre:'LIMAS MORELOS CARLOS',puesto:'AYUDANTE GENERAL',turno:'1'},
+  {id:'101112614',nombre:'DE LOS SANTOS SALGADO ANGEL',puesto:'AYUDANTE GENERAL',turno:'2'},
+  {id:'10116142',nombre:'URBANO SANTOS ALEXIS JOAQUIN',puesto:'AYUDANTE GENERAL',turno:'2'},
+  {id:'10121753',nombre:'ROJAS ROJAS YAEL AGUSTIN',puesto:'AYUDANTE GENERAL',turno:'1'},
+  {id:'10121760',nombre:'AVILA BRUNO ERICK NOE',puesto:'VERIFICADOR',turno:'1'},
+  {id:'10121823',nombre:'CRUZ TENIZA CRISTIAN OMAR',puesto:'AYUDANTE GENERAL',turno:'2'},
 ];
 
-// Derived filtered lists
-const MONTACARGUISTAS = ALL_PERSONAL.filter(p=>p.puesto==='Montacarguista');
-const VERIFICADORES   = ALL_PERSONAL.filter(p=>p.puesto.includes('Verificador')||p.puesto.includes('Supervisor')||p.puesto.includes('Coordinador'));
-const SUPS = Object.fromEntries(ALL_PERSONAL.filter(p=>p.puesto.includes('Supervisor')).map(p=>[p.id,p.nombre]));
+// Derived filtered lists (case-insensitive: el nuevo listado usa MAYÚSCULAS)
+const MONTACARGUISTAS = ALL_PERSONAL.filter(p=>p.puesto.toLowerCase()==='montacarguista');
+const VERIFICADORES   = ALL_PERSONAL.filter(p=>{
+  const pu=p.puesto.toLowerCase();
+  return pu.includes('verificador')||pu.includes('supervisor')||pu.includes('coordinador');
+});
+const SUPS = Object.fromEntries(ALL_PERSONAL.filter(p=>p.puesto.toLowerCase().includes('supervisor')).map(p=>[p.id,p.nombre]));
+// Todos los roles de puesto distintos que existen en la plantilla (para filtros/asignaciones)
+const PUESTOS_UNICOS = Array.from(new Set(ALL_PERSONAL.map(p=>p.puesto))).sort();
+// Personal agrupado por turno (1 / 2 / 3 / MIXTO)
+function personalPorTurno(turno){
+  if(!turno) return ALL_PERSONAL;
+  return ALL_PERSONAL.filter(p=>p.turno===turno||p.turno==='MIXTO');
+}
+
+// ─── TABLERO DE TURNO — matriz de responsabilidades ───────────────────────────
+// Roles de "Tareas" que se llenan a mano (sin fuente de datos automática en el sistema)
+const ROLES_MANUALES = [
+  'Encargado Picking','Encargado Customizado','Cargador-Tareas',
+  'Picking (Multifuncional)','Armador','Cargador-Armador','Customizador-Armador',
+  'Segregador Daños WT','Customizador','Pasador de Devoluciones-PR-19'
+];
+
+// S.turnoTablero = { [turno]: { __supervisor:{id,nombre}|null, [rol]: [ {id, nombre} , ... ] } }
+function ensureTableroTurno(turno){
+  if(!S.turnoTablero) S.turnoTablero={};
+  if(!S.turnoTablero[turno]) S.turnoTablero[turno]={};
+  if(S.turnoTablero[turno].__supervisor===undefined) S.turnoTablero[turno].__supervisor=null;
+  ROLES_MANUALES.forEach(r=>{ if(!S.turnoTablero[turno][r]) S.turnoTablero[turno][r]=[]; });
+  return S.turnoTablero[turno];
+}
+
+function tableroTurnoActual(){
+  return g('tabTurnoSel')?.value || S.sessionTurno || '1';
+}
+
+function renderTablero(){
+  const sel=g('tabTurnoSel');
+  if(sel && !sel._init){
+    sel.value = S.sessionTurno && ['1','2','3','MIXTO'].includes(S.sessionTurno) ? S.sessionTurno : '1';
+    sel._init = true;
+  }
+  const turno = tableroTurnoActual();
+  renderTableroSupervisor(turno);
+  renderTableroAuto();
+  renderTableroManual(turno);
+}
+
+// ── Supervisor de turno — asignación única (una sola persona por turno) ──
+function renderTableroSupervisor(turno){
+  const wrap=g('tabSupervisorWrap'); if(!wrap) return;
+  const data=ensureTableroTurno(turno);
+  const lista=personalPorTurno(turno);
+  const sup=data.__supervisor;
+  const selOpts = '<option value="">— elegir de la lista —</option>'+
+    lista.map(p=>`<option value="${es(p.id)}">${es(p.nombre)} (${es(p.puesto)})</option>`).join('');
+  wrap.innerHTML = `<div class="tab-role-row" style="border-color:var(--cyan)">
+    <div class="tab-role-ttl">👤 Supervisor de turno</div>
+    <div>${sup
+      ? `<span class="tab-chip">${es(sup.nombre)}<button onclick="tableroSupervisorQuitar('${es(turno)}')" title="Quitar">✕</button></span>`
+      : '<span class="tab-empty" style="display:inline">Sin asignar todavía.</span>'}</div>
+    ${sup ? '' : `<div class="tab-add-row">
+        <select id="tabSupSel-${es(turno)}">${selOpts}</select>
+        <input type="text" id="tabSupManual-${es(turno)}" placeholder="…o escribe un nombre que no esté en la lista">
+        <button class="btn" style="height:28px;font-size:11px;border-color:var(--cyan);color:var(--cyan)"
+          onclick="tableroSupervisorAsignar('${es(turno)}')">+ Asignar</button>
+      </div>`}
+  </div>`;
+}
+function tableroSupervisorAsignar(turno){
+  const data=ensureTableroTurno(turno);
+  const sel=g('tabSupSel-'+turno), inp=g('tabSupManual-'+turno);
+  let nombre='', id='';
+  if(sel && sel.value){
+    const p=ALL_PERSONAL.find(x=>x.id===sel.value);
+    if(p){ nombre=p.nombre; id=p.id; }
+  }
+  if(!nombre && inp && inp.value.trim()){ nombre=inp.value.trim(); id='manual:'+nombre; }
+  if(!nombre){ alert('Elige a alguien de la lista o escribe un nombre.'); return; }
+  data.__supervisor={id,nombre};
+  renderTableroSupervisor(turno);
+  if(typeof fbSave==='function') fbSave();
+}
+function tableroSupervisorQuitar(turno){
+  const data=ensureTableroTurno(turno);
+  data.__supervisor=null;
+  renderTableroSupervisor(turno);
+  if(typeof fbSave==='function') fbSave();
+}
+
+// ── Sección automática: se jala de S.rows (tracker) y de DC (Control de Descargas) ──
+function renderTableroAuto(){
+  // Descargas — montacarguistas: flete activo (tracker) + cortina/descargas (módulo Descargas, solo lectura)
+  const montaMap={};
+  const dcData = (typeof DC!=='undefined') ? DC : {};
+  Object.keys(dcData).forEach(cn=>{
+    const d=dcData[cn];
+    if(d && d.monta){
+      if(!montaMap[d.monta]) montaMap[d.monta]={nombre:getMontaNombre(d.monta)||d.monta,cortinas:[],descargas:0,fletes:[]};
+      montaMap[d.monta].cortinas.push('Cortina '+cn);
+      montaMap[d.monta].descargas += d.descargas||0;
+    }
+  });
+  (S.rows||[]).forEach(r=>{
+    if(r.monta && r.estop!=='CARGADO' && r.pc!==100){
+      if(!montaMap[r.monta]) montaMap[r.monta]={nombre:getMontaNombre(r.monta)||r.monta,cortinas:[],descargas:0,fletes:[]};
+      montaMap[r.monta].fletes.push(r.emb);
+    }
+  });
+  const montaIds=Object.keys(montaMap);
+  const elM=g('tabAutoMonta');
+  if(elM) elM.innerHTML = montaIds.length ? montaIds.map(id=>{
+    const m=montaMap[id];
+    return `<div class="tab-auto-row"><b>${es(m.nombre)}</b>
+      ${m.fletes.length?`<span class="tab-auto-tag">Flete ${m.fletes.map(es).join(', ')}</span>`:''}
+      ${m.cortinas.length?`<span class="tab-auto-tag">${m.cortinas.map(es).join(', ')}</span>`:''}
+      ${m.descargas?`<span class="tab-auto-tag">${m.descargas} descargas</span>`:''}
+      ${(!m.fletes.length&&!m.cortinas.length)?'<span class="tab-auto-tag">Libre — sin flete activo</span>':''}
+    </div>`;
+  }).join('') : '<div class="tab-empty">Sin montacarguistas con actividad registrada.</div>';
+
+  // Verificación: fletes con r.verif asignado
+  const verifMap={};
+  (S.rows||[]).forEach(r=>{
+    if(r.verif && r.estop!=='CARGADO' && r.pc!==100){
+      if(!verifMap[r.verif]) verifMap[r.verif]={nombre:getVerifNombre(r.verif)||r.verif,fletes:[]};
+      verifMap[r.verif].fletes.push(r.emb);
+    }
+  });
+  const verifIds=Object.keys(verifMap);
+  const elV=g('tabAutoVerif');
+  if(elV) elV.innerHTML = verifIds.length ? verifIds.map(id=>{
+    const v=verifMap[id];
+    return `<div class="tab-auto-row"><b>${es(v.nombre)}</b><span class="tab-auto-tag">${v.fletes.length} flete(s): ${v.fletes.slice(0,8).map(es).join(', ')}${v.fletes.length>8?'…':''}</span></div>`;
+  }).join('') : '<div class="tab-empty">Sin verificadores con fletes activos.</div>';
+
+  // Tareas → customizando ahora: r.customBy (nombre) sobre fletes activos
+  const custMap={};
+  (S.rows||[]).forEach(r=>{
+    if(r.customBy && r.estop!=='CARGADO' && r.pc!==100){
+      if(!custMap[r.customBy]) custMap[r.customBy]={fletes:[]};
+      custMap[r.customBy].fletes.push(r.emb);
+    }
+  });
+  const custIds=Object.keys(custMap);
+  const elC=g('tabAutoCust');
+  if(elC) elC.innerHTML = custIds.length ? custIds.map(nombre=>{
+    const c=custMap[nombre];
+    return `<div class="tab-auto-row"><b>${es(nombre)}</b><span class="tab-auto-tag">${c.fletes.length} flete(s): ${c.fletes.slice(0,8).map(es).join(', ')}${c.fletes.length>8?'…':''}</span></div>`;
+  }).join('') : '<div class="tab-empty">Sin customizaciones en curso.</div>';
+}
+
+// ── Sección Tareas (manual): roles sin fuente de datos, asignados por el supervisor ──
+function renderTableroManual(turno){
+  const wrap=g('tabManualWrap'); if(!wrap) return;
+  const data=ensureTableroTurno(turno);
+  const lista=personalPorTurno(turno);
+  wrap.innerHTML = ROLES_MANUALES.map(rol=>{
+    const asignados=data[rol]||[];
+    const chips = asignados.length ? asignados.map((p,i)=>
+      `<span class="tab-chip">${es(p.nombre)}<button onclick="tableroRemove('${es(turno)}','${es(rol)}',${i})" title="Quitar">✕</button></span>`
+    ).join('') : '<span class="tab-empty" style="display:inline">Sin asignar todavía.</span>';
+    const selOpts = '<option value="">— elegir de la lista —</option>'+
+      lista.map(p=>`<option value="${es(p.id)}">${es(p.nombre)} (${es(p.puesto)})</option>`).join('');
+    return `<div class="tab-role-row">
+      <div class="tab-role-ttl">${es(rol)} <span class="cnt">${asignados.length?asignados.length+' asignado(s)':''}</span></div>
+      <div>${chips}</div>
+      <div class="tab-add-row">
+        <select id="tabSel-${es(turno)}-${es(rol)}">${selOpts}</select>
+        <input type="text" id="tabManual-${es(turno)}-${es(rol)}" placeholder="…o escribe un nombre que no esté en la lista">
+        <button class="btn" style="height:28px;font-size:11px;border-color:var(--brand);color:var(--brand)"
+          onclick="tableroAdd('${es(turno)}','${es(rol)}')">+ Agregar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function tableroAdd(turno,rol){
+  const data=ensureTableroTurno(turno);
+  const sel=g('tabSel-'+turno+'-'+rol), inp=g('tabManual-'+turno+'-'+rol);
+  let nombre='', id='';
+  if(sel && sel.value){
+    const p=ALL_PERSONAL.find(x=>x.id===sel.value);
+    if(p){ nombre=p.nombre; id=p.id; }
+  }
+  if(!nombre && inp && inp.value.trim()){
+    nombre=inp.value.trim(); id='manual:'+nombre;
+  }
+  if(!nombre){ alert('Elige a alguien de la lista o escribe un nombre.'); return; }
+  if(!data[rol]) data[rol]=[];
+  if(data[rol].some(p=>p.id===id)){ alert('Esa persona ya está asignada a este rol.'); return; }
+  data[rol].push({id,nombre});
+  if(sel) sel.value='';
+  if(inp) inp.value='';
+  renderTableroManual(turno);
+  if(typeof fbSave==='function') fbSave();
+}
+function tableroRemove(turno,rol,idx){
+  const data=ensureTableroTurno(turno);
+  if(!data[rol]) return;
+  data[rol].splice(idx,1);
+  renderTableroManual(turno);
+  if(typeof fbSave==='function') fbSave();
+}
+
+// ── Histórico del tablero: "qué hizo cada turno, cada día" ──────────────────
+// S.tableroHistorial = [ { id, fecha:'YYYY-MM-DD', fechaLabel, turno, ts, sup,
+//                           descargas:[{nombre,fletes,cortinas,descargas}],
+//                           verificacion:[{nombre,fletes}],
+//                           customizando:[{nombre,fletes}],
+//                           tareas:{ [rol]:[nombre,...] } } ]
+function _tableroHoyKey(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function guardarCierreTablero(){
+  const turno=tableroTurnoActual();
+  const data=ensureTableroTurno(turno);
+  if(!S.tableroHistorial) S.tableroHistorial=[];
+
+  // Recolectar auto (descargas/verificación/customizando) tal como están ahora mismo
+  const montaMap={};
+  const dcData=(typeof DC!=='undefined')?DC:{};
+  Object.keys(dcData).forEach(cn=>{
+    const d=dcData[cn];
+    if(d && d.monta){
+      if(!montaMap[d.monta]) montaMap[d.monta]={nombre:getMontaNombre(d.monta)||d.monta,cortinas:[],descargas:0,fletes:[]};
+      montaMap[d.monta].cortinas.push('Cortina '+cn);
+      montaMap[d.monta].descargas+=d.descargas||0;
+    }
+  });
+  (S.rows||[]).forEach(r=>{
+    if(r.monta && r.estop!=='CARGADO' && r.pc!==100){
+      if(!montaMap[r.monta]) montaMap[r.monta]={nombre:getMontaNombre(r.monta)||r.monta,cortinas:[],descargas:0,fletes:[]};
+      montaMap[r.monta].fletes.push(r.emb);
+    }
+  });
+  const verifMap={};
+  (S.rows||[]).forEach(r=>{
+    if(r.verif && r.estop!=='CARGADO' && r.pc!==100){
+      if(!verifMap[r.verif]) verifMap[r.verif]={nombre:getVerifNombre(r.verif)||r.verif,fletes:[]};
+      verifMap[r.verif].fletes.push(r.emb);
+    }
+  });
+  const custMap={};
+  (S.rows||[]).forEach(r=>{
+    if(r.customBy && r.estop!=='CARGADO' && r.pc!==100){
+      if(!custMap[r.customBy]) custMap[r.customBy]={fletes:[]};
+      custMap[r.customBy].fletes.push(r.emb);
+    }
+  });
+  const tareas={};
+  ROLES_MANUALES.forEach(rol=>{ tareas[rol]=(data[rol]||[]).map(p=>p.nombre); });
+
+  const now=new Date();
+  const entry={
+    id:'tab_'+now.getTime(),
+    fecha:_tableroHoyKey(),
+    fechaLabel:now.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'}),
+    hora:now.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}),
+    turno,
+    ts:now.getTime(),
+    sup:data.__supervisor?data.__supervisor.nombre:'',
+    descargas:Object.values(montaMap).map(m=>({nombre:m.nombre,fletes:m.fletes,cortinas:m.cortinas,descargas:m.descargas})),
+    verificacion:Object.values(verifMap).map(v=>({nombre:v.nombre,fletes:v.fletes})),
+    customizando:Object.values(custMap).map(c=>({nombre:c.nombre||'—',fletes:c.fletes})),
+    tareas
+  };
+  S.tableroHistorial.push(entry);
+  // Mantener solo los últimos 60 cierres guardados
+  if(S.tableroHistorial.length>60) S.tableroHistorial=S.tableroHistorial.slice(-60);
+  try{ localStorage.setItem('trx_tablero_hist', JSON.stringify(S.tableroHistorial)); }catch(e){}
+  if(typeof fbSave==='function') fbSave();
+  alert('Cierre de turno guardado en el histórico ('+entry.fechaLabel+', Turno '+turno+').');
+  if(g('tabHistPanel') && g('tabHistPanel').style.display!=='none') renderTableroHist();
+}
+
+function toggleTableroHist(){
+  const panel=g('tabHistPanel'); if(!panel) return;
+  const show = panel.style.display==='none';
+  panel.style.display = show?'':'none';
+  if(show) renderTableroHist();
+}
+
+function renderTableroHist(){
+  const listEl=g('tabHistList'); if(!listEl) return;
+  const turnoF=g('tabHistTurnoFilter')?.value||'';
+  const fechaF=g('tabHistFechaFilter')?.value||'';
+  let entries=(S.tableroHistorial||[]).slice().sort((a,b)=>b.ts-a.ts);
+  if(turnoF) entries=entries.filter(e=>e.turno===turnoF);
+  if(fechaF) entries=entries.filter(e=>e.fecha===fechaF);
+  if(!entries.length){
+    listEl.innerHTML='<div class="tab-empty">No hay cierres de turno guardados todavía con ese filtro.</div>';
+    return;
+  }
+  // Agrupar por día
+  const porDia={};
+  entries.forEach(e=>{ (porDia[e.fecha]=porDia[e.fecha]||[]).push(e); });
+  const dias=Object.keys(porDia).sort().reverse();
+  listEl.innerHTML=dias.map(fecha=>{
+    const items=porDia[fecha];
+    const label=items[0].fechaLabel||fecha;
+    const cardsHtml=items.map(e=>{
+      const descHtml=e.descargas.length
+        ? e.descargas.map(d=>`<div>• <b>${es(d.nombre)}</b>${d.fletes.length?` — ${d.fletes.length} flete(s): ${d.fletes.map(es).join(', ')}`:''}${d.cortinas.length?` (${d.cortinas.map(es).join(', ')})`:''}${d.descargas?`, ${d.descargas} descargas`:''}</div>`).join('')
+        : '<div style="color:var(--text3)">Sin montacarguistas registrados.</div>';
+      const verifHtml=e.verificacion.length
+        ? e.verificacion.map(v=>`<div>• <b>${es(v.nombre)}</b> — ${v.fletes.length} flete(s): ${v.fletes.map(es).join(', ')}</div>`).join('')
+        : '<div style="color:var(--text3)">Sin verificadores registrados.</div>';
+      const custHtml=(e.customizando||[]).length
+        ? e.customizando.map(c=>`<div>• <b>${es(c.nombre)}</b> — ${c.fletes.length} flete(s): ${c.fletes.map(es).join(', ')}</div>`).join('')
+        : '';
+      const tareasRows=Object.keys(e.tareas||{}).filter(rol=>(e.tareas[rol]||[]).length);
+      const tareasHtml=tareasRows.length
+        ? tareasRows.map(rol=>`<div>• <b>${es(rol)}:</b> ${e.tareas[rol].map(es).join(', ')}</div>`).join('')
+        : '<div style="color:var(--text3)">Sin tareas manuales asignadas.</div>';
+      return `<div class="tab-hist-day">
+        <div class="tab-hist-day-ttl">
+          <span>🕐 ${es(e.hora||'')}</span>
+          <span class="tab-auto-tag">Turno ${es(e.turno)}</span>
+          ${e.sup?`<span class="tab-auto-tag">Sup: ${es(e.sup)}</span>`:''}
+        </div>
+        <div class="tab-hist-sec"><b>🚛 Descargas</b>${descHtml}</div>
+        <div class="tab-hist-sec"><b>📦 Tareas</b>${tareasHtml}${custHtml?`<div style="margin-top:4px">🎨 Customizando: </div>${custHtml}`:''}</div>
+        <div class="tab-hist-sec"><b>🧾 Verificación</b>${verifHtml}</div>
+      </div>`;
+    }).join('');
+    return `<div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--brand);text-transform:capitalize;margin-bottom:8px">📅 ${es(label)}</div>
+      ${cardsHtml}
+    </div>`;
+  }).join('');
+}
+
 
 function personalOpts(sel, filtro=''){
   const lista = filtro ? ALL_PERSONAL.filter(p=>p.puesto.toLowerCase().includes(filtro.toLowerCase())) : ALL_PERSONAL;
@@ -1711,7 +2065,7 @@ function patchDetPtr(){
       }
       r.tr = fc(D,['T. Restos','T.Restos'])||r.tr;
       r.ar = fc(D,['A. Restos','A.Restos'])||r.ar;
-      r.tra = fc(D,['Transportista','Unidad'])||r.tra;
+      r.tra = fc(D,['Unidad','No. Unidad','No Unidad','Placa','Tracto','Transportista'])||r.tra;
       r.con = getCortina(D)||r.con; // convert DI-N → 'Rampa N'
       r.contenedor = fc(D,['# Contenedor','Contenedor'])||r.contenedor;
     }
@@ -1737,7 +2091,7 @@ function patchDetPtr(){
   if(S.rows.length>0) console.log('[BUILD SAMPLE]',JSON.stringify(S.rows.slice(0,3).map(function(r){return{emb:r.emb,nom:r.nom,sem:r.sem,con:r.con,verif:r.verif,monta:r.monta};})));
   kpi(); render(); alerts(); badge();
   if(typeof kpiVerif==='function') kpiVerif();
-  ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
+  ['kRow','tabs','btnExp','btnRecalc','btnReporte','btnMontaBoard'].forEach(id=>{
     const el = g(id); if(el) el.classList.remove('hidden');
   });
   document.getElementById('st').textContent = 'Detalle/PTR actualizados — semáforo sin cambios.';
@@ -1850,7 +2204,7 @@ function build(){
     S.rows.push({
       emb: k,
       nom: fc(D,['Nombre','nombre','NOMBRE','Cliente','cliente']) || fc(r,['Nombre','nombre','Cliente','cliente','Destino','destino','CLIENTE','DESTINO']) || fc(r,['NOMBRE']) || '',
-      tra: fc(D,['Transportista','transportista','Unidad','unidad','Tipo trailer'])||fc(r,['Tipo trailer','trailer','Unidad'])||'',
+      tra: fc(D,['Unidad','No. Unidad','No Unidad','Placa','Tracto','Transportista'])||fc(r,['Unidad','Tipo trailer','trailer'])||'',
       sem: (()=>{
         const v=fc(r,['SEMAFORO CARGA','Semaforo Carga','semaforo','SEMÁFORO']);
         if(!v&&v!==0) return '';
@@ -1917,11 +2271,18 @@ function build(){
     if(saved){
       // Restore operational fields from userEdits (manual assignments persist)
       // estop is restored EXACTLY as saved — no automatic changes
-      const {com:_savedCom, ...savedWithoutCom} = saved;
-      Object.assign(S.rows[S.rows.length-1], savedWithoutCom);
+      Object.assign(S.rows[S.rows.length-1], saved);
     }
-    // com (comentarios) ALWAYS comes from DETALLE file — never from userEdits
-    // Already set from fc(D,['Comentarios:',...]) in S.rows.push above — no override needed
+    // com (comentarios): el comentario que el usuario escribió a mano en Resumen
+    // SIEMPRE gana. El archivo DETALLE solo se usa para llenarlo la primera vez,
+    // cuando todavía no hay ningún comentario guardado para ese flete.
+    // (Antes el archivo DETALLE ganaba en cuanto traía cualquier valor — como esa
+    // columna casi siempre trae algo del WMS, terminaba borrando lo que escribías.)
+    {
+      const _savedCom = (saved && saved.com) ? saved.com : '';
+      const _detalleCom = fc(D,['Comentarios:','Comentarios','comentarios','comentario']) || '';
+      S.rows[S.rows.length-1].com = _savedCom || _detalleCom;
+    }
     // ALWAYS re-apply con from DETALLE — file wins over saved edits
     const _con = getCortina(D);
     S.rows[S.rows.length-1].con = _con; // '' if no DI in DETALLE
@@ -1964,6 +2325,8 @@ function build(){
   S.ptrMap = ptrMap;
   kpi(); render(); alerts(); badge();
   if(typeof kpiVerif==='function') kpiVerif();
+  // Fletes que llegaron ya CARGADO (100%): liberar montacarguista y avanzar su cola
+  if(typeof checkMontaQueueAdvance==='function') checkMontaQueueAdvance();
   // Auto-detect shared containers in Eventos after build
   if(typeof evDetectarSilencioso==='function') evDetectarSilencioso();
   // Save to semaforo historico
@@ -1973,6 +2336,7 @@ function build(){
   document.getElementById('btnExp').classList.remove('hidden');
   document.getElementById('btnReporte').classList.remove('hidden');
   document.getElementById('btnRecalc').classList.remove('hidden');
+  document.getElementById('btnMontaBoard')?.classList.remove('hidden');
   g('stp1').classList.remove('active'); g('stp1').classList.add('done');
   g('stp2').classList.add('active');
   document.getElementById('st').textContent=S.rows.length+' fletes del semáforo activos.';
@@ -2093,7 +2457,7 @@ function applyNew(){
     if(!nr) return;
     const nc=fc(nr,['FECHA Y HORA CITA','fecha cita','cita']);
     const ns=fc(nr,['SEMAFORO CARGA','semaforo carga','semáforo']);
-    const nt=fc(nr,['Tipo trailer','Tipo Trailer','trailer','Unidad'])||fc(S.detMap?.[ex.emb]||S.comMap?.[ex.emb]||{},['Unidad','unidad','Tipo trailer']);
+    const nt=fc(nr,['Unidad','Tipo trailer','Tipo Trailer','trailer'])||fc(S.detMap?.[ex.emb]||S.comMap?.[ex.emb]||{},['Unidad','No. Unidad','No Unidad','Placa','Tracto','Transportista']);
     if(nc&&ex.ci){
       const dn=new Date(nc),do2=new Date(ex.ci);
       if(!isNaN(dn)&&!isNaN(do2)&&dn<do2){
@@ -2167,7 +2531,7 @@ function applyNew(){
     const saved=S.userEdits[k]||{};
     S.rows.push({
       emb:k, nom:fc(r,['Nombre','nombre'])||'',
-      tra:fc(r,['Tipo trailer','Tipo Trailer','trailer','Unidad'])||'',
+      tra:fc(D,['Unidad','No. Unidad','No Unidad','Placa','Tracto','Transportista'])||fc(r,['Unidad','Tipo trailer','trailer'])||'',
       sem:fc(r,['SEMAFORO CARGA','semaforo carga','semáforo'])||'',
       ci:fc(r,['FECHA Y HORA CITA','fecha cita','cita'])||'',
       pal:fc(P,['Pallets','pallets'])||'',
@@ -2206,6 +2570,8 @@ function applyNew(){
     return true; // always keep — semaforo defines the list
   });
   drop=beforeCount-S.rows.length;
+  // Fletes que llegaron/quedaron CARGADO: liberar montacarguista y avanzar su cola
+  if(typeof checkMontaQueueAdvance==='function') checkMontaQueueAdvance();
 
   // 4. Detect position changes
   const newSorted=sortedForPosition([...S.rows]);
@@ -2345,6 +2711,178 @@ function sortedForPosition(arr){
   return [...normalRows,...cargRows];
 }
 
+// ─── Pendiente Picking / Pendiente Tarea (helpers compartidos) ────────────────
+// Picking: si T.Restos > 0 → pendiente = T.Restos - A.Restos (min 0). Sin T.Restos → N/A
+function pendPickInfo(r){
+  const trN=parseFloat(r.tr)||0, arN=parseFloat(r.ar)||0;
+  if(!r.tr||isNaN(parseFloat(r.tr))||trN===0) return {na:true};
+  const val=Math.max(0,trN-arN);
+  return {na:false,pending:val>0,val};
+}
+// Tareas: basado en % Tareas (r.pt) sobre pallets (r.pal)
+function pendTareaInfo(r){
+  const palN=parseFloat(r.pal)||0;
+  if(palN===0) return {na:true};
+  const pending = r.pt===null||r.pt===undefined||r.pt<100;
+  return {na:false,pending,pct:r.pt};
+}
+
+// ─── COLA DE MONTACARGUISTAS — asignación automática al terminar ─────────────
+// S.montaQueue = { [montaId]: [emb1, emb2, ...] }  (orden = orden de atención)
+
+// ¿Este montacarguista tiene ahora mismo un flete activo (no CARGADO) asignado?
+function montaHasActive(montaId){
+  return S.rows.some(r=>r.monta===montaId && r.estop!=='CARGADO' && r.pc!==100);
+}
+
+// Recorre las colas y, si un montacarguista quedó libre, le asigna el siguiente
+// flete de su cola (saltando los que ya no existen o ya quedaron CARGADO).
+function checkMontaQueueAdvance(){
+  if(!S.montaQueue) return;
+  let changed=false;
+  Object.keys(S.montaQueue).forEach(montaId=>{
+    const queue=S.montaQueue[montaId];
+    if(!queue || !queue.length) return;
+    if(montaHasActive(montaId)) return; // sigue ocupado con el flete actual
+    while(queue.length){
+      const nextEmb=queue[0];
+      const row=S.rows.find(r=>r.emb===nextEmb);
+      if(!row || row.estop==='CARGADO' || row.pc===100){ queue.shift(); continue; }
+      row.monta=montaId;
+      if(!S.userEdits[row.emb]) S.userEdits[row.emb]={};
+      S.userEdits[row.emb].monta=montaId;
+      queue.shift();
+      changed=true;
+      if(typeof _notifyAssignment==='function'){
+        _notifyAssignment('Montacarguista (auto)', getMontaNombre(montaId)||montaId, row.emb+(row.nom?' — '+row.nom.substring(0,45):''));
+      }
+      break; // solo se asigna un flete nuevo por vuelta
+    }
+  });
+  if(changed){
+    if(typeof fbSave==='function') fbSave();
+    if(!g('modalMontaBoard')?.classList.contains('hidden')) renderMontaBoard();
+    if(!g('p-tk')?.classList.contains('hidden')) render();
+    if(!g('p-rs')?.classList.contains('hidden')) renderResumen();
+  }
+}
+
+function openMontaQueue(){
+  const sel=g('mqMontaSel');
+  if(sel && sel.options.length<=1){
+    sel.innerHTML='<option value="">— Selecciona un montacarguista —</option>'+
+      MONTACARGUISTAS.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');
+  }
+  g('modalMontaQueue').classList.remove('hidden');
+  renderMontaQueueModal();
+}
+function closeMontaQueue(){ g('modalMontaQueue').classList.add('hidden'); }
+
+function renderMontaQueueModal(){
+  const montaId=g('mqMontaSel')?.value||'';
+  const pendEl=g('mqPendList'), queueEl=g('mqQueueList'), cntEl=g('mqQueueCount');
+  if(!montaId){
+    pendEl.innerHTML='<div style="padding:14px;color:var(--text3);font-size:11.5px">Selecciona un montacarguista.</div>';
+    queueEl.innerHTML='<div style="padding:14px;color:var(--text3);font-size:11.5px">Sin fletes en cola.</div>';
+    if(cntEl) cntEl.textContent='';
+    return;
+  }
+  const queue=S.montaQueue[montaId]||[];
+  // Pendientes: no cargados, ordenados por semáforo, excluyendo los ya en la cola de este montacarguista
+  const pend=sortedForPosition(S.rows).filter(r=>r.estop!=='CARGADO' && r.pc!==100 && !queue.includes(r.emb));
+  pendEl.innerHTML = pend.length ? pend.map(r=>{
+    const yaAsignado = r.monta && r.monta!==montaId;
+    const tag = yaAsignado ? ` <span style="color:var(--text3)">(con ${es((getMontaNombre(r.monta)||'').split(' ')[0])})</span>` : '';
+    return `<div class="mq-item">
+      <input type="checkbox" value="${es(r.emb)}" id="mqchk-${es(r.emb)}">
+      <label for="mqchk-${es(r.emb)}"><b style="font-family:'IBM Plex Mono',monospace">${es(r.emb)}</b> — ${es(r.nom||'')}${tag}</label>
+    </div>`;
+  }).join('') : '<div style="padding:14px;color:var(--text3);font-size:11.5px">No hay fletes pendientes.</div>';
+
+  if(cntEl) cntEl.textContent = queue.length ? '('+queue.length+')' : '';
+  queueEl.innerHTML = queue.length ? queue.map((emb,i)=>{
+    const row=S.rows.find(r=>r.emb===emb);
+    const nom=row?row.nom:'';
+    return `<div class="mq-queue-item">
+      <span class="mq-queue-n">${i+1}</span>
+      <span class="mq-emb">${es(emb)}</span>
+      <span style="flex:1;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${es(nom||'')}</span>
+      <button class="mq-mini-btn" onclick="montaQueueMove('${es(montaId)}','${es(emb)}',-1)" title="Subir" ${i===0?'disabled style="opacity:.3"':''}>↑</button>
+      <button class="mq-mini-btn" onclick="montaQueueMove('${es(montaId)}','${es(emb)}',1)" title="Bajar" ${i===queue.length-1?'disabled style="opacity:.3"':''}>↓</button>
+      <button class="mq-mini-btn" onclick="montaQueueRemove('${es(montaId)}','${es(emb)}')" title="Quitar" style="color:var(--red);border-color:rgba(239,68,68,.3)">✕</button>
+    </div>`;
+  }).join('') : '<div style="padding:14px;color:var(--text3);font-size:11.5px">Sin fletes en cola.</div>';
+}
+
+function montaQueueAddSelected(){
+  const montaId=g('mqMontaSel')?.value||'';
+  if(!montaId){ alert('Selecciona un montacarguista primero.'); return; }
+  const checked=Array.from(document.querySelectorAll('#mqPendList input[type=checkbox]:checked')).map(c=>c.value);
+  if(!checked.length){ alert('Selecciona al menos un flete para agregar a la cola.'); return; }
+  if(!S.montaQueue[montaId]) S.montaQueue[montaId]=[];
+  checked.forEach(emb=>{
+    if(!S.montaQueue[montaId].includes(emb)) S.montaQueue[montaId].push(emb);
+  });
+  checkMontaQueueAdvance(); // si el montacarguista está libre, le asigna el primero de inmediato
+  renderMontaQueueModal();
+  if(typeof fbSave==='function') fbSave();
+}
+function montaQueueRemove(montaId,emb){
+  if(!S.montaQueue[montaId]) return;
+  S.montaQueue[montaId]=S.montaQueue[montaId].filter(e=>e!==emb);
+  renderMontaQueueModal();
+  if(typeof fbSave==='function') fbSave();
+}
+function montaQueueMove(montaId,emb,dir){
+  const q=S.montaQueue[montaId]; if(!q) return;
+  const i=q.indexOf(emb); if(i<0) return;
+  const j=i+dir; if(j<0||j>=q.length) return;
+  [q[i],q[j]]=[q[j],q[i]];
+  renderMontaQueueModal();
+  if(typeof fbSave==='function') fbSave();
+}
+
+// ─── PANTALLA GRANDE — turno de montacarguistas (estilo "banco") ──────────────
+function openMontaBoard(){
+  g('modalMontaBoard').classList.remove('hidden');
+  renderMontaBoard();
+}
+function closeMontaBoard(){ g('modalMontaBoard').classList.add('hidden'); }
+
+function renderMontaBoard(){
+  const grid=g('mbGrid'); if(!grid) return;
+  // Montacarguistas con actividad: flete activo asignado o cola pendiente
+  const relevantIds=new Set();
+  S.rows.forEach(r=>{ if(r.monta && r.estop!=='CARGADO' && r.pc!==100) relevantIds.add(r.monta); });
+  Object.keys(S.montaQueue||{}).forEach(id=>{ if((S.montaQueue[id]||[]).length) relevantIds.add(id); });
+  if(!relevantIds.size){
+    grid.innerHTML='<div class="mb-empty-slot" style="grid-column:1/-1;text-align:center;padding:30px">Sin montacarguistas con fletes asignados o en cola todavía.</div>';
+    return;
+  }
+  const ids=Array.from(relevantIds).sort((a,b)=>(getMontaNombre(a)||a).localeCompare(getMontaNombre(b)||b));
+  grid.innerHTML = ids.map(montaId=>{
+    const nombre=getMontaNombre(montaId)||montaId;
+    const activo=S.rows.find(r=>r.monta===montaId && r.estop!=='CARGADO' && r.pc!==100);
+    const cola=(S.montaQueue[montaId]||[]).filter(emb=>{
+      const rw=S.rows.find(r=>r.emb===emb); return rw && rw.estop!=='CARGADO' && rw.pc!==100;
+    });
+    const activeCls=activo?'mb-active':'';
+    const body = activo
+      ? `<div class="mb-emb">${es(activo.emb)}</div><div class="mb-nom" title="${es(activo.nom||'')}">${es(activo.nom||'—')}</div>`
+      : `<div class="mb-empty-slot">Libre — sin flete asignado</div>`;
+    const nextHtml = cola.length
+      ? `<div class="mb-next-ttl">Siguientes en cola (${cola.length})</div>` +
+        cola.slice(0,3).map(emb=>`<div class="mb-next-item">${es(emb)}</div>`).join('') +
+        (cola.length>3?`<div class="mb-next-item" style="color:var(--text3)">+${cola.length-3} más…</div>`:'')
+      : '';
+    return `<div class="mb-card ${activeCls}">
+      <div class="mb-monta">🚛 ${es(nombre)}</div>
+      ${body}
+      ${nextHtml}
+    </div>`;
+  }).join('');
+}
+
 // ─── SORT ─────────────────────────────────────────────────────────────────────
 function sort(th){
   const c=th.dataset.c;
@@ -2421,6 +2959,8 @@ function render(){
     if(festop.length && !festop.includes(r.estop)) return false;
     // Filtro horas a cita (multi-select)
     if(!matchHrsFilter(r, getHrsFilter('fHrsDrop'))) return false;
+    if(filtroPicking){ const pk=pendPickInfo(r); if(pk.na||!pk.pending) return false; }
+    if(filtroTareas){ const tk=pendTareaInfo(r); if(tk.na||!tk.pending) return false; }
     return true;
   });
 
@@ -2517,6 +3057,7 @@ function render(){
         const label=urgente?(r.sem||'Sin estado')+' ⚠':(r.sem||'—');
         return `<span class="b ${badgeCls}" data-cita="${r.ci||''}" style="white-space:nowrap">${es(label)}</span>`;
       })()}</td>
+      <td style="font-size:10.5px;color:var(--text2)">${es(r.tra||'—')}</td>
       <td>${(()=>{
         if(r.con){ const _cf=fmtCortina(r.con); if(_cf!=='—') return `<span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--cyan);font-weight:600;display:inline-flex;align-items:center;gap:4px">${_cf}<button onclick="upd(${idx},'con','');render()" style="background:none;border:none;cursor:pointer;opacity:.5;color:inherit;font-size:10px;padding:0" title="Editar">✎</button></span>`; }
         return `<input class="edt" type="text" value="" placeholder="— cortina —" onchange="upd(${idx},'con',this.value);render()" style="min-width:65px">`;
@@ -2573,11 +3114,6 @@ function render(){
           : `<div style="position:relative"><input class="edt-sel" type="text" placeholder="¿Quién?" style="width:80px;font-size:9.5px;height:22px;padding:2px 5px" oninput="acFilter(this,ALL_PERSONAL,${idx},'customBy')" onblur="setTimeout(()=>{const d=document.getElementById('ac-drop-c-${idx}');if(d)d.remove()},200)"></div>`
         }
       </td>
-      <td style="text-align:center">
-        <button onclick="abrirEvidencias(${idx})" style="background:${(r.evidencias&&r.evidencias.length)?'rgba(16,185,129,.2)':'var(--navy2)'};border:1px solid ${(r.evidencias&&r.evidencias.length)?'var(--green)':'var(--border2)'};color:${(r.evidencias&&r.evidencias.length)?'var(--green)':'var(--text3)'};border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;white-space:nowrap">
-          📷 ${r.evidencias&&r.evidencias.length?r.evidencias.length+' foto'+(r.evidencias.length>1?'s':''):'+'}
-        </button>
-      </td>
       <td style="min-width:110px">
         <select class="edt-sel" onchange="upd(${idx},'estop',this.value)"
           style="height:26px;font-size:10px;font-weight:600;border-radius:5px;cursor:pointer;
@@ -2592,7 +3128,6 @@ function render(){
           ['','POR VERIFICAR','POR CARGAR','PENDIENTE','CARGADO','EN PROCESO'].map(v=>`<option value="${v}"${(r.estop||'PENDIENTE')===v?' selected':''}>${v||'— estatus —'}</option>`).join('')
         }</select>
       </td>
-      <td style="min-width:120px;font-size:10px">${stateHtml||''}</td>
     </tr>`;
   }).join('');
 
@@ -2614,12 +3149,33 @@ function render(){
 
 }
 
+// ─── CANDADO DE EDICIÓN LOCAL ──────────────────────────────────────────────────
+// Protege cualquier campo que el usuario acaba de editar en ESTE dispositivo para
+// que, durante los siguientes segundos, ninguna sincronización de Firebase (que
+// pudiera venir "atrasada" de otro dispositivo o de un evento fuera de orden) lo
+// pueda pisar de vuelta. Sin esto, un cambio recién hecho (quitar una prioridad,
+// escribir un comentario) podía "regresar solo" unos segundos después.
+const _localEditLock = {}; // { 'emb::field': timestampMs }
+const LOCAL_EDIT_LOCK_MS = 20000; // 20 segundos de protección
+function lockLocalEdit(emb, field){
+  _localEditLock[emb+'::'+field] = Date.now();
+}
+function isLocalEditLocked(emb, field){
+  const t = _localEditLock[emb+'::'+field];
+  return !!t && (Date.now()-t) < LOCAL_EDIT_LOCK_MS;
+}
+
 function upd(idx,field,val){
   if(!fbIsAdmin)return;
   S.rows[idx][field]=val;
   const emb=S.rows[idx].emb;
   if(!S.userEdits[emb]) S.userEdits[emb]={};
   S.userEdits[emb][field]=val;
+  lockLocalEdit(emb, field);
+  // Si el flete quedó CARGADO, revisar si su montacarguista tiene cola para avanzar
+  if(field==='estop' && val==='CARGADO' && typeof checkMontaQueueAdvance==='function'){
+    checkMontaQueueAdvance();
+  }
 }
 // ─── CARGAR DESDE GUARDADO ────────────────────────────────────────────────────
 // Renders the tracker using whatever is already in S.rows (loaded from Firebase
@@ -2660,8 +3216,7 @@ function cargarDesdeGuardado(){
   g('btnExp').classList.remove('hidden');
   g('btnRecalc').classList.remove('hidden');
   g('btnReporte').classList.remove('hidden');
-
-  // Recalculate and render everything
+  g('btnMontaBoard')?.classList.remove('hidden');
   kpi(); render(); alerts(); badge();
   if(typeof kpiVerif === 'function') kpiVerif();
   updateTopbarSup();
@@ -3556,15 +4111,13 @@ function syncEvidenciasToHist(emb, evidencias){
 }
 
 function histSubTab(t){
-  ['emb','desc','vf','cust'].forEach(x=>{
+  ['vf','cust'].forEach(x=>{
     const panel=document.getElementById('hpan-'+x); if(panel) panel.style.display=x===t?'':'none';
     const btn=document.getElementById('htab-'+x);
     if(btn){ btn.style.background=x===t?'var(--blue)':'none'; btn.style.color=x===t?'#fff':'var(--text3)'; }
   });
-  if(t==='desc') renderHistDesc();
-  else if(t==='vf') renderHistVf();
-  else if(t==='cust') renderHistCust();
-  else renderHist();
+  if(t==='vf') renderHistVf();
+  else renderHistCust();
 }
 
 
@@ -4389,7 +4942,7 @@ function exportHistCSV(){
 function switchView(v){
   // Documentador: only desc and hist allowed
   if(fbIsDocumentador && v!=='desc' && v!=='hist') return;
-  ['emb','desc','inc','hist'].forEach(x=>{
+  ['emb','desc','inc','hist','tab'].forEach(x=>{
     const el=g('view-'+x); if(el) el.classList.toggle('hidden', x!==v);
     const btn=g('vsw-'+x); if(btn) btn.classList.toggle('active', x===v);
   });
@@ -4401,13 +4954,9 @@ function switchView(v){
     incRender();
   }
   if(v==='hist'){
-    if(fbIsDocumentador){
-      histSubTab('desc');
-    } else {
-      // Activate first visible sub-tab
-      histSubTab('emb');
-    }
+    histSubTab('cust');
   }
+  if(v==='tab') renderTablero();
 }
 window._switchViewOriginal = switchView;
 
@@ -4475,6 +5024,14 @@ const CUST = { historial: [] };
   try{
     const _c=localStorage.getItem('trx_cust_hist');
     if(_c){ const _d=JSON.parse(_c); if(Array.isArray(_d)) CUST.historial=_d; }
+  }catch(e){}
+})();
+
+// Tablero de turno — histórico persistente (respaldo local antes de que sincronice Firebase)
+(function(){
+  try{
+    const _t=localStorage.getItem('trx_tablero_hist');
+    if(_t){ const _d=JSON.parse(_t); if(Array.isArray(_d)) S.tableroHistorial=_d; }
   }catch(e){}
 })();
 
@@ -6333,6 +6890,8 @@ function renderDescargas(){
 // ─── RESUMEN SEMAFORO ────────────────────────────────────────────────────────
 let filtroPrio = false;
 let mostrarCargados = true; // show all fletes including 100% by default
+let filtroPicking = false;  // solo fletes con picking pendiente
+let filtroTareas = false;   // solo fletes con tareas faltantes
 
 function vfToggleDetalle(){
   const p=g('vfDetallePanel'),b=g('vfDetalleBtn');
@@ -6634,6 +7193,41 @@ function toggleMostrarCargados(){
   renderResumen();
 }
 
+function toggleFiltroPicking(){
+  filtroPicking = !filtroPicking;
+  ['fRsPicking','fTkPicking'].forEach(id=>{
+    const btn=g(id); if(!btn) return;
+    if(filtroPicking){
+      btn.style.background='rgba(245,158,11,.2)';
+      btn.style.borderColor='var(--amber)';
+      btn.style.color='var(--amber)';
+    } else {
+      btn.style.background=''; btn.style.borderColor=''; btn.style.color='';
+    }
+  });
+  if(g('view-emb') && !g('view-emb').classList.contains('hidden')){
+    if(g('p-rs') && !g('p-rs').classList.contains('hidden')) renderResumen();
+    else render();
+  }
+}
+function toggleFiltroTareas(){
+  filtroTareas = !filtroTareas;
+  ['fRsTareas','fTkTareas'].forEach(id=>{
+    const btn=g(id); if(!btn) return;
+    if(filtroTareas){
+      btn.style.background='rgba(139,92,246,.2)';
+      btn.style.borderColor='var(--purple)';
+      btn.style.color='var(--purple)';
+    } else {
+      btn.style.background=''; btn.style.borderColor=''; btn.style.color='';
+    }
+  });
+  if(g('view-emb') && !g('view-emb').classList.contains('hidden')){
+    if(g('p-rs') && !g('p-rs').classList.contains('hidden')) renderResumen();
+    else render();
+  }
+}
+
 function renderResumen(){
   const q=(g('qRs')?.value||'').toLowerCase();
   const fs=g('fRsSem')?.value||'';
@@ -6654,6 +7248,16 @@ function renderResumen(){
     if(_rsEstopBoxes.length && !_rsEstopBoxes.map(b=>b.value).includes(r.estop)) return false;
     // Ocultar cargados (pc=100 / estop=CARGADO) por defecto, mostrar solo si se activa el toggle
     if(!mostrarCargados && (r.estop==='CARGADO' || r.pc===100)) return false;
+    // Solo picking pendiente
+    if(filtroPicking){
+      const pk=pendPickInfo(r);
+      if(pk.na || !pk.pending) return false;
+    }
+    // Solo tareas faltantes
+    if(filtroTareas){
+      const tk=pendTareaInfo(r);
+      if(tk.na || !tk.pending) return false;
+    }
     return true;
   });
 
@@ -6806,6 +7410,7 @@ function togglePrio(idx){
     const emb=r.emb;
     if(!S.userEdits[emb]) S.userEdits[emb]={};
     S.userEdits[emb].prio=false; S.userEdits[emb].prioNum=0;
+    lockLocalEdit(emb,'prio'); lockLocalEdit(emb,'prioNum');
     // Re-numerar restantes para que no queden huecos
     S.rows.filter(function(x){return x.prio;})
       .sort(function(a,b){return (a.prioNum||0)-(b.prioNum||0);})
@@ -6813,6 +7418,7 @@ function togglePrio(idx){
         x.prioNum=i+1;
         if(!S.userEdits[x.emb]) S.userEdits[x.emb]={};
         S.userEdits[x.emb].prioNum=i+1;
+        lockLocalEdit(x.emb,'prioNum');
       });
   } else {
     // Marcar como prioridad — pedir posición entre todos los fletes visibles
@@ -6825,6 +7431,7 @@ function togglePrio(idx){
     const emb=r.emb;
     if(!S.userEdits[emb]) S.userEdits[emb]={};
     S.userEdits[emb].prio=true; S.userEdits[emb].prioNum=num;
+    lockLocalEdit(emb,'prio'); lockLocalEdit(emb,'prioNum');
   }
   renderResumen();
   render();
@@ -6849,6 +7456,8 @@ function exportResumen(){
     if(!matchHrsFilter(r, getHrsFilter('fRsHrsDrop'))) return false;
     if(_estopBoxes.length&&!_estopBoxes.map(function(b){return b.value;}).includes(r.estop)) return false;
     if(!mostrarCargados&&(r.estop==='CARGADO'||r.pc===100)) return false;
+    if(filtroPicking){ const pk=pendPickInfo(r); if(pk.na||!pk.pending) return false; }
+    if(filtroTareas){ const tk=pendTareaInfo(r); if(tk.na||!tk.pending) return false; }
     return true;
   });
   if(!rows.length){alert('Sin datos para exportar con el filtro actual.');return;}
@@ -7477,7 +8086,7 @@ function applyAdminUI(){
   if(window._switchViewOriginal) window.switchView=window._switchViewOriginal;
   document.querySelectorAll('.admin-only').forEach(el=>el.classList.remove('hidden'));
   document.querySelectorAll('.tab').forEach(el=>el.classList.remove('hidden'));
-  ['vsw-emb','vsw-desc','vsw-hist','vsw-inc'].forEach(id=>{
+  ['vsw-emb','vsw-desc','vsw-hist','vsw-inc','vsw-tab'].forEach(id=>{
     const el=g(id); if(el){el.style.display='';el.style.visibility='';}
   });
   ['htab-emb','htab-vf'].forEach(id=>{
@@ -7489,7 +8098,7 @@ function applyAdminUI(){
   document.querySelectorAll('.vsw-btn').forEach(b=>{
     b.classList.toggle('active',b.id==='vsw-emb');
   });
-  ['kRow','tabs','btnExp','btnRecalc','btnReporte'].forEach(id=>{
+  ['kRow','tabs','btnExp','btnRecalc','btnReporte','btnMontaBoard'].forEach(id=>{
     const el=g(id); if(el) el.classList.remove('hidden');
   });
   console.log('[ROLE] applyAdminUI done fbIsAdmin='+fbIsAdmin);
@@ -7593,8 +8202,8 @@ function applyDocumentadorUI(){
   g('viewerMsg').innerHTML='<strong>📋 Documentador</strong> — Módulo de Descargas';
   // Allow editing — DO NOT add guest-mode
   document.body.classList.remove('guest-mode');
-  // Hide vsw buttons for Embarques and Incidencias
-  ['vsw-emb','vsw-inc'].forEach(id=>{ const el=g(id); if(el) el.style.display='none'; });
+  // Hide vsw buttons for Embarques y Incidencias (y Tablero, que depende del Tracker)
+  ['vsw-emb','vsw-inc','vsw-tab'].forEach(id=>{ const el=g(id); if(el) el.style.display='none'; });
   // Hide htab-emb only (Verificadores sí está disponible para Documentador)
   ['htab-emb'].forEach(id=>{ const el=g(id); if(el) el.style.display='none'; });
   // Switch to Descargas view
@@ -7681,7 +8290,7 @@ function fbSave(){
           con:_s(r.con),pal:_s(r.pal),
           pt:_n(r.pt),pr:_n(r.pr),pc:_n(r.pc),
           tr:_s(r.tr),ar:_s(r.ar),
-          estop:_s(r.estop),prio:_b(r.prio),
+          estop:_s(r.estop),prio:_b(r.prio),prioNum:_n(r.prioNum),
           precarga:_s(r.precarga),
           monta:_s(r.monta),monta2:_s(r.monta2),
           verif:_s(r.verif),verif2:_s(r.verif2),
@@ -7715,6 +8324,9 @@ function fbSave(){
           var rr={...r}; delete rr.fotos; return rr; // drop redundant 'fotos' array, keep single 'foto'
         }),
         custHistorial: (CUST.historial||[]).slice(-100),
+        montaQueue: S.montaQueue||{},
+        turnoTablero: S.turnoTablero||{},
+        tableroHistorial: (S.tableroHistorial||[]).slice(-60),
         ts, device: DEVICE_ID
       };
       // Size check before sending
@@ -7808,16 +8420,28 @@ function applyRemoteData(data){
     } else {
       console.log('[SYNC] S.rows SKIPPED — local has MORE rows ('+_localRows+') than Firebase ('+_incomingRows+'), keeping local');
     }
-    // Re-apply userEdits on top — always wins
+    // Re-apply userEdits on top — always wins (incluye 'com': los comentarios manuales
+    // ya no se excluyen aquí, para que no "desaparezcan" al llegar una sincronización)
     S.rows.forEach(function(r){
       const saved = S.userEdits[r.emb];
       if(saved){
-        var savedWithoutCom = Object.assign({}, saved);
-        delete savedWithoutCom.com;
-        delete savedWithoutCom.evidencias;
-        Object.assign(r, savedWithoutCom);
+        var savedForRow = Object.assign({}, saved);
+        delete savedForRow.evidencias;
+        Object.assign(r, savedForRow);
       }
     });
+    // Candado de edición local: si un campo se editó hace poco en ESTE dispositivo,
+    // se respeta el valor que ya tiene la fila en memoria (r[field]) pase lo que pase,
+    // sin importar lo que haya traído la sincronización de Firebase.
+    if(typeof isLocalEditLocked==='function'){
+      S.rows.forEach(function(r){
+        ['prio','prioNum','com','estop','monta','verif','precarga'].forEach(function(f){
+          if(isLocalEditLocked(r.emb,f) && S.userEdits[r.emb] && S.userEdits[r.emb][f]!==undefined){
+            r[f]=S.userEdits[r.emb][f];
+          }
+        });
+      });
+    }
     console.log('[SYNC] S.rows restore: local='+_localRows+' incoming='+_incomingRows+' sameDevice='+_sameDevice+' restored='+(_shouldRestore||_incomingRows===_localRows));
   } else if(data.rows && _msSinceBuild <= 8000){
     console.log('[SYNC] S.rows SKIPPED — build ran '+Math.round(_msSinceBuild/1000)+'s ago, keeping local rows='+S.rows.length);
@@ -7844,7 +8468,19 @@ function applyRemoteData(data){
       if(!S.rows.find(r=>r.emb===emb)) alertedEmbs.delete(emb);
     });
   }
-  if(data.userEdits && _msSinceBuild > 8000) S.userEdits = data.userEdits;
+  // Fusionar S.userEdits en vez de sobreescribir: si llega un snapshot de Firebase
+  // "viejo" (por el orden en que llegan los eventos de sincronización), un cambio
+  // que acabas de hacer localmente (ej. quitar una prioridad) ya NO se revierte solo,
+  // porque lo local siempre gana campo por campo sobre lo que traiga Firebase.
+  if(data.userEdits && _msSinceBuild > 8000){
+    const _remoteUE = data.userEdits;
+    const _mergedUE = {};
+    Object.keys(_remoteUE).forEach(k=>{ _mergedUE[k] = Object.assign({}, _remoteUE[k]); });
+    Object.keys(S.userEdits||{}).forEach(k=>{
+      _mergedUE[k] = Object.assign({}, _mergedUE[k]||{}, S.userEdits[k]);
+    });
+    S.userEdits = _mergedUE;
+  }
   // MERGE turnoHistorial — Firebase solo guarda las últimas 50, el historial completo vive en localStorage
   if(data.turnoHistorial && Array.isArray(data.turnoHistorial)){
     if(data.turnoHistorial.length >= S.turnoHistorial.length){
@@ -7904,10 +8540,30 @@ function applyRemoteData(data){
       try{localStorage.setItem('trx_cust_hist',JSON.stringify(CUST.historial));}catch(e){}
     }
   }
+  // Restore montaQueue (cola de fletes por montacarguista) — el más reciente gana
+  if(data.montaQueue && typeof data.montaQueue==='object'){
+    S.montaQueue = data.montaQueue;
+  }
+  // Restore turnoTablero (matriz de responsabilidades manual) — el más reciente gana
+  if(data.turnoTablero && typeof data.turnoTablero==='object'){
+    S.turnoTablero = data.turnoTablero;
+  }
+  // Restore tableroHistorial — merge por id, quedarse con el más completo
+  if(data.tableroHistorial && Array.isArray(data.tableroHistorial)){
+    if(!S.tableroHistorial) S.tableroHistorial=[];
+    if(data.tableroHistorial.length >= S.tableroHistorial.length){
+      S.tableroHistorial = data.tableroHistorial;
+    } else {
+      const localIds=new Set(S.tableroHistorial.map(e=>e.id));
+      data.tableroHistorial.forEach(e=>{ if(!localIds.has(e.id)) S.tableroHistorial.push(e); });
+    }
+    try{ localStorage.setItem('trx_tablero_hist', JSON.stringify(S.tableroHistorial)); }catch(e){}
+  }
   if(!S.rows || !S.rows.length) return;
+  if(typeof checkMontaQueueAdvance==='function') checkMontaQueueAdvance();
 
   // Show UI chrome
-  ['kRow','tabs','btnExp','btnRecalc','btnReporte','btnMantenimiento'].forEach(id=>{
+  ['kRow','tabs','btnExp','btnRecalc','btnReporte','btnMantenimiento','btnMontaBoard'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.classList.remove('hidden');
   });
   if(typeof updateTopbarSup==='function') updateTopbarSup();
@@ -7948,6 +8604,8 @@ function applyRemoteData(data){
   if(_incView&&!_incView.classList.contains('hidden')) incRender();
   const _descView=g('view-desc');
   if(_descView&&!_descView.classList.contains('hidden')) dvRender();
+  const _tabView=g('view-tab');
+  if(_tabView&&!_tabView.classList.contains('hidden') && typeof renderTablero==='function') renderTablero();
 
 }
 
