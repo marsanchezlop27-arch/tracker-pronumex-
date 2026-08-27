@@ -328,34 +328,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 .mb-next-item{font-size:11px;color:var(--text2);font-family:'IBM Plex Mono',monospace;padding:2px 0}
 .mb-empty-slot{color:var(--text3);font-size:13px;padding:6px 0}
 
-/* TABLERO DE TURNO — matriz de responsabilidades */
-.tab-section-card{background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:16px 18px;min-height:60px}
-.tab-auto-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
-.tab-auto-card{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;min-height:70px}
-.tab-auto-ttl{font-size:11.5px;font-weight:700;color:var(--cyan)}
-.tab-auto-row{padding:9px 0;border-top:1px solid var(--border);font-size:12px;display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 10px}
-.tab-auto-row:first-child{border-top:none}
-.tab-auto-row b{color:var(--text);font-size:13px;white-space:normal;overflow:visible;text-overflow:clip;flex:0 0 auto}
-.tab-auto-tag{display:inline-block;background:var(--navy2);border:1px solid var(--border2);color:var(--text2);
-  font-size:10.5px;border-radius:10px;padding:3px 9px;margin:0}
-.tab-empty{color:var(--text3);font-size:11.5px;padding:6px 0}
-.tab-role-row{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;margin-bottom:10px}
-.tab-role-ttl{font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.tab-role-ttl .cnt{font-size:10px;color:var(--text3);font-weight:400}
-.tab-chip{display:inline-flex;align-items:center;gap:6px;background:var(--navy2);border:1px solid var(--border2);
-  border-radius:14px;padding:4px 6px 4px 12px;font-size:12px;margin:0 6px 6px 0;white-space:normal}
-.tab-chip button{background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;
-  width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.tab-chip button:hover{color:var(--red);background:rgba(239,68,68,.12)}
-.tab-add-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
-.tab-add-row select,.tab-add-row input{background:var(--navy2);border:1px solid var(--border2);color:var(--text);
-  border-radius:6px;padding:5px 8px;font-size:11.5px;height:28px}
-.tab-add-row select{flex:1;min-width:220px}
-.tab-add-row input{flex:1;min-width:160px}
-.tab-hist-day{background:var(--navy2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;margin-bottom:10px}
-.tab-hist-day-ttl{font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.tab-hist-sec{font-size:11px;margin:6px 0}
-.tab-hist-sec b{color:var(--text2);font-weight:700}
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    PC / ESCRITORIO  ≥1280px
@@ -365,22 +337,10 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 /* Tracker + Resumen: .ts already has calc(100vh - 220px)    */
 
 /* Module panels: always fill remaining height with scroll    */
-#view-desc,#view-inc,#view-hist{
+#view-desc,#view-hist{
   max-height:calc(100vh - 155px);
   overflow-y:auto;
   overflow-x:hidden;
-}
-
-/* Incidencias: ranking + list */
-#incColabRank{
-  max-height:45vh;
-  overflow-y:auto;
-  overflow-x:hidden;
-  padding-right:2px;
-}
-#incLista{
-  max-height:35vh;
-  overflow-y:auto;
 }
 
 /* Ranking detail body */
@@ -388,12 +348,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   max-height:320px;
   overflow-y:auto;
   overflow-x:auto;
-}
-
-/* Historial descargas content */
-#histContent,#hpan-desc{
-  max-height:50vh;
-  overflow-y:auto;
 }
 
 /* DV supervisor panel */
@@ -413,12 +367,9 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 
 /* Always show scrollbar on webkit so user knows it scrolls */
 #view-desc::-webkit-scrollbar,
-#view-inc::-webkit-scrollbar,
+
 #view-hist::-webkit-scrollbar,
-#incColabRank::-webkit-scrollbar,
-#incLista::-webkit-scrollbar,
 .rank-body::-webkit-scrollbar,
-#histContent::-webkit-scrollbar,
 #dvSupPanel::-webkit-scrollbar,
 .rep-box::-webkit-scrollbar,
 .ts::-webkit-scrollbar{
@@ -426,12 +377,8 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   height:5px;
 }
 #view-desc::-webkit-scrollbar-track,
-#view-inc::-webkit-scrollbar-track,
 #view-hist::-webkit-scrollbar-track,
-#incColabRank::-webkit-scrollbar-track,
-#incLista::-webkit-scrollbar-track,
 .rank-body::-webkit-scrollbar-track,
-#histContent::-webkit-scrollbar-track,
 #dvSupPanel::-webkit-scrollbar-track,
 .rep-box::-webkit-scrollbar-track,
 .ts::-webkit-scrollbar-track{
@@ -439,12 +386,8 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   border-radius:3px;
 }
 #view-desc::-webkit-scrollbar-thumb,
-#view-inc::-webkit-scrollbar-thumb,
 #view-hist::-webkit-scrollbar-thumb,
-#incColabRank::-webkit-scrollbar-thumb,
-#incLista::-webkit-scrollbar-thumb,
 .rank-body::-webkit-scrollbar-thumb,
-#histContent::-webkit-scrollbar-thumb,
 #dvSupPanel::-webkit-scrollbar-thumb,
 .rep-box::-webkit-scrollbar-thumb,
 .ts::-webkit-scrollbar-thumb{
@@ -492,11 +435,8 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @media (max-width:768px){
   body{font-size:12px}
-  #view-desc,#view-inc,#view-hist{max-height:calc(100vh - 130px)}
-  #incColabRank{max-height:38vh}
-  #incLista{max-height:28vh}
+  #view-desc,#view-hist{max-height:calc(100vh - 130px)}
   .rank-body{max-height:220px}
-  #histContent,#hpan-desc{max-height:42vh}
   #dvSupPanel{max-height:35vh}
   .topbar{padding:5px 10px;gap:5px;flex-wrap:wrap}
   .topbar .btn{font-size:10px;padding:3px 7px}
@@ -679,10 +619,6 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   <button class="vsw-btn" id="vsw-hist" onclick="switchView('hist')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     Histórico
-  </button>
-  <button class="vsw-btn" id="vsw-tab" onclick="switchView('tab')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-    Tablero de turno
   </button>
 
 </div>
@@ -964,6 +900,7 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
           <th style="width:108px">No. Embarque</th>
           <th style="min-width:160px">Cliente</th>
           <th style="width:180px">Semáforo</th>
+          <th style="width:90px">Unidad</th>
           <th style="width:80px">Cortina</th>
           <th style="width:120px;color:var(--cyan)">Precarga</th>
           <th style="width:140px;color:var(--cyan)">Estatus op.</th>
@@ -1128,90 +1065,13 @@ tr.pos-desplazado td:first-child{border-left-color:var(--purple)!important}
   </div>
 </div><!-- /view-hist -->
 
-<!-- VISTA TABLERO DE TURNO — matriz de responsabilidades -->
-<div id="view-tab" class="hidden">
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
-    <div>
-      <div style="font-family:'Oswald',sans-serif;font-size:15px;font-weight:600;color:var(--cyan)">📋 Tablero de turno — matriz de responsabilidades</div>
-      <div style="font-size:11.5px;color:var(--text3);max-width:640px;margin-top:3px">
-        Descargas y Verificación se jalan automático del Tracker y del módulo de Descargas.
-        Tareas y Supervisor se asignan a mano — si la persona no está en la lista, puedes escribirla directo.
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <select id="tabTurnoSel" onchange="renderTablero()"
-        style="background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:6px 10px;font-size:12px;height:32px">
-        <option value="1">Turno 1</option>
-        <option value="2">Turno 2</option>
-        <option value="3">Turno 3</option>
-        <option value="MIXTO">Mixto</option>
-      </select>
-      <button class="btn" onclick="renderTablero()" style="border-color:var(--cyan);color:var(--cyan)">⟳ Actualizar</button>
-      <button class="btn" onclick="guardarCierreTablero()" style="border-color:var(--green);color:var(--green)">📌 Guardar cierre de turno</button>
-      <button class="btn" id="tabHistToggleBtn" onclick="toggleTableroHist()" style="border-color:var(--brand);color:var(--brand)">🕐 Histórico</button>
-    </div>
-  </div>
-
-  <!-- HISTÓRICO (oculto por defecto) -->
-  <div id="tabHistPanel" style="display:none;margin-bottom:22px;background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:14px 16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px">
-      <div style="font-size:12px;font-weight:700;color:var(--brand)">🕐 Histórico de tableros — qué hizo cada turno, día por día</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <select id="tabHistTurnoFilter" onchange="renderTableroHist()"
-          style="background:var(--navy2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 9px;font-size:11px">
-          <option value="">Todos los turnos</option>
-          <option value="1">Turno 1</option>
-          <option value="2">Turno 2</option>
-          <option value="3">Turno 3</option>
-          <option value="MIXTO">Mixto</option>
-        </select>
-        <input type="date" id="tabHistFechaFilter" onchange="renderTableroHist()"
-          style="background:var(--navy2);border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:5px 9px;font-size:11px">
-        <button class="btn" onclick="g('tabHistFechaFilter').value='';renderTableroHist()" style="font-size:11px;padding:5px 10px">✕ Quitar fecha</button>
-      </div>
-    </div>
-    <div id="tabHistList"></div>
-  </div>
-
-  <!-- SUPERVISOR (asignación única, arriba de todo) -->
-  <div id="tabSupervisorWrap" style="margin-bottom:20px"></div>
-
-  <!-- SECCIÓN: DESCARGAS -->
-  <div class="section-title" style="display:flex;align-items:center;gap:10px;margin:10px 0">
-    <span style="font-size:11px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.09em">🚛 Descargas — automático (Tracker / módulo Descargas)</span>
-    <hr style="flex:1;border:none;border-top:1px solid var(--border)">
-  </div>
-  <div class="tab-section-card">
-    <div id="tabAutoMonta"></div>
-  </div>
-
-  <!-- SECCIÓN: TAREAS -->
-  <div class="section-title" style="display:flex;align-items:center;gap:10px;margin:22px 0 10px">
-    <span style="font-size:11px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.09em">📦 Tareas — picking, customizado, armado, devoluciones</span>
-    <hr style="flex:1;border:none;border-top:1px solid var(--border)">
-  </div>
-  <div class="tab-section-card" style="margin-bottom:14px">
-    <div class="tab-auto-ttl" style="margin-bottom:8px">🎨 Customizando ahora (automático — Tracker)</div>
-    <div id="tabAutoCust"></div>
-  </div>
-  <div id="tabManualWrap"></div>
-
-  <!-- SECCIÓN: VERIFICACIÓN -->
-  <div class="section-title" style="display:flex;align-items:center;gap:10px;margin:22px 0 10px">
-    <span style="font-size:11px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:.09em">🧾 Verificación — automático (Tracker)</span>
-    <hr style="flex:1;border:none;border-top:1px solid var(--border)">
-  </div>
-  <div class="tab-section-card">
-    <div id="tabAutoVerif"></div>
-  </div>
-</div><!-- /view-tab -->
 
 
 </div><!-- /shell -->
 
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
-const S = { rows:[], buf:{}, sc:'', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[], initialSemEmbs:[], initialSemArBase:{}, montaQueue:{}, turnoTablero:{}, tableroHistorial:[] };
+const S = { rows:[], buf:{}, sc:'', sa:true, detMap:{}, userEdits:{}, posAlerts:[], sessionSup:'', sessionTurno:'1', turnoHistorial:[], initialSemEmbs:[], initialSemArBase:{}, montaQueue:{} };
 
 // ─── HISTORIAL PERSISTENTE (localStorage) ────────────────────────────────────
 
@@ -1389,325 +1249,6 @@ const PUESTOS_UNICOS = Array.from(new Set(ALL_PERSONAL.map(p=>p.puesto))).sort()
 function personalPorTurno(turno){
   if(!turno) return ALL_PERSONAL;
   return ALL_PERSONAL.filter(p=>p.turno===turno||p.turno==='MIXTO');
-}
-
-// ─── TABLERO DE TURNO — matriz de responsabilidades ───────────────────────────
-// Roles de "Tareas" que se llenan a mano (sin fuente de datos automática en el sistema)
-const ROLES_MANUALES = [
-  'Encargado Picking','Encargado Customizado','Cargador-Tareas',
-  'Picking (Multifuncional)','Armador','Cargador-Armador','Customizador-Armador',
-  'Segregador Daños WT','Customizador','Pasador de Devoluciones-PR-19'
-];
-
-// S.turnoTablero = { [turno]: { __supervisor:{id,nombre}|null, [rol]: [ {id, nombre} , ... ] } }
-function ensureTableroTurno(turno){
-  if(!S.turnoTablero) S.turnoTablero={};
-  if(!S.turnoTablero[turno]) S.turnoTablero[turno]={};
-  if(S.turnoTablero[turno].__supervisor===undefined) S.turnoTablero[turno].__supervisor=null;
-  ROLES_MANUALES.forEach(r=>{ if(!S.turnoTablero[turno][r]) S.turnoTablero[turno][r]=[]; });
-  return S.turnoTablero[turno];
-}
-
-function tableroTurnoActual(){
-  return g('tabTurnoSel')?.value || S.sessionTurno || '1';
-}
-
-function renderTablero(){
-  const sel=g('tabTurnoSel');
-  if(sel && !sel._init){
-    sel.value = S.sessionTurno && ['1','2','3','MIXTO'].includes(S.sessionTurno) ? S.sessionTurno : '1';
-    sel._init = true;
-  }
-  const turno = tableroTurnoActual();
-  renderTableroSupervisor(turno);
-  renderTableroAuto();
-  renderTableroManual(turno);
-}
-
-// ── Supervisor de turno — asignación única (una sola persona por turno) ──
-function renderTableroSupervisor(turno){
-  const wrap=g('tabSupervisorWrap'); if(!wrap) return;
-  const data=ensureTableroTurno(turno);
-  const lista=personalPorTurno(turno);
-  const sup=data.__supervisor;
-  const selOpts = '<option value="">— elegir de la lista —</option>'+
-    lista.map(p=>`<option value="${es(p.id)}">${es(p.nombre)} (${es(p.puesto)})</option>`).join('');
-  wrap.innerHTML = `<div class="tab-role-row" style="border-color:var(--cyan)">
-    <div class="tab-role-ttl">👤 Supervisor de turno</div>
-    <div>${sup
-      ? `<span class="tab-chip">${es(sup.nombre)}<button onclick="tableroSupervisorQuitar('${es(turno)}')" title="Quitar">✕</button></span>`
-      : '<span class="tab-empty" style="display:inline">Sin asignar todavía.</span>'}</div>
-    ${sup ? '' : `<div class="tab-add-row">
-        <select id="tabSupSel-${es(turno)}">${selOpts}</select>
-        <input type="text" id="tabSupManual-${es(turno)}" placeholder="…o escribe un nombre que no esté en la lista">
-        <button class="btn" style="height:28px;font-size:11px;border-color:var(--cyan);color:var(--cyan)"
-          onclick="tableroSupervisorAsignar('${es(turno)}')">+ Asignar</button>
-      </div>`}
-  </div>`;
-}
-function tableroSupervisorAsignar(turno){
-  const data=ensureTableroTurno(turno);
-  const sel=g('tabSupSel-'+turno), inp=g('tabSupManual-'+turno);
-  let nombre='', id='';
-  if(sel && sel.value){
-    const p=ALL_PERSONAL.find(x=>x.id===sel.value);
-    if(p){ nombre=p.nombre; id=p.id; }
-  }
-  if(!nombre && inp && inp.value.trim()){ nombre=inp.value.trim(); id='manual:'+nombre; }
-  if(!nombre){ alert('Elige a alguien de la lista o escribe un nombre.'); return; }
-  data.__supervisor={id,nombre};
-  renderTableroSupervisor(turno);
-  if(typeof fbSave==='function') fbSave();
-}
-function tableroSupervisorQuitar(turno){
-  const data=ensureTableroTurno(turno);
-  data.__supervisor=null;
-  renderTableroSupervisor(turno);
-  if(typeof fbSave==='function') fbSave();
-}
-
-// ── Sección automática: se jala de S.rows (tracker) y de DC (Control de Descargas) ──
-function renderTableroAuto(){
-  // Descargas — montacarguistas: flete activo (tracker) + cortina/descargas (módulo Descargas, solo lectura)
-  const montaMap={};
-  const dcData = (typeof DC!=='undefined') ? DC : {};
-  Object.keys(dcData).forEach(cn=>{
-    const d=dcData[cn];
-    if(d && d.monta){
-      if(!montaMap[d.monta]) montaMap[d.monta]={nombre:getMontaNombre(d.monta)||d.monta,cortinas:[],descargas:0,fletes:[]};
-      montaMap[d.monta].cortinas.push('Cortina '+cn);
-      montaMap[d.monta].descargas += d.descargas||0;
-    }
-  });
-  (S.rows||[]).forEach(r=>{
-    if(r.monta && r.estop!=='CARGADO' && r.pc!==100){
-      if(!montaMap[r.monta]) montaMap[r.monta]={nombre:getMontaNombre(r.monta)||r.monta,cortinas:[],descargas:0,fletes:[]};
-      montaMap[r.monta].fletes.push(r.emb);
-    }
-  });
-  const montaIds=Object.keys(montaMap);
-  const elM=g('tabAutoMonta');
-  if(elM) elM.innerHTML = montaIds.length ? montaIds.map(id=>{
-    const m=montaMap[id];
-    return `<div class="tab-auto-row"><b>${es(m.nombre)}</b>
-      ${m.fletes.length?`<span class="tab-auto-tag">Flete ${m.fletes.map(es).join(', ')}</span>`:''}
-      ${m.cortinas.length?`<span class="tab-auto-tag">${m.cortinas.map(es).join(', ')}</span>`:''}
-      ${m.descargas?`<span class="tab-auto-tag">${m.descargas} descargas</span>`:''}
-      ${(!m.fletes.length&&!m.cortinas.length)?'<span class="tab-auto-tag">Libre — sin flete activo</span>':''}
-    </div>`;
-  }).join('') : '<div class="tab-empty">Sin montacarguistas con actividad registrada.</div>';
-
-  // Verificación: fletes con r.verif asignado
-  const verifMap={};
-  (S.rows||[]).forEach(r=>{
-    if(r.verif && r.estop!=='CARGADO' && r.pc!==100){
-      if(!verifMap[r.verif]) verifMap[r.verif]={nombre:getVerifNombre(r.verif)||r.verif,fletes:[]};
-      verifMap[r.verif].fletes.push(r.emb);
-    }
-  });
-  const verifIds=Object.keys(verifMap);
-  const elV=g('tabAutoVerif');
-  if(elV) elV.innerHTML = verifIds.length ? verifIds.map(id=>{
-    const v=verifMap[id];
-    return `<div class="tab-auto-row"><b>${es(v.nombre)}</b><span class="tab-auto-tag">${v.fletes.length} flete(s): ${v.fletes.slice(0,8).map(es).join(', ')}${v.fletes.length>8?'…':''}</span></div>`;
-  }).join('') : '<div class="tab-empty">Sin verificadores con fletes activos.</div>';
-
-  // Tareas → customizando ahora: r.customBy (nombre) sobre fletes activos
-  const custMap={};
-  (S.rows||[]).forEach(r=>{
-    if(r.customBy && r.estop!=='CARGADO' && r.pc!==100){
-      if(!custMap[r.customBy]) custMap[r.customBy]={fletes:[]};
-      custMap[r.customBy].fletes.push(r.emb);
-    }
-  });
-  const custIds=Object.keys(custMap);
-  const elC=g('tabAutoCust');
-  if(elC) elC.innerHTML = custIds.length ? custIds.map(nombre=>{
-    const c=custMap[nombre];
-    return `<div class="tab-auto-row"><b>${es(nombre)}</b><span class="tab-auto-tag">${c.fletes.length} flete(s): ${c.fletes.slice(0,8).map(es).join(', ')}${c.fletes.length>8?'…':''}</span></div>`;
-  }).join('') : '<div class="tab-empty">Sin customizaciones en curso.</div>';
-}
-
-// ── Sección Tareas (manual): roles sin fuente de datos, asignados por el supervisor ──
-function renderTableroManual(turno){
-  const wrap=g('tabManualWrap'); if(!wrap) return;
-  const data=ensureTableroTurno(turno);
-  const lista=personalPorTurno(turno);
-  wrap.innerHTML = ROLES_MANUALES.map(rol=>{
-    const asignados=data[rol]||[];
-    const chips = asignados.length ? asignados.map((p,i)=>
-      `<span class="tab-chip">${es(p.nombre)}<button onclick="tableroRemove('${es(turno)}','${es(rol)}',${i})" title="Quitar">✕</button></span>`
-    ).join('') : '<span class="tab-empty" style="display:inline">Sin asignar todavía.</span>';
-    const selOpts = '<option value="">— elegir de la lista —</option>'+
-      lista.map(p=>`<option value="${es(p.id)}">${es(p.nombre)} (${es(p.puesto)})</option>`).join('');
-    return `<div class="tab-role-row">
-      <div class="tab-role-ttl">${es(rol)} <span class="cnt">${asignados.length?asignados.length+' asignado(s)':''}</span></div>
-      <div>${chips}</div>
-      <div class="tab-add-row">
-        <select id="tabSel-${es(turno)}-${es(rol)}">${selOpts}</select>
-        <input type="text" id="tabManual-${es(turno)}-${es(rol)}" placeholder="…o escribe un nombre que no esté en la lista">
-        <button class="btn" style="height:28px;font-size:11px;border-color:var(--brand);color:var(--brand)"
-          onclick="tableroAdd('${es(turno)}','${es(rol)}')">+ Agregar</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function tableroAdd(turno,rol){
-  const data=ensureTableroTurno(turno);
-  const sel=g('tabSel-'+turno+'-'+rol), inp=g('tabManual-'+turno+'-'+rol);
-  let nombre='', id='';
-  if(sel && sel.value){
-    const p=ALL_PERSONAL.find(x=>x.id===sel.value);
-    if(p){ nombre=p.nombre; id=p.id; }
-  }
-  if(!nombre && inp && inp.value.trim()){
-    nombre=inp.value.trim(); id='manual:'+nombre;
-  }
-  if(!nombre){ alert('Elige a alguien de la lista o escribe un nombre.'); return; }
-  if(!data[rol]) data[rol]=[];
-  if(data[rol].some(p=>p.id===id)){ alert('Esa persona ya está asignada a este rol.'); return; }
-  data[rol].push({id,nombre});
-  if(sel) sel.value='';
-  if(inp) inp.value='';
-  renderTableroManual(turno);
-  if(typeof fbSave==='function') fbSave();
-}
-function tableroRemove(turno,rol,idx){
-  const data=ensureTableroTurno(turno);
-  if(!data[rol]) return;
-  data[rol].splice(idx,1);
-  renderTableroManual(turno);
-  if(typeof fbSave==='function') fbSave();
-}
-
-// ── Histórico del tablero: "qué hizo cada turno, cada día" ──────────────────
-// S.tableroHistorial = [ { id, fecha:'YYYY-MM-DD', fechaLabel, turno, ts, sup,
-//                           descargas:[{nombre,fletes,cortinas,descargas}],
-//                           verificacion:[{nombre,fletes}],
-//                           customizando:[{nombre,fletes}],
-//                           tareas:{ [rol]:[nombre,...] } } ]
-function _tableroHoyKey(){
-  const d=new Date();
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-}
-function guardarCierreTablero(){
-  const turno=tableroTurnoActual();
-  const data=ensureTableroTurno(turno);
-  if(!S.tableroHistorial) S.tableroHistorial=[];
-
-  // Recolectar auto (descargas/verificación/customizando) tal como están ahora mismo
-  const montaMap={};
-  const dcData=(typeof DC!=='undefined')?DC:{};
-  Object.keys(dcData).forEach(cn=>{
-    const d=dcData[cn];
-    if(d && d.monta){
-      if(!montaMap[d.monta]) montaMap[d.monta]={nombre:getMontaNombre(d.monta)||d.monta,cortinas:[],descargas:0,fletes:[]};
-      montaMap[d.monta].cortinas.push('Cortina '+cn);
-      montaMap[d.monta].descargas+=d.descargas||0;
-    }
-  });
-  (S.rows||[]).forEach(r=>{
-    if(r.monta && r.estop!=='CARGADO' && r.pc!==100){
-      if(!montaMap[r.monta]) montaMap[r.monta]={nombre:getMontaNombre(r.monta)||r.monta,cortinas:[],descargas:0,fletes:[]};
-      montaMap[r.monta].fletes.push(r.emb);
-    }
-  });
-  const verifMap={};
-  (S.rows||[]).forEach(r=>{
-    if(r.verif && r.estop!=='CARGADO' && r.pc!==100){
-      if(!verifMap[r.verif]) verifMap[r.verif]={nombre:getVerifNombre(r.verif)||r.verif,fletes:[]};
-      verifMap[r.verif].fletes.push(r.emb);
-    }
-  });
-  const custMap={};
-  (S.rows||[]).forEach(r=>{
-    if(r.customBy && r.estop!=='CARGADO' && r.pc!==100){
-      if(!custMap[r.customBy]) custMap[r.customBy]={fletes:[]};
-      custMap[r.customBy].fletes.push(r.emb);
-    }
-  });
-  const tareas={};
-  ROLES_MANUALES.forEach(rol=>{ tareas[rol]=(data[rol]||[]).map(p=>p.nombre); });
-
-  const now=new Date();
-  const entry={
-    id:'tab_'+now.getTime(),
-    fecha:_tableroHoyKey(),
-    fechaLabel:now.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'}),
-    hora:now.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}),
-    turno,
-    ts:now.getTime(),
-    sup:data.__supervisor?data.__supervisor.nombre:'',
-    descargas:Object.values(montaMap).map(m=>({nombre:m.nombre,fletes:m.fletes,cortinas:m.cortinas,descargas:m.descargas})),
-    verificacion:Object.values(verifMap).map(v=>({nombre:v.nombre,fletes:v.fletes})),
-    customizando:Object.values(custMap).map(c=>({nombre:c.nombre||'—',fletes:c.fletes})),
-    tareas
-  };
-  S.tableroHistorial.push(entry);
-  // Mantener solo los últimos 60 cierres guardados
-  if(S.tableroHistorial.length>60) S.tableroHistorial=S.tableroHistorial.slice(-60);
-  try{ localStorage.setItem('trx_tablero_hist', JSON.stringify(S.tableroHistorial)); }catch(e){}
-  if(typeof fbSave==='function') fbSave();
-  alert('Cierre de turno guardado en el histórico ('+entry.fechaLabel+', Turno '+turno+').');
-  if(g('tabHistPanel') && g('tabHistPanel').style.display!=='none') renderTableroHist();
-}
-
-function toggleTableroHist(){
-  const panel=g('tabHistPanel'); if(!panel) return;
-  const show = panel.style.display==='none';
-  panel.style.display = show?'':'none';
-  if(show) renderTableroHist();
-}
-
-function renderTableroHist(){
-  const listEl=g('tabHistList'); if(!listEl) return;
-  const turnoF=g('tabHistTurnoFilter')?.value||'';
-  const fechaF=g('tabHistFechaFilter')?.value||'';
-  let entries=(S.tableroHistorial||[]).slice().sort((a,b)=>b.ts-a.ts);
-  if(turnoF) entries=entries.filter(e=>e.turno===turnoF);
-  if(fechaF) entries=entries.filter(e=>e.fecha===fechaF);
-  if(!entries.length){
-    listEl.innerHTML='<div class="tab-empty">No hay cierres de turno guardados todavía con ese filtro.</div>';
-    return;
-  }
-  // Agrupar por día
-  const porDia={};
-  entries.forEach(e=>{ (porDia[e.fecha]=porDia[e.fecha]||[]).push(e); });
-  const dias=Object.keys(porDia).sort().reverse();
-  listEl.innerHTML=dias.map(fecha=>{
-    const items=porDia[fecha];
-    const label=items[0].fechaLabel||fecha;
-    const cardsHtml=items.map(e=>{
-      const descHtml=e.descargas.length
-        ? e.descargas.map(d=>`<div>• <b>${es(d.nombre)}</b>${d.fletes.length?` — ${d.fletes.length} flete(s): ${d.fletes.map(es).join(', ')}`:''}${d.cortinas.length?` (${d.cortinas.map(es).join(', ')})`:''}${d.descargas?`, ${d.descargas} descargas`:''}</div>`).join('')
-        : '<div style="color:var(--text3)">Sin montacarguistas registrados.</div>';
-      const verifHtml=e.verificacion.length
-        ? e.verificacion.map(v=>`<div>• <b>${es(v.nombre)}</b> — ${v.fletes.length} flete(s): ${v.fletes.map(es).join(', ')}</div>`).join('')
-        : '<div style="color:var(--text3)">Sin verificadores registrados.</div>';
-      const custHtml=(e.customizando||[]).length
-        ? e.customizando.map(c=>`<div>• <b>${es(c.nombre)}</b> — ${c.fletes.length} flete(s): ${c.fletes.map(es).join(', ')}</div>`).join('')
-        : '';
-      const tareasRows=Object.keys(e.tareas||{}).filter(rol=>(e.tareas[rol]||[]).length);
-      const tareasHtml=tareasRows.length
-        ? tareasRows.map(rol=>`<div>• <b>${es(rol)}:</b> ${e.tareas[rol].map(es).join(', ')}</div>`).join('')
-        : '<div style="color:var(--text3)">Sin tareas manuales asignadas.</div>';
-      return `<div class="tab-hist-day">
-        <div class="tab-hist-day-ttl">
-          <span>🕐 ${es(e.hora||'')}</span>
-          <span class="tab-auto-tag">Turno ${es(e.turno)}</span>
-          ${e.sup?`<span class="tab-auto-tag">Sup: ${es(e.sup)}</span>`:''}
-        </div>
-        <div class="tab-hist-sec"><b>🚛 Descargas</b>${descHtml}</div>
-        <div class="tab-hist-sec"><b>📦 Tareas</b>${tareasHtml}${custHtml?`<div style="margin-top:4px">🎨 Customizando: </div>${custHtml}`:''}</div>
-        <div class="tab-hist-sec"><b>🧾 Verificación</b>${verifHtml}</div>
-      </div>`;
-    }).join('');
-    return `<div style="margin-bottom:16px">
-      <div style="font-size:11px;font-weight:700;color:var(--brand);text-transform:capitalize;margin-bottom:8px">📅 ${es(label)}</div>
-      ${cardsHtml}
-    </div>`;
-  }).join('');
 }
 
 
@@ -2003,7 +1544,14 @@ function parseSlot(buf){
       const rows = parseFile(b);
       // Remove duplicate columns: keep only the FIRST occurrence of each header name
       const cleaned = removeDupCols(rows);
-      all.push(...(i === 0 ? cleaned : cleaned.slice(1)));
+      // Cada archivo puede traer su encabezado en una fila distinta (logo/título arriba).
+      // Se recorta cada archivo para que su propio encabezado quede siempre en la fila 0
+      // antes de concatenar — así nunca se corta la fila equivocada al combinar varios
+      // archivos a la vez (antes se asumía que el encabezado siempre estaba en la fila 0
+      // de CADA archivo, lo cual rompía datos si alguno traía filas extra arriba).
+      const hi = findHdrRow(cleaned);
+      const aligned = cleaned.slice(hi);
+      all.push(...(i === 0 ? aligned : aligned.slice(1)));
     } catch(e){ console.warn('parseSlot error', e); }
   });
   return all;
@@ -2089,7 +1637,7 @@ function patchDetPtr(){
   // _rm removed: all fletes kept, 100% auto-sets estop=CARGADO
   console.log('[BUILD END] S.rows='+S.rows.length);
   if(S.rows.length>0) console.log('[BUILD SAMPLE]',JSON.stringify(S.rows.slice(0,3).map(function(r){return{emb:r.emb,nom:r.nom,sem:r.sem,con:r.con,verif:r.verif,monta:r.monta};})));
-  kpi(); render(); alerts(); badge();
+  kpi(); render(); alerts(); badge(); if(g('p-rs') && !g('p-rs').classList.contains('hidden')) renderResumen();
   if(typeof kpiVerif==='function') kpiVerif();
   ['kRow','tabs','btnExp','btnRecalc','btnReporte','btnMontaBoard'].forEach(id=>{
     const el = g(id); if(el) el.classList.remove('hidden');
@@ -2323,7 +1871,7 @@ function build(){
   S.detMap = detMap;
   S.comMap = comMap;
   S.ptrMap = ptrMap;
-  kpi(); render(); alerts(); badge();
+  kpi(); render(); alerts(); badge(); if(g('p-rs') && !g('p-rs').classList.contains('hidden')) renderResumen();
   if(typeof kpiVerif==='function') kpiVerif();
   // Fletes que llegaron ya CARGADO (100%): liberar montacarguista y avanzar su cola
   if(typeof checkMontaQueueAdvance==='function') checkMontaQueueAdvance();
@@ -2585,7 +2133,7 @@ function applyNew(){
     }
   });
 
-  kpi(); render(); alerts(); badge();
+  kpi(); render(); alerts(); badge(); if(g('p-rs') && !g('p-rs').classList.contains('hidden')) renderResumen();
   g('stp2').classList.add('done'); g('stp3').classList.add('active');
   showRes('ok',
     snapMsg+'<br>'+
@@ -3217,7 +2765,7 @@ function cargarDesdeGuardado(){
   g('btnRecalc').classList.remove('hidden');
   g('btnReporte').classList.remove('hidden');
   g('btnMontaBoard')?.classList.remove('hidden');
-  kpi(); render(); alerts(); badge();
+  kpi(); render(); alerts(); badge(); if(g('p-rs') && !g('p-rs').classList.contains('hidden')) renderResumen();
   if(typeof kpiVerif === 'function') kpiVerif();
   updateTopbarSup();
 
@@ -3235,7 +2783,7 @@ function cargarDesdeGuardado(){
 
 function recalcular(){
   if(!S.rows.length){ alert('No hay datos cargados aún.'); return; }
-  kpi(); render(); alerts(); badge();
+  kpi(); render(); alerts(); badge(); if(g('p-rs') && !g('p-rs').classList.contains('hidden')) renderResumen();
   if(typeof kpiVerif==='function') kpiVerif();
   if(g('p-rs')&&!g('p-rs').classList.contains('hidden')) renderResumen();
   const btn=g('btnRecalc'); if(!btn) return;
@@ -4942,21 +4490,14 @@ function exportHistCSV(){
 function switchView(v){
   // Documentador: only desc and hist allowed
   if(fbIsDocumentador && v!=='desc' && v!=='hist') return;
-  ['emb','desc','inc','hist','tab'].forEach(x=>{
+  ['emb','desc','hist'].forEach(x=>{
     const el=g('view-'+x); if(el) el.classList.toggle('hidden', x!==v);
     const btn=g('vsw-'+x); if(btn) btn.classList.toggle('active', x===v);
   });
   if(v==='desc') dvRender();
-  if(v==='inc'){
-    if(!document.getElementById('incSkuList')?.children.length){ incAddSku(); }
-    const _ic=g('incColab'); if(_ic&&!_ic._acAttached){ makeAC(_ic,ALL_PERSONAL,(id,n)=>{g('incColabId').value=id;}); _ic._acAttached=true; }
-    const _ii=g('incColabInc'); if(_ii&&!_ii._acAttached){ makeAC(_ii,ALL_PERSONAL,(id,n)=>{g('incColabIncId').value=id;}); _ii._acAttached=true; }
-    incRender();
-  }
   if(v==='hist'){
     histSubTab('cust');
   }
-  if(v==='tab') renderTablero();
 }
 window._switchViewOriginal = switchView;
 
@@ -5024,14 +4565,6 @@ const CUST = { historial: [] };
   try{
     const _c=localStorage.getItem('trx_cust_hist');
     if(_c){ const _d=JSON.parse(_c); if(Array.isArray(_d)) CUST.historial=_d; }
-  }catch(e){}
-})();
-
-// Tablero de turno — histórico persistente (respaldo local antes de que sincronice Firebase)
-(function(){
-  try{
-    const _t=localStorage.getItem('trx_tablero_hist');
-    if(_t){ const _d=JSON.parse(_t); if(Array.isArray(_d)) S.tableroHistorial=_d; }
   }catch(e){}
 })();
 
@@ -5173,403 +4706,6 @@ window.addEventListener('load', ()=>{
   try{ const d=localStorage.getItem('trx_incidencias'); if(d) INC.registros=JSON.parse(d); }catch(e){}
 })();
 
-function incSave(){
-  INC._lastSaveTs = Date.now(); // guard against remote overwrite
-  try{ localStorage.setItem('trx_incidencias',JSON.stringify(INC.registros)); }catch(e){}
-  if(typeof fbSave==='function') fbSave(); // persist to Firebase immediately
-}
-
-function incTipoChange(){
-  const v=g('incTipo').value;
-  g('incTipoOtro').classList.toggle('hidden', v!=='OTROS');
-}
-
-function incBuscarEmb(){
-  const emb=nk(g('incEmb').value.trim());
-  const r=S.rows.find(x=>x.emb===emb);
-  if(r){ g('incEmbInfo').textContent=`✓ ${r.nom} · ${r.sem||'—'}`; }
-  else { g('incEmbInfo').textContent=emb?'No encontrado en semáforo actual':''; }
-}
-
-let incFotoData=''; let incFotos=[]; // multiple photos support
-function incFotoChange(inp){
-  const files=[...inp.files]; if(!files.length) return;
-  files.forEach(file=>{
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const img_=new Image(); img_.onload=()=>{ const c=document.createElement('canvas'); const sc=Math.min(1,400/img_.width); c.width=Math.round(img_.width*sc); c.height=Math.round(img_.height*sc); c.getContext('2d').drawImage(img_,0,0,c.width,c.height); const b64=c.toDataURL('image/jpeg',0.6); incFotos.push(b64); incFotoData=b64; incRefreshFotos(); }; img_.src=e.target.result;
-  };
-  reader.readAsDataURL(file);
-  }); // end files.forEach
-  inp.value='';
-}
-
-function incRefreshFotos(){
-  const prev=g('incFotoPreview'); if(!prev) return;
-  prev.style.display=incFotos.length?'flex':'none';
-  g('incFotoLbl').textContent=incFotos.length?incFotos.length+' foto'+(incFotos.length>1?'s':''):'';
-  prev.innerHTML=incFotos.map((b,i)=>`<div style="position:relative;flex-shrink:0"><img src="${b}" style="height:80px;width:80px;object-fit:cover;border-radius:6px;border:1px solid var(--border2)"><button onclick="incFotos.splice(${i},1);incFotoData=incFotos[0]||'';incRefreshFotos()" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);border:none;cursor:pointer;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px">✕</button></div>`).join('')+'<button onclick="document.getElementById(\"incFoto\").click()" style="height:80px;width:80px;background:var(--navy2);border:1px dashed var(--border2);border-radius:6px;cursor:pointer;color:var(--text3);font-size:20px">+</button>';
-}
-function incFotoLimpiar(){
-  incFotoData=''; incFotos=[];
-  g('incFotoPreview').style.display='none';
-  g('incFotoLbl').textContent='Seleccionar foto';
-  g('incFoto').value='';
-}
-
-
-let _incSkuCount = 0;
-function incAddSku(){
-  const list = document.getElementById('incSkuList');
-  if(!list) return;
-  const id = ++_incSkuCount;
-  const TIPOS_INC = ['SOBRANTE','FALTANTE','PALLET DE MÁS','DAÑOS','COLAPSO','CALIDAD','DAÑO TRANSPORTE','MAL CERTIFICADO','CÓDIGOS CAMBIADOS'];
-  const row = document.createElement('div');
-  row.id = 'inc-sku-'+id;
-  row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr 2fr auto;gap:4px;align-items:center;background:var(--navy2);border-radius:6px;padding:5px 7px';
-  row.innerHTML = `
-    <input class="edt-sel" type="text" placeholder="SKU / Código" style="font-size:11px;height:28px;font-family:'IBM Plex Mono',monospace">
-    <input class="edt-sel" type="number" min="0" placeholder="Cant." style="font-size:11px;height:28px">
-    <select class="edt-sel" style="font-size:11px;height:28px">
-      <option value="CAJAS">Cajas</option><option value="PALLETS">Pallets</option><option value="PZ">Pz</option>
-    </select>
-    <select class="edt-sel" style="font-size:11px;height:28px">
-      <option value="">— Tipo —</option>
-      ${TIPOS_INC.map(t=>`<option value="${t}">${t}</option>`).join('')}
-    </select>
-    <button onclick="document.getElementById('inc-sku-${id}').remove()" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:15px;padding:0;width:18px">✕</button>
-  `;
-  list.appendChild(row);
-}
-
-function incGetSkus(){
-  const list = document.getElementById('incSkuList');
-  if(!list) return [];
-  return [...list.children].map(row => {
-    const inputs = row.querySelectorAll('input, select');
-    return { sku: inputs[0]?.value.trim()||'', cant: inputs[1]?.value||'0', unidad: inputs[2]?.value||'CAJAS', tipo: inputs[3]?.value||'' };
-  }).filter(s => s.tipo);
-}
-
-async function incGuardar(){
-  const emb = g('incEmb').value.trim();
-  let tipo = g('incTipo').value;
-  if(tipo==='OTROS') tipo = g('incTipoOtro').value.trim()||'OTROS';
-  if(!emb){ alert('Ingresa el número de embarque.'); return; }
-  // Accept either main tipo OR skus with tipos
-  const skus = incGetSkus();
-  if(!tipo && !skus.length){ alert('Selecciona el tipo de incidencia o agrega al menos un SKU.'); return; }
-  const r = S.rows.find(x=>x.emb===nk(emb));
-  const hora = new Date().toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
-  const ts = Date.now();
-
-  // Upload photos to Firebase Storage first (if available), get URLs
-  let fotoUrls = [];
-  if(incFotos.length && window.FB && FB.uploadPhoto){
-    const btn=g('incBtnGuardar'); if(btn){btn.disabled=true; btn.textContent='Subiendo fotos...';}
-    for(let i=0;i<incFotos.length;i++){
-      try{
-        const path='incidencias/'+emb.trim()+'/'+ts+'_'+i+'.jpg';
-        const url=await FB.uploadPhoto(path, incFotos[i]);
-        fotoUrls.push(url||incFotos[i]); // fallback to b64 if Storage unavailable
-      }catch(e){
-        console.error('incFoto upload error',e);
-        fotoUrls.push(incFotos[i]); // fallback to b64 if upload fails
-      }
-    }
-    if(btn){btn.disabled=false; btn.textContent='Guardar';}
-  } else {
-    fotoUrls = [...incFotos];
-  }
-
-  if(skus.length){
-    // Save one record per SKU row
-    skus.forEach((s,si) => {
-      INC.registros.push({
-        id: ts+si,
-        emb: emb.trim(), nom: r?.nom||'',
-        tipo: s.tipo||tipo, desc: '',
-        colab: g('incColab')?.value||'',
-        colabInc: g('incColabInc')?.value||'',
-        sku: s.sku, cantidad: s.cant, unidad: s.unidad,
-        foto: si===0?(fotoUrls[0]||''):'', fotos: si===0?fotoUrls:[],
-        hora, ts: ts+si, turno: S.sessionTurno, sup: S.sessionSup
-      });
-    });
-  } else {
-    INC.registros.push({
-      id: ts, emb: emb.trim(), nom: r?.nom||'',
-      tipo, desc: '',
-      colab: g('incColab')?.value||'', colabInc: g('incColabInc')?.value||'',
-      sku: '', cantidad: '', unidad: 'CAJAS',
-      foto: fotoUrls[0]||'', fotos: fotoUrls,
-      hora, ts, turno: S.sessionTurno, sup: S.sessionSup
-    });
-  }
-  incSave();
-  // Reset ALL fields
-  g('incEmb').value=''; g('incTipo').value='';
-  if(g('incColab')) g('incColab').value='';
-  if(g('incColabInc')) g('incColabInc').value='';
-  g('incTipoOtro').value=''; g('incTipoOtro').classList.add('hidden');
-  g('incEmbInfo').textContent=''; incFotoLimpiar();
-  // Reset SKU list with fresh row
-  const skuList = document.getElementById('incSkuList');
-  if(skuList){ skuList.innerHTML=''; _incSkuCount=0; incAddSku(); }
-  incRender(); // show immediately
-}
-
-function incEliminarColab(nombre){
-  if(!confirm('¿Eliminar TODOS los registros de incidencia de '+nombre+'?')) return;
-  INC.registros=INC.registros.filter(r=>
-    r.colab!==nombre && r.nom!==nombre &&
-    String(r.colab||'')!==String(nombre) &&
-    String(r.nom||'')!==String(nombre)
-  );
-  INC._lastSaveTs=Date.now();
-  try{localStorage.setItem('trx_incidencias',JSON.stringify(INC.registros));}catch(e){}
-  if(typeof fbSave==='function') fbSave();
-  incRender();
-}
-
-function incEliminarRegistro(id){
-  if(!confirm('¿Eliminar este registro de incidencia?')) return;
-  INC.registros=INC.registros.filter(r=>r.id!==id&&String(r.id)!==String(id));
-  INC._lastSaveTs=Date.now();
-  try{localStorage.setItem('trx_incidencias',JSON.stringify(INC.registros));}catch(e){}
-  if(typeof fbSave==='function') fbSave();
-  incRender();
-}
-
-function incRender(){
-  const tipo=g('incFiltTipo')?.value||'';
-  const periodo=g('incFiltPeriodo')?.value||'dia'; // default: show today's records
-  const now=new Date();
-
-  let regs=[...INC.registros].sort((a,b)=>b.ts-a.ts);
-  if(tipo) regs=regs.filter(r=>r.tipo===tipo);
-  if(periodo==='turno') regs=regs.filter(r=>r.turno===S.sessionTurno); // removed sup filter — show all incidences for this shift
-  else if(periodo==='dia') regs=regs.filter(r=>new Date(r.ts).toDateString()===now.toDateString());
-  else if(periodo==='semana'){
-    const w=new Date(now); w.setDate(w.getDate()-7);
-    regs=regs.filter(r=>r.ts>=w.getTime());
-  } else if(periodo==='mes'){
-    const m=new Date(now); m.setDate(m.getDate()-30);
-    regs=regs.filter(r=>r.ts>=m.getTime());
-  }
-
-  // KPIs
-  if(g('incKtotal')) g('incKtotal').textContent=INC.registros.length;
-  if(g('incKturno')) g('incKturno').textContent=INC.registros.filter(r=>r.turno===S.sessionTurno&&r.sup===S.sessionSup).length;
-  const tipos=new Set(INC.registros.map(r=>r.tipo));
-  if(g('incKtipos')) g('incKtipos').textContent=tipos.size;
-
-  // Badge
-  const pendInc=INC.registros.filter(r=>r.turno===S.sessionTurno&&r.sup===S.sessionSup).length;
-  if(g('incBdg')) g('incBdg').innerHTML=pendInc?`<span class="b br" style="font-size:9px;padding:1px 6px">${pendInc}</span>`:'';
-
-  const lst=g('incLista'); if(!lst) return;
-  if(!regs.length){
-    lst.innerHTML=`<div style="text-align:center;padding:32px;color:var(--text3);font-size:13px">Sin incidencias registradas para el filtro seleccionado.</div>`;
-    return;
-  }
-
-  // Draw charts
-  incDrawCharts();
-
-  // ── Ranking por colaborador
-  const byColab={};
-  INC.registros.forEach(r=>{
-    const k=r.colabInc||r.colab||'Sin asignar';
-    if(!byColab[k]) byColab[k]={count:0,tipos:{}};
-    byColab[k].count++;
-    byColab[k].tipos[r.tipo]=(byColab[k].tipos[r.tipo]||0)+1;
-  });
-  // Build detailed byColab with SKU+tipo+cantidad+cajas totales
-  const byCo={};
-  INC.registros.forEach(r=>{
-    const k=r.colabInc||r.colab||'Sin asignar';
-    if(!byCo[k]) byCo[k]={count:0,totalCajas:0,registros:[]};
-    byCo[k].count++;
-    byCo[k].totalCajas += parseFloat(r.cantidad)||0;
-    byCo[k].registros.push(r);
-  });
-  const colabRanking=Object.entries(byCo).sort((a,b)=>b[1].count-a[1].count).slice(0,10);
-  const rankEl=document.getElementById('incColabRank');
-  if(rankEl){
-    rankEl.innerHTML=colabRanking.length?colabRanking.map(([nom,d],ri)=>`
-      <div class="rank-card" style="background:var(--navy2);border-radius:8px;margin-bottom:10px;overflow:hidden;border:1px solid var(--border)">
-        <!-- Card header -->
-        <div onclick="var bd=this.nextElementSibling;var c=bd.style.display==='none';bd.style.display=c?'block':'none';this.querySelector('.rk-arrow').textContent=c?'▼':'▶';"
-          style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border)">
-          <span style="font-size:13px;font-weight:800;color:${ri===0?'var(--red)':ri<3?'var(--amber)':'var(--text3)'};min-width:20px">${ri+1}</span>
-          <span style="flex:1;font-size:12px;font-weight:700">${es(nom)}</span>
-          <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:${ri===0?'var(--red)':ri<3?'var(--amber)':'var(--text)'}">${d.count} inc.</span>
-          <span style="font-size:10px;color:var(--text3);background:var(--card);padding:2px 8px;border-radius:4px">${d.totalCajas} cajas</span>
-          <span class="rk-arrow" style="font-size:11px;color:var(--brand);font-weight:700;flex-shrink:0">▼</span>
-          <button onclick="event.stopPropagation();incEliminarColab('${es(nom)}')"
-            style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:var(--red);border-radius:5px;cursor:pointer;font-size:10px;padding:2px 8px;font-weight:600">🗑</button>
-        </div>
-        <!-- Detail table -->
-        <div class="rank-body" style="overflow-x:auto">
-          <table style="width:100%;border-collapse:collapse;font-size:10.5px">
-            <thead>
-              <tr style="background:rgba(255,255,255,.03);border-bottom:1px solid var(--border)">
-                <th style="padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap"># Incidencia</th>
-                <th style="padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap">Colaborador</th>
-                <th style="padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap">Flete — Cliente</th>
-                <th style="padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap">Quién reportó</th>
-                <th style="padding:5px 8px;text-align:left;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap">Tipo evento</th>
-                <th style="padding:5px 8px;text-align:right;font-size:9px;color:var(--text3);text-transform:uppercase;white-space:nowrap">Cajas</th>
-                <th style="padding:5px 8px;text-align:center;font-size:9px;color:var(--text3);text-transform:uppercase"></th>
-              </tr>
-            </thead>
-            <tbody>
-              ${d.registros.map(x=>`
-              <tr style="border-bottom:1px solid rgba(30,58,95,.4)" onmouseover="this.style.background='rgba(255,255,255,.025)'" onmouseout="this.style.background=''">
-                <td style="padding:5px 8px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--brand);white-space:nowrap">${String(x.id||'').slice(-6)}</td>
-                <td style="padding:5px 8px;font-weight:600;white-space:nowrap">${es(x.colabInc||x.colab||'—')}</td>
-                <td style="padding:5px 8px">
-                  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber)">${es(x.emb||'—')}</div>
-                  <div style="font-size:9.5px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">${es(x.nom||'—')}</div>
-                </td>
-                <td style="padding:5px 8px;font-size:10px;color:var(--text2);white-space:nowrap">${es(x.colab||x.sup||'—')}</td>
-                <td style="padding:5px 8px">
-                  <span style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.25);border-radius:3px;padding:1px 6px;font-size:9px;font-weight:700;white-space:nowrap">${es(x.tipo||'—')}</span>
-                </td>
-                <td style="padding:5px 8px;text-align:right;font-weight:700;white-space:nowrap">${es(x.cantidad||'—')} <span style="font-size:9px;color:var(--text3)">${es(x.unidad||'')}</span></td>
-                <td style="padding:5px 8px;text-align:center">
-                  <button onclick="incEliminarRegistro(${x.id})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:11px;opacity:.6;padding:0 3px" title="Eliminar">🗑</button>
-                </td>
-              </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>`).join(''):'<div style="font-size:11px;color:var(--text3);padding:8px 0">Sin datos</div>';
-  }
-
-  const colores={'SOBRANTE':'var(--amber)','FALTANTE':'var(--red)','PALLET DE MÁS':'var(--purple)','DAÑOS':'var(--red)','CÓDIGOS CAMBIADOS':'var(--cyan)'};
-  lst.innerHTML=regs.map(r=>`
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:8px;border-left:3px solid ${colores[r.tipo]||'var(--text3)'}">
-      <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
-        <div style="flex:1">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700">${es(r.emb)}</span>
-            <span class="b" style="background:rgba(239,68,68,.15);color:#FCA5A5;border:1px solid rgba(239,68,68,.3);font-size:9px">${es(r.tipo)}</span>
-            ${r.sku?`<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);padding:1px 6px;border-radius:4px">SKU: ${es(r.sku)}</span>`:''}
-            ${r.cantidad?`<span style="font-size:10px;color:var(--text2);font-weight:600">${es(r.cantidad)} ${es(r.unidad||'')}</span>`:''}
-            <span style="font-size:10px;color:var(--text3)">${r.hora}</span>
-          </div>
-          <div style="font-size:11px;color:var(--text2);margin-bottom:2px">${es(r.nom)||'—'}</div>
-          ${r.colab?`<div style="font-size:10px;color:var(--text3)">Reportado por: <strong>${es(r.colab)}</strong></div>`:''}
-          ${r.desc?`<div style="font-size:11px;color:var(--text3)">${es(r.desc)}</div>`:''}
-        </div>
-        ${(r.fotos||[r.foto]).filter(Boolean).length?`<div style="display:flex;gap:3px;flex-wrap:wrap">${(r.fotos||[r.foto]).filter(Boolean).slice(0,4).map(f=>`<img src="${f}" style="height:55px;width:55px;object-fit:cover;border-radius:5px;border:1px solid var(--border2);cursor:pointer" onclick="evVerFoto('${f}')">`).join('')}${(r.fotos||[]).length>4?`<div style="height:55px;width:55px;background:var(--navy2);border-radius:5px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3)">+${(r.fotos||[]).length-4}</div>`:''}</div>`:''}
-        <button onclick="incEliminar(${r.id})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;opacity:.5;padding:2px" title="Eliminar">✕</button>
-      </div>
-    </div>`).join('');
-}
-
-function incExportarGerencial(){
-  // One row per incidencia detail
-  const rows=[['Colaborador','Embarque','Cliente','Tipo Incidencia','SKU','Cantidad','Unidad','Hora','Reportado por']];
-  INC.registros.forEach(r=>{
-    rows.push([r.colabInc||r.colab||'Sin asignar', r.emb||'', r.nom||'', r.tipo||'', r.sku||'', r.cantidad||'', r.unidad||'', r.hora||'', r.colab||'']);
-  });
-  const csv='﻿'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
-  a.download='Ranking_Colaboradores_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
-}
-function _incExportarGerencialOLD(){
-  const byColab={};
-  INC.registros.forEach(r=>{
-    const k=r.colabInc||r.colab||'Sin asignar';
-    if(!byColab[k]) byColab[k]={count:0,tipos:{}};
-    byColab[k].count++;
-    byColab[k].tipos[r.tipo]=(byColab[k].tipos[r.tipo]||0)+1;
-  });
-  const rows=[['Posición','Colaborador','Total incidencias','Tipos principales']];
-  Object.entries(byColab).sort((a,b)=>b[1].count-a[1].count).forEach(([nom,d],i)=>{
-    const tiposStr=Object.entries(d.tipos).sort((a,b)=>b[1]-a[1]).map(([t,n])=>t+':'+n).join(' | ');
-    rows.push([i+1,nom,d.count,tiposStr]);
-  });
-  const csv=rows.map(r=>r.map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
-  a.download='Reporte_Gerencial_Incidencias_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
-}
-// (end _incExportarGerencialOLD)
-
-function incDrawCharts(){
-  // ── Chart 1: by tipo ──
-  const c1=document.getElementById('chartTipo'); if(!c1) return;
-  const ctx1=c1.getContext('2d');
-  const tipos={}; INC.registros.forEach(r=>{ tipos[r.tipo]=(tipos[r.tipo]||0)+1; });
-  const labels1=Object.keys(tipos); const data1=Object.values(tipos);
-  const clrs=['#EF4444','#F59E0B','#8B5CF6','#06B6D4','#10B981','#3B82F6','#F97316'];
-  ctx1.clearRect(0,0,c1.width,c1.height);
-  c1.width=c1.offsetWidth||300; c1.height=160;
-  if(!labels1.length){ ctx1.fillStyle='#64748B'; ctx1.font='12px Arial'; ctx1.fillText('Sin datos',10,80); return; }
-  const maxV=Math.max(...data1);
-  const barW=Math.floor((c1.width-40)/labels1.length)-4;
-  labels1.forEach((label,i)=>{
-    const x=20+i*(barW+4);
-    const h=Math.floor((data1[i]/maxV)*(c1.height-40));
-    const y=c1.height-20-h;
-    ctx1.fillStyle=clrs[i%clrs.length];
-    ctx1.fillRect(x,y,barW,h);
-    ctx1.fillStyle='#94A3B8'; ctx1.font='9px Arial'; ctx1.textAlign='center';
-    ctx1.fillText(data1[i],x+barW/2,y-3);
-    ctx1.fillStyle='#64748B'; ctx1.font='8px Arial';
-    const shortLabel=label.length>8?label.slice(0,7)+'…':label;
-    ctx1.fillText(shortLabel,x+barW/2,c1.height-5);
-  });
-
-  // ── Chart 2: by day last 7 ──
-  const c2=document.getElementById('chartDia'); if(!c2) return;
-  const ctx2=c2.getContext('2d');
-  c2.width=c2.offsetWidth||300; c2.height=160;
-  ctx2.clearRect(0,0,c2.width,c2.height);
-  const days={}; const now=new Date();
-  for(let i=6;i>=0;i--){ const d=new Date(now); d.setDate(d.getDate()-i); const key=d.toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit'}); days[key]=0; }
-  INC.registros.forEach(r=>{ const d=new Date(r.ts); const key=d.toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit'}); if(key in days) days[key]++; });
-  const dLabels=Object.keys(days); const dData=Object.values(days);
-  const maxD=Math.max(...dData,1);
-  const bW2=Math.floor((c2.width-40)/dLabels.length)-4;
-  dLabels.forEach((label,i)=>{
-    const x=20+i*(bW2+4);
-    const h=Math.floor((dData[i]/maxD)*(c2.height-40));
-    const y=c2.height-20-h;
-    ctx2.fillStyle=dData[i]>0?'#3B82F6':'#1E293B';
-    ctx2.fillRect(x,y,bW2,Math.max(h,2));
-    if(dData[i]>0){ ctx2.fillStyle='#94A3B8'; ctx2.font='9px Arial'; ctx2.textAlign='center'; ctx2.fillText(dData[i],x+bW2/2,y-3); }
-    ctx2.fillStyle='#64748B'; ctx2.font='8px Arial'; ctx2.textAlign='center';
-    ctx2.fillText(label,x+bW2/2,c2.height-5);
-  });
-}
-
-function incVerFoto(id){
-  const r=INC.registros.find(x=>x.id===parseInt(id));
-  if(!r||!r.foto) return;
-  const w=window.open(''); w.document.write(`<img src="${r.foto}" style="max-width:100%;max-height:100vh">`);
-}
-
-function incEliminar(id){
-  if(!confirm('¿Eliminar esta incidencia?')) return;
-  INC.registros=INC.registros.filter(r=>r.id!==id);
-  incSave(); incRender();
-}
-
-function incExportar(){
-  const regs=[...INC.registros];
-  const h=['ID','Embarque','Cliente','Tipo','SKU','Cantidad','Unidad','Descripción','Hora','Turno'];
-  const d=regs.map(r=>[r.id,r.emb,r.nom,r.tipo,r.sku||'',r.cantidad||'',r.unidad||'',r.desc,r.hora,r.turno]);
-  const csv=[h,...d].map(row=>row.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
-  a.download='incidencias_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
-}
 
 // ─── VISTA DESCARGAS SIMPLIFICADA ─────────────────────────────────────────────
 // State: current turn registros + closed historial
@@ -7275,6 +6411,8 @@ function renderResumen(){
   const _rsPend=rows.filter(r=>r.estop!=='CARGADO'&&r.pc!==100);
   const totCon=_rsPend.filter(r=>hasTrans(r)).length;
   const totSin=_rsPend.filter(r=>!hasTrans(r)).length;
+  const totPickPend=rows.filter(r=>{ const pk=pendPickInfo(r); return !pk.na&&pk.pending; }).length;
+  const totTareaPend=rows.filter(r=>{ const tk=pendTareaInfo(r); return !tk.na&&tk.pending; }).length;
   // Add hrs breakdown KPI if filter active
   const _fHrsActive = g('fRsHrs')?.value||'';
   const _hrsKpis = _fHrsActive ? [] : [
@@ -7293,6 +6431,8 @@ function renderResumen(){
     ['En proceso',totEP,'#FCD34D'],
     ['Pendiente',totPe,'#C4B5FD'],
     ['Cargado',totCa,'var(--green)'],
+    ['📦 Picking pendiente',totPickPend,'var(--amber)'],
+    ['✅ Tareas faltantes',totTareaPend,'var(--purple)'],
     ..._hrsKpis,
   ].map(([l,v,c])=>`
     <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;display:flex;align-items:baseline;gap:8px">
@@ -7303,7 +6443,7 @@ function renderResumen(){
   const tb=g('rsTb');
   if(!tb) return;
   if(!rows.length){
-    tb.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:36px;color:var(--text3)">Sin resultados</td></tr>`;
+    tb.innerHTML=`<tr><td colspan="11" style="text-align:center;padding:36px;color:var(--text3)">Sin resultados</td></tr>`;
     g('rsTf').textContent=''; return;
   }
 
@@ -7357,6 +6497,7 @@ function renderResumen(){
       <td class="m" style="font-weight:700;font-size:11px;font-family:'IBM Plex Mono',monospace;color:${r.prio?'#FACC15':'var(--text)'}">${es(r.emb)}</td>
       <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis" title="${es(r.nom)}">${es(r.nom)}</td>
       <td>${semCell}</td>
+      <td style="font-size:10.5px;color:var(--text2)">${es(r.tra||'—')}</td>
       <td style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--cyan);font-weight:600">${r.con?fmtCortina(r.con):'—'}</td>
       
       <td>${(()=>{
@@ -7389,8 +6530,11 @@ function renderResumen(){
       }</td>
       <td style="text-align:center">${pendTareaHtml}</td>
       <td style="text-align:center">${pendPickHtml}</td>
-      <td><input class="edt" type="text" value="${es(r.com||'')}" placeholder="—"
-          onchange="upd(${idx},'com',this.value)" title="Comentarios" style="min-width:130px"></td>
+      <td style="min-width:200px;max-width:280px">
+        <textarea class="edt" rows="${Math.min(5, Math.max(1, Math.ceil((r.com||'').length/30)))}"
+          style="width:100%;resize:vertical;white-space:pre-wrap;font-family:inherit;font-size:11px;line-height:1.35;padding:5px 7px"
+          onchange="upd(${idx},'com',this.value)" placeholder="—" title="Comentario completo">${es(r.com||'')}</textarea>
+      </td>
     </tr>`;
   }).join('');
 
@@ -7464,12 +6608,12 @@ function exportResumen(){
   const _fEst = (document.getElementById('fRsEst')?.value||'').replace(/\s+/g,'_')||'todos';
   const _fSem = (document.getElementById('fRsSem')?.value||'').replace(/\s+/g,'_')||'';
   const _suffix = (_fEst!=='todos'?_fEst:'')+(_fSem?'_'+_fSem:'');
-  const h=['No.Embarque','Cliente','Semaforo Carga','Cortina','Precarga','Estatus Op.','Pend. Picking','Pend. Tarea %','Comentarios'];
+  const h=['No.Embarque','Cliente','Semaforo Carga','Unidad','Cortina','Precarga','Estatus Op.','Pend. Picking','Pend. Tarea %','Comentarios'];
   const d=rows.map(r=>{
     const trV=parseFloat(r.tr), arV=parseFloat(r.ar)||0;
     const pendPick=(!r.tr||isNaN(trV)||trV===0)?'N/A':Math.max(0,trV-arV).toString();
     const pendTarea=(parseFloat(r.pal)||0)===0?'N/A':r.pt===null||r.pt<100?(100-(r.pt||0))+'%':'Listo';
-    return [r.emb,r.nom,r.sem,r.con||'',r.precarga,r.estop,pendPick,pendTarea,String(r.com||'').replace(/,/g,';')];
+    return [r.emb,r.nom,r.sem,r.tra||'',r.con||'',r.precarga,r.estop,pendPick,pendTarea,String(r.com||'').replace(/,/g,';')];
   });
   const csv=[h,...d].map(function(row){return row.map(function(v){var s=String(v==null?'':v).replace(/"/g,"'");return '"'+s+'"';}).join(',');}).join('\n');
   const a=document.createElement('a');
@@ -8086,7 +7230,7 @@ function applyAdminUI(){
   if(window._switchViewOriginal) window.switchView=window._switchViewOriginal;
   document.querySelectorAll('.admin-only').forEach(el=>el.classList.remove('hidden'));
   document.querySelectorAll('.tab').forEach(el=>el.classList.remove('hidden'));
-  ['vsw-emb','vsw-desc','vsw-hist','vsw-inc','vsw-tab'].forEach(id=>{
+  ['vsw-emb','vsw-desc','vsw-hist','vsw-inc'].forEach(id=>{
     const el=g(id); if(el){el.style.display='';el.style.visibility='';}
   });
   ['htab-emb','htab-vf'].forEach(id=>{
@@ -8111,7 +7255,7 @@ function applyAdminUI(){
   });
   _restoreFromStorage();
   if(S.rows&&S.rows.length){
-    requestAnimationFrame(()=>{ kpi(); render(); alerts(); badge(); });
+    requestAnimationFrame(()=>{ kpi(); render(); alerts(); badge(); if(g('p-rs') && !g('p-rs').classList.contains('hidden')) renderResumen(); });
   }
 }
 
@@ -8203,7 +7347,7 @@ function applyDocumentadorUI(){
   // Allow editing — DO NOT add guest-mode
   document.body.classList.remove('guest-mode');
   // Hide vsw buttons for Embarques y Incidencias (y Tablero, que depende del Tracker)
-  ['vsw-emb','vsw-inc','vsw-tab'].forEach(id=>{ const el=g(id); if(el) el.style.display='none'; });
+  ['vsw-emb','vsw-inc'].forEach(id=>{ const el=g(id); if(el) el.style.display='none'; });
   // Hide htab-emb only (Verificadores sí está disponible para Documentador)
   ['htab-emb'].forEach(id=>{ const el=g(id); if(el) el.style.display='none'; });
   // Switch to Descargas view
@@ -8325,8 +7469,6 @@ function fbSave(){
         }),
         custHistorial: (CUST.historial||[]).slice(-100),
         montaQueue: S.montaQueue||{},
-        turnoTablero: S.turnoTablero||{},
-        tableroHistorial: (S.tableroHistorial||[]).slice(-60),
         ts, device: DEVICE_ID
       };
       // Size check before sending
@@ -8544,21 +7686,6 @@ function applyRemoteData(data){
   if(data.montaQueue && typeof data.montaQueue==='object'){
     S.montaQueue = data.montaQueue;
   }
-  // Restore turnoTablero (matriz de responsabilidades manual) — el más reciente gana
-  if(data.turnoTablero && typeof data.turnoTablero==='object'){
-    S.turnoTablero = data.turnoTablero;
-  }
-  // Restore tableroHistorial — merge por id, quedarse con el más completo
-  if(data.tableroHistorial && Array.isArray(data.tableroHistorial)){
-    if(!S.tableroHistorial) S.tableroHistorial=[];
-    if(data.tableroHistorial.length >= S.tableroHistorial.length){
-      S.tableroHistorial = data.tableroHistorial;
-    } else {
-      const localIds=new Set(S.tableroHistorial.map(e=>e.id));
-      data.tableroHistorial.forEach(e=>{ if(!localIds.has(e.id)) S.tableroHistorial.push(e); });
-    }
-    try{ localStorage.setItem('trx_tablero_hist', JSON.stringify(S.tableroHistorial)); }catch(e){}
-  }
   if(!S.rows || !S.rows.length) return;
   if(typeof checkMontaQueueAdvance==='function') checkMontaQueueAdvance();
 
@@ -8604,8 +7731,6 @@ function applyRemoteData(data){
   if(_incView&&!_incView.classList.contains('hidden')) incRender();
   const _descView=g('view-desc');
   if(_descView&&!_descView.classList.contains('hidden')) dvRender();
-  const _tabView=g('view-tab');
-  if(_tabView&&!_tabView.classList.contains('hidden') && typeof renderTablero==='function') renderTablero();
 
 }
 
