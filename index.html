@@ -7109,7 +7109,8 @@ function mantenimientoRespaldoLimpieza(){
       dvTurno: DV.turno,
       dvSup: DV.sup,
       incRegistros: INC.registros,
-      custHistorial: CUST.historial
+      custHistorial: CUST.historial,
+      montaQueue: S.montaQueue||{}
     };
     const json = JSON.stringify(backup, null, 2);
     const blob = new Blob([json], {type:'application/json'});
@@ -7149,6 +7150,7 @@ function mantenimientoRespaldoLimpieza(){
   try{ localStorage.setItem('trx_cust_hist', JSON.stringify(CUST.historial)); }catch(e){}
 
   // ── 3) Forzar guardado inmediato en Firestore (payload ya más ligero) ──
+  S._cleanTs = Date.now();   // avisa a las demás máquinas que apliquen la misma limpieza
   fbSave();
 
   setTimeout(()=>{
@@ -7453,6 +7455,7 @@ function fbSave(){
       const payload = {
         rows: S.rows.map(_trimRow),
         buildTs: S._lastBuildTs||0,
+        cleanTs: S._cleanTs||0,
         userEdits: (function(){
           var ue={}; Object.keys(S.userEdits||{}).forEach(function(k){
             var v={...S.userEdits[k]}; delete v.evidencias; ue[k]=v;
@@ -7491,6 +7494,12 @@ function fbSave(){
       const _finalKb=Math.round(JSON.stringify(payload).length/1024);
       if(_finalKb>950){
         console.error('[fbSave] STILL TOO LARGE '+_finalKb+'KB — aborting save');
+        const _d0=document.getElementById('syncDot');
+        if(_d0){ _d0.style.background='var(--red)'; _d0.title='NO se está guardando: el tracker es demasiado grande ('+_finalKb+' KB)'; }
+        if(!window._tooLargeWarnTs || Date.now()-window._tooLargeWarnTs>600000){
+          window._tooLargeWarnTs=Date.now();
+          alert('⚠️ Los cambios NO se están sincronizando: el tracker pesa '+_finalKb+' KB y supera el límite.\n\nUn administrador debe usar el botón "Respaldo y limpieza".');
+        }
         return;
       }
       // Deep-sanitize: replace undefined with null (Firebase rejects undefined)
@@ -7538,6 +7547,22 @@ function applyRemoteData(data){
   }
   // Don't overwrite S.rows if build() just ran (guard 8 seconds)
   const _msSinceBuild = Date.now()-(S._lastBuildTs||0);
+  // Fusionar S.userEdits: lo REMOTO gana (así un cambio hecho en otra máquina SÍ se refleja aquí),
+  // salvo el campo que se editó en ESTE dispositivo hace menos de 20 s (candado), que se respeta.
+  // Antes ganaba siempre lo local, y por eso una máquina que ya tenía un valor nunca recibía el nuevo.
+  if(data.userEdits && _msSinceBuild > 8000){
+    const _mergedUE = {};
+    Object.keys(S.userEdits||{}).forEach(k=>{ _mergedUE[k] = Object.assign({}, S.userEdits[k]); });
+    Object.keys(data.userEdits).forEach(k=>{
+      const rem = data.userEdits[k]||{};
+      const m = _mergedUE[k] || (_mergedUE[k] = {});
+      Object.keys(rem).forEach(f=>{
+        if(typeof isLocalEditLocked==='function' && isLocalEditLocked(k,f)) return;
+        m[f] = rem[f];
+      });
+    });
+    S.userEdits = _mergedUE;
+  }
   if(data.rows && _msSinceBuild > 8000){
     const _sameDevice = data.device && data.device===DEVICE_ID;
     const _incomingRows = data.rows.length;
@@ -7612,18 +7637,21 @@ function applyRemoteData(data){
       if(!S.rows.find(r=>r.emb===emb)) alertedEmbs.delete(emb);
     });
   }
-  // Fusionar S.userEdits en vez de sobreescribir: si llega un snapshot de Firebase
-  // "viejo" (por el orden en que llegan los eventos de sincronización), un cambio
-  // que acabas de hacer localmente (ej. quitar una prioridad) ya NO se revierte solo,
-  // porque lo local siempre gana campo por campo sobre lo que traiga Firebase.
-  if(data.userEdits && _msSinceBuild > 8000){
-    const _remoteUE = data.userEdits;
-    const _mergedUE = {};
-    Object.keys(_remoteUE).forEach(k=>{ _mergedUE[k] = Object.assign({}, _remoteUE[k]); });
-    Object.keys(S.userEdits||{}).forEach(k=>{
-      _mergedUE[k] = Object.assign({}, _mergedUE[k]||{}, S.userEdits[k]);
-    });
-    S.userEdits = _mergedUE;
+  // "Respaldo y limpieza" hecha en OTRA máquina: aplicarla aquí también; si no, esta máquina
+  // volvería a subir el historial viejo y desharía la limpieza.
+  if(data.cleanTs && data.cleanTs > (window._lastAppliedCleanTs||0)){
+    window._lastAppliedCleanTs = data.cleanTs; S._cleanTs = data.cleanTs;
+    if(!(data.device && data.device===DEVICE_ID)){
+      const _cut = data.cleanTs - 7*24*60*60*1000;
+      S.turnoHistorial = (S.turnoHistorial||[]).filter(h=>(h.ts||0)>=_cut);
+      DV.historial     = (DV.historial||[]).filter(b=>_parseFechaMX(b._dayKey||b.fecha)>=_cut);
+      INC.registros    = (INC.registros||[]).filter(r=>(r.ts||0)>=_cut);
+      CUST.historial   = (CUST.historial||[]).filter(r=>(r.ts||0)>=_cut);
+      try{ localStorage.setItem('trx_historial',JSON.stringify(S.turnoHistorial)); }catch(e){}
+      try{ localStorage.setItem('trx_dv_historial',JSON.stringify(DV.historial)); }catch(e){}
+      try{ localStorage.setItem('trx_incidencias',JSON.stringify(INC.registros)); }catch(e){}
+      try{ localStorage.setItem('trx_cust_hist',JSON.stringify(CUST.historial)); }catch(e){}
+    }
   }
   // MERGE turnoHistorial — Firebase solo guarda las últimas 50, el historial completo vive en localStorage
   if(data.turnoHistorial && Array.isArray(data.turnoHistorial)){
@@ -7776,11 +7804,14 @@ function startSync(){
   });
 }
 
-// Keep-alive: reconnect if listener drops (mobile background, network change)
-setInterval(()=>{
-  if(!window.FB || !fbReady) return;
-  // Check if we haven't received a snapshot recently — force reconnect
-}, 60000);
+// Reconexión: en el celular, al volver a la app (o recuperar internet) la conexión en tiempo real
+// puede haberse quedado dormida; se vuelve a abrir para traer los datos más recientes.
+let _hiddenAt = 0;
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='hidden'){ _hiddenAt = Date.now(); return; }
+  if(window.FB && fbUnsubscribe && _hiddenAt && Date.now()-_hiddenAt > 20000){ startSync(); }
+});
+window.addEventListener('online', ()=>{ if(window.FB && fbUnsubscribe) startSync(); });
 
 // ── Patch upd/listo/togglePrio/updCustom/updVerif to also save ──
 const _origUpd = upd;
